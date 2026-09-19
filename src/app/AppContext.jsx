@@ -58,7 +58,7 @@ export function AppProvider({ children }) {
   // The shape the existing tree UI already understands.
   const viewState = useMemo(
     () => ({
-      treeName: settings.treeName,
+      treeName: evState.treeName ?? settings.treeName,
       skills: evState.skills,
       entries: evState.entries,
       settings: {
@@ -68,6 +68,17 @@ export function AppProvider({ children }) {
       },
     }),
     [settings, evState]
+  )
+
+  const renameTree = useCallback(
+    (name) => {
+      const next = name.trim().slice(0, 40) || 'My Grove'
+      updateSettings({ treeName: next })
+      if (runtime && next !== (evState.treeName ?? settings.treeName)) {
+        runtime.log.append(createEvent({ type: 'tree.named', app: 'evergrove', actor: 'user', data: { name: next } }))
+      }
+    },
+    [runtime, evState.treeName, settings.treeName, updateSettings]
   )
 
   const run = useCallback(
@@ -191,6 +202,7 @@ export function AppProvider({ children }) {
     viewState,
     settings,
     updateSettings,
+    renameTree,
     run,
     reverseEvent,
     addEntry,

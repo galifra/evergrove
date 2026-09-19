@@ -17,6 +17,7 @@ export function newContext() {
     tasks: new Map(),
     habitDays: new Set(),
     paused: new Set(),
+    treeName: null,
   }
 }
 
@@ -48,6 +49,13 @@ export const RULES = {
     observe(e, ctx) {
       const { taskId, effort, goalId } = e.data
       if (taskId) ctx.tasks.set(taskId, { effort: clamp(Math.round(Number(effort) || 1), 1, 3), goalId })
+    },
+  },
+  // The tree's name lives in the log so every device shows the same one.
+  'tree.named': {
+    observe(e, ctx) {
+      const name = String(e.data.name ?? '').trim().slice(0, 40)
+      if (name) ctx.treeName = name
     },
   },
   'area.paused': { observe: (e, ctx) => ctx.paused.add(e.data.area) },

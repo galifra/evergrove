@@ -49,7 +49,7 @@ function Page({ route }) {
 }
 
 function Shell() {
-  const { ready, bootError, settings, updateSettings, viewState } = useApp()
+  const { ready, bootError, settings, updateSettings, renameTree, viewState } = useApp()
   const route = useRoute()
   const [settingsOpen, setSettingsOpen] = useState(false)
 
@@ -70,9 +70,10 @@ function Shell() {
   if (!settings.onboarded) {
     return (
       <Onboarding
-        onFinish={({ treeName, reminderTime, reminderEnabled }) =>
-          updateSettings({ treeName, reminderTime, reminderEnabled, onboarded: true })
-        }
+        onFinish={({ treeName, reminderTime, reminderEnabled }) => {
+          renameTree(treeName)
+          updateSettings({ reminderTime, reminderEnabled, onboarded: true })
+        }}
       />
     )
   }

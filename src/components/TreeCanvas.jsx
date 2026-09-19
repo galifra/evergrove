@@ -71,7 +71,7 @@ export default function TreeCanvas({ state, onSelectDomain }) {
           {tree.leaves.map((l) => (
             <motion.circle
               key={l.key}
-              initial={{ scale: 0, opacity: 0 }}
+              initial={{ scale: 0, opacity: 0, cx: l.x, cy: l.y }}
               animate={{ scale: 1, opacity: 1, cx: l.x, cy: l.y }}
               exit={{ scale: 0, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 200, damping: 14 }}

@@ -5,6 +5,7 @@ import { useApp } from '../app/AppContext'
 import { getAccessCode, setAccessCode } from '../lib/storage'
 import { pushSupported, enablePushReminders, disablePushReminders } from '../lib/push'
 import { listApps } from '../modules'
+import { AccessCodePrompt } from './ui'
 
 const section = 'rounded-xl border border-white/10 p-3'
 const input =
@@ -98,7 +99,7 @@ export default function SettingsModal({ onClose }) {
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              onBlur={() => updateSettings({ treeName: name.trim() || 'My Grove' })}
+              onBlur={() => app.renameTree(name)}
               className={`mt-1 ${input}`}
             />
           </label>
@@ -153,6 +154,12 @@ export default function SettingsModal({ onClose }) {
               )}
             </div>
             {syncStatus.state === 'error' && <p className="text-xs text-rose-300 mt-2">{syncStatus.message}</p>}
+            {syncStatus.state === 'error' && /401/.test(syncStatus.message) && (
+              <div>
+                <p className="text-xs text-white/50 mt-1">The server needs your access code first.</p>
+                <AccessCodePrompt onSaved={app.syncNow} />
+              </div>
+            )}
           </div>
 
           <div className={section}>

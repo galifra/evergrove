@@ -66,6 +66,16 @@ describe('skill growth', () => {
   })
 })
 
+describe('tree name', () => {
+  it('the latest name in the log wins, so every synced device agrees', () => {
+    const a = mk('tree.named', { name: 'Old Grove' }, { area: null, now: new Date('2026-05-01T00:00:00Z') })
+    const b = mk('tree.named', { name: '  New Grove  ' }, { area: null, now: new Date('2026-05-02T00:00:00Z'), occurredAt: '2026-05-02T00:00:00.000Z' })
+    expect(deriveEvergrove([a, b]).treeName).toBe('New Grove')
+    expect(deriveEvergrove([b, a]).treeName).toBe('New Grove')
+    expect(deriveEvergrove([]).treeName).toBeNull()
+  })
+})
+
 describe('rules for other apps', () => {
   it('a habit checked twice the same day earns once', () => {
     const def = mk('habit.defined', { habitId: 'h1', name: 'Stretch', area: 'health' }, { app: 'tasks' })
