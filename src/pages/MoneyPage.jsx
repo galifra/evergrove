@@ -4,6 +4,7 @@ import { localDate } from '../core/events'
 import { deriveMoney, formatCents } from '../modules/money'
 import { Button, Card, Empty, ErrorNote, Field, PageHeader, ProgressBar, Select, TextInput } from '../components/ui'
 import { useAction } from '../components/useAction'
+import CsvImport from '../components/CsvImport'
 
 function Stat({ label, value, tone }) {
   return (
@@ -179,6 +180,8 @@ export default function MoneyPage() {
           <ErrorNote>{bal.error}</ErrorNote>
         </form>
       </Card>
+
+      <CsvImport />
 
       <Card title="Recent purchases">
         <ul className="divide-y divide-white/5 text-sm">
