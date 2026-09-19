@@ -5,7 +5,7 @@ import { newId } from '../core/events'
 import { approveStep, askJarvis, buildRequest, planFromContent, runAutoSteps } from '../jarvis/jarvis'
 import { getAccessCode } from '../lib/storage'
 import { describeLocal } from '../modules/calendar'
-import { Button, Empty, PageHeader } from '../components/ui'
+import { AccessCodePrompt, Button, Empty, PageHeader } from '../components/ui'
 
 const CHAT_KEY = 'evergrove_jarvis_chat_v1'
 
@@ -40,6 +40,7 @@ export default function JarvisPage() {
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [needsCode, setNeedsCode] = useState(false)
   const [spend, setSpend] = useState(null)
   const bottom = useRef(null)
 
@@ -70,6 +71,7 @@ export default function JarvisPage() {
     if (!value || busy) return
     setText('')
     setError('')
+    setNeedsCode(false)
     setBusy(true)
     const history = [...messages, { id: newId(), role: 'user', text: value }]
     setMessages(history)
@@ -99,6 +101,9 @@ export default function JarvisPage() {
       ])
     } catch (err) {
       setError(err.message)
+      setNeedsCode(err.status === 401)
+      setText(value)
+      setMessages(messages)
     } finally {
       setBusy(false)
     }
@@ -180,6 +185,14 @@ export default function JarvisPage() {
         )}
         {busy && <div className="text-sm text-white/40 flex items-center gap-2"><Loader2 size={14} className="animate-spin" /> Thinking...</div>}
         {error && <div className="text-sm text-rose-300">{error}</div>}
+        {needsCode && (
+          <AccessCodePrompt
+            onSaved={() => {
+              setNeedsCode(false)
+              setError('Saved. Press send again.')
+            }}
+          />
+        )}
         <div ref={bottom} />
       </div>
 

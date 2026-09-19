@@ -93,7 +93,9 @@ export function AppProvider({ children }) {
         })
         if (!res.ok) {
           const body = await res.json().catch(() => ({}))
-          throw new Error(body.error || `Request failed (${res.status})`)
+          const err = new Error(body.error || `Request failed (${res.status})`)
+          err.needsCode = res.status === 401
+          throw err
         }
         const data = await res.json()
         const updates = Array.isArray(data.updates) ? data.updates : []
@@ -128,7 +130,7 @@ export function AppProvider({ children }) {
         setLastResult(result)
         return result
       } catch (err) {
-        setLastResult({ error: err.message || 'Something went wrong logging that.' })
+        setLastResult({ error: err.message || 'Something went wrong logging that.', needsCode: !!err.needsCode })
         return null
       } finally {
         setPending(false)

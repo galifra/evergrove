@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { setAccessCode } from '../lib/storage'
 import {
   Archive, Briefcase, Brain, Calendar, CheckSquare, Compass, Dumbbell, GraduationCap, HeartPulse, House, Lock,
   Palette, Plane, Rocket, Sparkles, Target, Trees, Users, Wallet, LayoutGrid,
@@ -104,5 +106,32 @@ export function ProgressBar({ value, color = '#4ade80', over = false }) {
         style={{ width: `${Math.min(100, Math.max(0, value * 100))}%`, background: over ? '#fb7185' : color }}
       />
     </div>
+  )
+}
+
+// Shown when the server says the access code is missing or wrong, so the fix is
+// one paste away instead of a trip through Settings.
+export function AccessCodePrompt({ onSaved }) {
+  const [code, setCode] = useState('')
+  return (
+    <form
+      className="mt-2 flex gap-2 items-center"
+      onSubmit={(e) => {
+        e.preventDefault()
+        setAccessCode(code.trim())
+        onSaved?.()
+      }}
+    >
+      <input
+        value={code}
+        onChange={(e) => setCode(e.target.value)}
+        placeholder="Paste your access code"
+        autoComplete="off"
+        className={inputCls + ' max-w-xs'}
+      />
+      <Button type="submit" disabled={!code.trim()}>
+        Save
+      </Button>
+    </form>
   )
 }

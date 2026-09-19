@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Loader2, Send, Sparkles } from 'lucide-react'
+import { AccessCodePrompt } from './ui'
 
 export default function EntryConsole({ onSubmit, pending, lastResult }) {
   const [text, setText] = useState('')
@@ -10,7 +11,8 @@ export default function EntryConsole({ onSubmit, pending, lastResult }) {
     if (!text.trim() || pending) return
     const value = text
     setText('')
-    await onSubmit(value)
+    const result = await onSubmit(value)
+    if (!result) setText(value)
   }
 
   return (
@@ -54,7 +56,10 @@ export default function EntryConsole({ onSubmit, pending, lastResult }) {
             }}
           >
             {lastResult.error ? (
-              <p className="text-rose-300">{lastResult.error}</p>
+              <>
+                <p className="text-rose-300">{lastResult.error}</p>
+                {lastResult.needsCode && <AccessCodePrompt />}
+              </>
             ) : (
               <>
                 <p className="text-white/85">{lastResult.summary}</p>
