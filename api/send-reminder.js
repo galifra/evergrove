@@ -23,19 +23,24 @@ export default async function handler(req, res) {
 
   const today = localDateString(state.timezone)
   const nowHM = localHourMinute(state.timezone)
+  // Same secret as the cron: lets the owner send a test right now, ignoring
+  // the time window and today's dedupe, without touching either.
+  const force = new URL(req.url ?? '/', 'http://local').searchParams.get('force') === '1'
 
-  if (state.lastNotifiedDate === today) {
-    res.status(200).json({ ok: true, skipped: 'already notified today' })
-    return
-  }
-  if (minutesBetween(nowHM, state.reminderTime) > WINDOW_MINUTES) {
-    res.status(200).json({ ok: true, skipped: 'outside reminder window', nowHM, target: state.reminderTime })
-    return
-  }
-  if (state.lastEntryDate === today) {
-    await mergeReminderState({ lastNotifiedDate: today })
-    res.status(200).json({ ok: true, skipped: 'already logged today' })
-    return
+  if (!force) {
+    if (state.lastNotifiedDate === today) {
+      res.status(200).json({ ok: true, skipped: 'already notified today' })
+      return
+    }
+    if (minutesBetween(nowHM, state.reminderTime) > WINDOW_MINUTES) {
+      res.status(200).json({ ok: true, skipped: 'outside reminder window', nowHM, target: state.reminderTime })
+      return
+    }
+    if (state.lastEntryDate === today) {
+      await mergeReminderState({ lastNotifiedDate: today })
+      res.status(200).json({ ok: true, skipped: 'already logged today' })
+      return
+    }
   }
 
   webpush.setVapidDetails(
@@ -49,11 +54,13 @@ export default async function handler(req, res) {
       state.subscription,
       JSON.stringify({
         title: 'Evergrove',
-        body: "Haven't heard from you today — what did you get done?",
+        body: force
+          ? "Test: your reminders work. Tonight's real one is still scheduled."
+          : "Haven't heard from you today — what did you get done?",
       })
     )
-    await mergeReminderState({ lastNotifiedDate: today })
-    res.status(200).json({ ok: true, sent: true })
+    if (!force) await mergeReminderState({ lastNotifiedDate: today })
+    res.status(200).json({ ok: true, sent: true, test: force })
   } catch (err) {
     if (err.statusCode === 404 || err.statusCode === 410) {
       // Subscription expired or was revoked — stop trying until they re-enable.
