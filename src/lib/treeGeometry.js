@@ -64,7 +64,6 @@ export function buildTree(state) {
   activeDomains.forEach((domain, i) => {
     const rng = mulberry32(hashString(domain.id))
     const dxp = domainTotalXp(state, domain.id)
-    const skillCount = Object.keys(state.skills[domain.id] || {}).length
     const hasGrowth = dxp > 0
 
     const t = activeDomains.length === 1 ? 0.5 : i / (activeDomains.length - 1)

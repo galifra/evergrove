@@ -62,7 +62,7 @@ export function createSync({ log, transport, iterations }) {
             throw new Error('Could not decrypt synced data. Is the passphrase the same on both devices?')
           }
           if (good.length) {
-            const added = await log.append(good)
+            const added = await log.append(good, { remote: true })
             pulled += added.length
             await store.markPushed(good.map((e) => e.id))
           }

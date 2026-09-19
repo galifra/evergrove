@@ -177,7 +177,7 @@ export function detectRecurring(purchases, bills = []) {
     groups.get(key).push(p)
   }
   const out = []
-  for (const [merchant, list] of groups) {
+  for (const list of groups.values()) {
     const months = new Set(list.map((p) => monthOf(p.date)))
     if (months.size < 3) continue
     const amounts = list.map((p) => p.amountCents)

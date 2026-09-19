@@ -29,16 +29,31 @@ export function buildContext(registry, events, { shareSensitive = [] } = {}, now
   return parts.join('\n').slice(0, 3500)
 }
 
+// A lookup the model copies from, so weekday words never depend on it doing
+// date arithmetic (which it gets wrong).
+export function upcomingDays(now = new Date(), count = 21) {
+  const out = []
+  for (let i = 0; i < count; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i)
+    const label = d.toLocaleDateString('en-US', { weekday: 'long' })
+    out.push(`${label} ${localDate(d)}${i === 0 ? ' (today)' : i === 1 ? ' (tomorrow)' : ''}`)
+  }
+  return out.join('\n')
+}
+
 export function buildRequest({ history, registry, events, shareSensitive = [], now = new Date() }) {
   const evState = deriveEvergrove(events)
   const tools = registry.tools().map((t) => ({ name: t.name, description: t.description, input_schema: t.input }))
   const pad = (n) => String(n).padStart(2, '0')
+  const recent = history.slice(-MAX_HISTORY)
+  while (recent.length && recent[0].role !== 'user') recent.shift()
   return {
-    messages: history.slice(-MAX_HISTORY).map((m) => ({ role: m.role, content: m.text })),
+    messages: recent.map((m) => ({ role: m.role, content: m.text || '(no reply)' })),
     tools,
     catalog: trackerCatalog(evState.trackers),
     context: buildContext(registry, events, { shareSensitive }, now),
     today: localDate(now),
+    days: upcomingDays(now),
     nowLocal: `${localDate(now)}T${pad(now.getHours())}:${pad(now.getMinutes())}`,
     weekday: now.toLocaleDateString('en-US', { weekday: 'long' }),
   }

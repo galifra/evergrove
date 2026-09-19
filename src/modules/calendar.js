@@ -18,6 +18,18 @@ export function addMinutes(local, minutes) {
   return `${dt.getFullYear()}-${p(dt.getMonth() + 1)}-${p(dt.getDate())}T${p(dt.getHours())}:${p(dt.getMinutes())}`
 }
 
+// "Sunday, Sep 27 at 9:00 AM" - shown next to every date so a wrong weekday is
+// obvious the moment it happens.
+export function describeLocal(local) {
+  const [date, time] = String(local).split('T')
+  const [y, m, d] = date.split('-').map(Number)
+  const day = new Date(y, m - 1, d).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
+  if (!time) return day
+  const [h, mi] = time.split(':').map(Number)
+  const t = new Date(2000, 0, 1, h, mi).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+  return `${day} at ${t}`
+}
+
 export function overlaps(a, b) {
   const aStart = a.allDay ? `${a.start}T00:00` : a.start
   const aEnd = a.allDay ? `${a.start}T23:59` : endOf(a)
@@ -100,7 +112,7 @@ export const calendarModule = {
         const clash = conflictsFor(moduleState(), candidate)
         const warn = clash.length ? ` Heads up: overlaps with ${clash.map((c) => c.title).join(', ')}.` : ''
         return {
-          summary: `Added "${args.title}" on ${args.start.replace('T', ' at ')}.${warn}`,
+          summary: `Added "${args.title}" on ${describeLocal(args.start)}.${warn}`,
           events: [
             {
               type: 'calendar.event.created',
@@ -131,7 +143,7 @@ export const calendarModule = {
         const clash = conflictsFor(state, candidate, r.item.id)
         const warn = clash.length ? ` Heads up: overlaps with ${clash.map((c) => c.title).join(', ')}.` : ''
         return {
-          summary: `Moved "${r.item.title}" to ${args.start.replace('T', ' at ')}.${warn}`,
+          summary: `Moved "${r.item.title}" to ${describeLocal(args.start)}.${warn}`,
           events: [{ type: 'calendar.event.rescheduled', data: { eventId: r.item.id, start: args.start, end: args.end } }],
         }
       },

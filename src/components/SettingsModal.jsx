@@ -1,22 +1,42 @@
-import { useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Download, Upload, X } from 'lucide-react'
-import { exportStateAsFile, getAccessCode, setAccessCode } from '../lib/storage'
+import { Download, RefreshCw, Upload, X } from 'lucide-react'
+import { useApp } from '../app/AppContext'
+import { getAccessCode, setAccessCode } from '../lib/storage'
 import { pushSupported, enablePushReminders, disablePushReminders } from '../lib/push'
+import { listApps } from '../modules'
 
-export default function SettingsModal({ state, updateSettings, renameTree, resetAll, importState, onClose }) {
-  const [name, setName] = useState(state.treeName)
+const section = 'rounded-xl border border-white/10 p-3'
+const input =
+  'w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 focus:outline-none focus:border-emerald-400/50 placeholder:text-white/25'
+
+export default function SettingsModal({ onClose }) {
+  const app = useApp()
+  const { settings, updateSettings, events, syncStatus } = app
+  const [name, setName] = useState(settings.treeName)
   const [code, setCode] = useState(getAccessCode())
   const [reminderError, setReminderError] = useState('')
   const [reminderBusy, setReminderBusy] = useState(false)
+  const [pass, setPass] = useState(settings.syncPassphrase)
+  const [spend, setSpend] = useState(null)
+  const [notice, setNotice] = useState('')
   const fileRef = useRef(null)
+
+  useEffect(() => {
+    fetch('/api/usage', { headers: { 'x-app-code': getAccessCode() } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d && setSpend(d))
+      .catch(() => {})
+  }, [])
+
+  const sensitiveApps = useMemo(() => listApps(events).filter((a) => a.sensitive && a.id !== 'vault'), [events])
 
   async function handleReminderToggle(checked) {
     setReminderError('')
     setReminderBusy(true)
     try {
       if (checked) {
-        await enablePushReminders(state.settings.reminderTime)
+        await enablePushReminders(settings.reminderTime)
         updateSettings({ reminderEnabled: true })
       } else {
         await disablePushReminders()
@@ -30,31 +50,32 @@ export default function SettingsModal({ state, updateSettings, renameTree, reset
     }
   }
 
-  async function handleReminderTimeChange(value) {
+  async function handleReminderTime(value) {
     updateSettings({ reminderTime: value })
-    if (state.settings.reminderEnabled) {
-      // re-subscribe so the server has the updated time
-      try {
-        await enablePushReminders(value)
-      } catch {
-        // non-fatal — they can re-toggle if this silently fails
-      }
-    }
+    if (settings.reminderEnabled) await enablePushReminders(value).catch(() => {})
+  }
+
+  function toggleShare(id, on) {
+    const set = new Set(settings.shareSensitive)
+    if (on) set.add(id)
+    else set.delete(id)
+    updateSettings({ shareSensitive: [...set] })
   }
 
   function handleImportFile(e) {
     const file = e.target.files?.[0]
     if (!file) return
     const reader = new FileReader()
-    reader.onload = () => {
+    reader.onload = async () => {
       try {
-        const parsed = JSON.parse(reader.result)
-        importState(parsed)
-      } catch {
-        alert('Could not read that file — is it a valid Evergrove backup?')
+        const r = await app.importBackup(JSON.parse(reader.result))
+        setNotice(`Imported ${r.added} new event${r.added === 1 ? '' : 's'} (${r.total - r.valid} skipped as invalid).`)
+      } catch (err) {
+        setNotice(err.message || 'Could not read that file.')
       }
     }
     reader.readAsText(file)
+    e.target.value = ''
   }
 
   return (
@@ -62,53 +83,106 @@ export default function SettingsModal({ state, updateSettings, renameTree, reset
       <motion.div
         initial={{ opacity: 0, scale: 0.96, y: 8 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0e1a13] p-5 shadow-2xl"
+        className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#0e1a13] p-5 shadow-2xl"
       >
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-display text-xl">Settings</h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/10">
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/10" aria-label="Close">
             <X size={18} />
           </button>
         </div>
 
-        <div className="space-y-5 text-sm">
+        <div className="space-y-4 text-sm">
           <label className="block">
             <span className="text-white/60 text-xs">Tree name</span>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              onBlur={() => renameTree(name.trim() || 'My Grove')}
-              className="mt-1 w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 focus:outline-none focus:border-emerald-400/50"
+              onBlur={() => updateSettings({ treeName: name.trim() || 'My Grove' })}
+              className={`mt-1 ${input}`}
             />
           </label>
 
-          <div className="rounded-xl border border-white/10 p-3">
+          <div className={section}>
             <div className="flex items-center justify-between">
               <span className="text-white/80">Daily reminder</span>
               <input
                 type="checkbox"
-                checked={state.settings.reminderEnabled}
+                checked={settings.reminderEnabled}
                 disabled={reminderBusy}
                 onChange={(e) => handleReminderToggle(e.target.checked)}
                 className="w-4 h-4 accent-emerald-500"
               />
             </div>
-            {!pushSupported() && (
-              <p className="text-xs text-amber-300/80 mt-1">
-                This browser doesn't support push notifications.
-              </p>
-            )}
+            {!pushSupported() && <p className="text-xs text-amber-300/80 mt-1">This browser doesn't support push notifications.</p>}
             {reminderError && <p className="text-xs text-rose-300 mt-1">{reminderError}</p>}
-            <p className="text-xs text-white/40 mt-1">
-              A real notification, even if Evergrove isn't open — only if nothing's logged
-              that day.
-            </p>
+            <p className="text-xs text-white/40 mt-1">A real notification even if Evergrove isn't open, only if nothing's logged that day.</p>
             <input
               type="time"
-              value={state.settings.reminderTime}
-              onChange={(e) => handleReminderTimeChange(e.target.value)}
+              value={settings.reminderTime}
+              onChange={(e) => handleReminderTime(e.target.value)}
               className="mt-2 rounded-lg bg-white/5 border border-white/10 px-3 py-1.5"
             />
+          </div>
+
+          <div className={section}>
+            <div className="flex items-center justify-between">
+              <span className="text-white/80">Sync between devices</span>
+              <span className="text-xs text-white/40">
+                {syncStatus.state === 'off' && 'Off'}
+                {syncStatus.state === 'syncing' && 'Syncing...'}
+                {syncStatus.state === 'ok' && syncStatus.message}
+                {syncStatus.state === 'error' && <span className="text-rose-300">Problem</span>}
+              </span>
+            </div>
+            <p className="text-xs text-white/40 mt-1">
+              Use the same passphrase on each device. Your data is encrypted on the device before it leaves; the server only stores scrambled data. Nothing runs in the background: it syncs when you open the app, return to it, or save something.
+            </p>
+            <div className="mt-2 flex gap-2">
+              <input type="password" value={pass} onChange={(e) => setPass(e.target.value)} placeholder="Sync passphrase" className={input} autoComplete="off" />
+              <button
+                onClick={() => app.setSyncPassphrase(pass.trim())}
+                className="px-3 rounded-lg bg-emerald-500 text-emerald-950 shrink-0"
+              >
+                {settings.syncPassphrase && pass === settings.syncPassphrase ? 'Saved' : pass.trim() ? 'Turn on' : 'Turn off'}
+              </button>
+              {settings.syncPassphrase && (
+                <button onClick={app.syncNow} className="px-2.5 rounded-lg bg-white/5 border border-white/10" aria-label="Sync now">
+                  <RefreshCw size={14} />
+                </button>
+              )}
+            </div>
+            {syncStatus.state === 'error' && <p className="text-xs text-rose-300 mt-2">{syncStatus.message}</p>}
+          </div>
+
+          <div className={section}>
+            <div className="flex items-center justify-between">
+              <span className="text-white/80">AI budget</span>
+              <span className="text-xs text-white/50">
+                {spend ? `$${spend.spentUsd.toFixed(3)} of $${spend.capUsd.toFixed(2)} this month` : '...'}
+              </span>
+            </div>
+            <p className="text-xs text-white/40 mt-1">A hard monthly cap. When it's reached the AI stops until next month; everything else keeps working.</p>
+          </div>
+
+          <div className={section}>
+            <span className="text-white/80">Share private areas with Jarvis</span>
+            <p className="text-xs text-white/40 mt-1">
+              Off by default. Jarvis can still log to these when you tell it something, but it won't see summaries of what's inside unless you turn a switch on. The vault is never shared.
+            </p>
+            <div className="mt-2 space-y-1.5">
+              {sensitiveApps.map((a) => (
+                <label key={a.id} className="flex items-center justify-between">
+                  <span className="text-white/70">{a.name}</span>
+                  <input
+                    type="checkbox"
+                    checked={settings.shareSensitive.includes(a.id)}
+                    onChange={(e) => toggleShare(a.id, e.target.checked)}
+                    className="w-4 h-4 accent-emerald-500"
+                  />
+                </label>
+              ))}
+            </div>
           </div>
 
           <label className="block">
@@ -117,37 +191,32 @@ export default function SettingsModal({ state, updateSettings, renameTree, reset
               value={code}
               onChange={(e) => setCode(e.target.value)}
               onBlur={() => setAccessCode(code.trim())}
-              placeholder="only needed if you set APP_ACCESS_CODE on the server"
-              className="mt-1 w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 focus:outline-none focus:border-emerald-400/50 placeholder:text-white/25"
+              placeholder="only needed if the server has APP_ACCESS_CODE set"
+              className={`mt-1 ${input}`}
             />
           </label>
 
           <div className="flex gap-2">
-            <button
-              onClick={() => exportStateAsFile(state)}
-              className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 py-2"
-            >
+            <button onClick={app.exportBackup} className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 py-2">
               <Download size={14} /> Export
             </button>
-            <button
-              onClick={() => fileRef.current?.click()}
-              className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 py-2"
-            >
+            <button onClick={() => fileRef.current?.click()} className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 py-2">
               <Upload size={14} /> Import
             </button>
             <input ref={fileRef} type="file" accept="application/json" onChange={handleImportFile} hidden />
           </div>
+          {notice && <p className="text-xs text-white/60">{notice}</p>}
 
           <button
-            onClick={() => {
-              if (confirm('Reset your whole tree? This cannot be undone (export a backup first).')) {
-                resetAll()
+            onClick={async () => {
+              if (confirm('Erase everything on this device? Export a backup first. If sync is on, the synced copy stays on the server; turn sync off or use a new passphrase afterward.')) {
+                await app.resetAll()
                 onClose()
               }
             }}
             className="w-full rounded-lg border border-rose-400/25 text-rose-300 hover:bg-rose-500/10 py-2"
           >
-            Reset tree
+            Reset this device
           </button>
         </div>
       </motion.div>

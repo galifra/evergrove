@@ -11,7 +11,7 @@ import { deriveMoney, toCents, formatCents, detectRecurring, monthClosingEvents 
 import { deriveGoals } from './goals'
 import { derivePeople, nextBirthday } from './people'
 import { deriveVault, unlockVault, sealItem, openItem } from './vault'
-import { buildContext, buildRequest, planFromContent, runAutoSteps, approveStep } from '../jarvis/jarvis'
+import { buildContext, buildRequest, planFromContent, runAutoSteps, approveStep, upcomingDays } from '../jarvis/jarvis'
 import { validateArgs } from '../core/schema'
 
 let log
@@ -360,6 +360,16 @@ describe('Jarvis safety', () => {
     expect(req.catalog).toMatch(/body: Body/)
     expect(req.nowLocal).toBe('2026-05-15T12:00')
     expect(req.weekday).toBe('Friday')
+  })
+
+  it('gives the model a computed weekday list so it never does date math', () => {
+    const list = upcomingDays(NOW, 21).split('\n')
+    expect(list[0]).toBe('Friday 2026-05-15 (today)')
+    expect(list[1]).toBe('Saturday 2026-05-16 (tomorrow)')
+    expect(list).toContain('Tuesday 2026-05-19')
+    expect(list).toContain('Tuesday 2026-05-26')
+    expect(list.length).toBe(21)
+    expect(buildRequest({ history: [{ role: 'user', text: 'x' }], registry: reg, events: [], now: NOW }).days).toBe(list.join('\n'))
   })
 
   it('drops invented tools from model output', () => {

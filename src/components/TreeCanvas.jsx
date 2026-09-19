@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { buildTree } from '../lib/treeGeometry'
-import { levelFromXp, skillTotalXp, domainTotalXp } from '../lib/treeEngine'
+import { levelFromXp, skillTotalXp } from '../lib/treeEngine'
 
 export default function TreeCanvas({ state, onSelectDomain }) {
   const tree = useMemo(() => buildTree(state), [state])
@@ -116,7 +116,6 @@ export function DomainLegend({ state, onSelectDomain, domains }) {
   return (
     <div className="flex flex-wrap justify-center gap-2 mt-2">
       {domains.map((d) => {
-        const xp = domainTotalXp(state, d.id)
         const skillCount = Object.keys(state.skills[d.id] || {}).length
         return (
           <button

@@ -14,8 +14,8 @@ extends, and blossoms as you put time into it.
   the Claude API to turn that into structured XP updates against your
   existing skills (reusing skill names it already knows about, so "ran" and
   "running" don't become two different branches).
-- Everything lives in **your browser's localStorage** — no accounts, no
-  database. Export/import a JSON backup from Settings any time.
+- Everything lives in **your device's IndexedDB** as an append-only event log. Devices can sync through an end-to-end encrypted relay (Settings). Export/import a backup any time.
+- Jarvis (chat) and 18 apps (tasks, calendar, money, goals, people, vault and 12 trackers) all read and write that one log; see docs/SPEC.md.
 - A floating "buddy" widget in the corner you can check throughout the day,
   and a best-effort end-of-day browser notification if nothing's logged yet.
 

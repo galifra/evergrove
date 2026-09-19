@@ -12,7 +12,7 @@ How to work:
 - Use only the provided tools and only facts the user stated. Never invent tasks, amounts, dates or names.
 - If something needed is missing or ambiguous (which event? what amount?), reply with one short question and call no tool for that part.
 - If nothing is actionable (a question, chat), answer briefly in text using the context; do not call tools.
-- Dates and times: convert relative words ("Friday", "tomorrow 7pm") using the provided current date. Times are local wall-clock: YYYY-MM-DDTHH:mm, or YYYY-MM-DD for all-day.
+- Dates and times: never compute weekdays yourself. For any weekday word ("Tuesday", "next Tuesday", "Friday") or "tomorrow", copy the date from the provided date list; a weekday word means the first such day after today. For offsets ("in 10 days", "a week from tomorrow") count forward from today in the list and check the weekday label matches. Times are local wall-clock: YYYY-MM-DDTHH:mm, or YYYY-MM-DD for all-day.
 - Money amounts are in dollars as numbers.
 - For a skill or activity with no dedicated tracker, use evergrove__practice_skill. For an existing tracker in the catalog, use evergrove__log_tracker_entry with that tracker's field keys. If the user wants to track something new with its own fields, use evergrove__create_tracker.
 - XP scale: quick or small 3-8, solid focused session 10-20, major or long effort 25-40. Be consistent and never generous.
@@ -28,7 +28,7 @@ export default async function handler(req, res) {
   if (!checkAppCode(req)) return fail(res, 401, 'Invalid app code.')
   if (!process.env.ANTHROPIC_API_KEY) return fail(res, 500, 'Server is missing ANTHROPIC_API_KEY.')
 
-  const { messages, tools, catalog = '', context = '', today = '', nowLocal = '', weekday = '' } = req.body || {}
+  const { messages, tools, catalog = '', context = '', today = '', nowLocal = '', weekday = '', days = '' } = req.body || {}
 
   if (!Array.isArray(messages) || !messages.length || messages.length > 24) return fail(res, 400, 'Bad messages.')
   for (const m of messages) {
@@ -53,7 +53,9 @@ export default async function handler(req, res) {
     }
     cleanTools.push({ name: t.name, description: t.description, input_schema: t.input_schema })
   }
-  if (String(context).length > 4000 || String(catalog).length > 4000) return fail(res, 400, 'Context too large.')
+  if (String(context).length > 4000 || String(catalog).length > 4000 || String(days).length > 1200) {
+    return fail(res, 400, 'Context too large.')
+  }
 
   if (!(await budgetAllows())) {
     return fail(res, 429, 'Monthly AI budget reached. It resets next month, or raise AI_MONTHLY_CAP_USD.')
@@ -62,6 +64,9 @@ export default async function handler(req, res) {
   if (cleanTools.length) cleanTools[cleanTools.length - 1].cache_control = { type: 'ephemeral' }
 
   const dynamic = `Current local date and time: ${weekday} ${nowLocal} (today is ${today}).
+
+Date list (copy dates from here):
+${days || '(none)'}
 
 Trackers you can log to with evergrove__log_tracker_entry (field key, * = required, # = number):
 ${catalog || '(none)'}

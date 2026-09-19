@@ -1,7 +1,7 @@
 # Jarvis + Evergrove backlog
 
 Legend: `D` = decision you make, `T` = test, everything else = build task. Order is chronological; a phase is done only when its tests pass.
-Today: Evergrove v0 exists (skill tree, AI entry parsing, push reminders). Nothing else is built.
+Status (2026-09-18): Phases 0-4 are built and tested (91 automated tests). Phases 5-8 apps exist as v1 versions (trackers, people, vault, compass). Still open: phase 9 hardening items marked below, voice, real-device sync test, install-as-app polish.
 
 ## Ground rules (apply to every phase)
 
