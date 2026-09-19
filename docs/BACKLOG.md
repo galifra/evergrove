@@ -1,7 +1,7 @@
 # Jarvis + Evergrove backlog
 
 Legend: `D` = decision you make, `T` = test, everything else = build task. Order is chronological; a phase is done only when its tests pass.
-Status (2026-09-18): Phases 0-4 are built and tested (91 automated tests). Phases 5-8 apps exist as v1 versions (trackers, people, vault, compass). Still open: phase 9 hardening items marked below, voice, real-device sync test, install-as-app polish.
+Today: Evergrove v0 exists (skill tree, AI entry parsing, push reminders). Nothing else is built.
 
 ## Ground rules (apply to every phase)
 
@@ -117,8 +117,3 @@ Each app below gets: page, manifest, events, Evergrove rules, Jarvis eval cases,
 - Hosting and storage: local-first data on your device and free tiers only; no paid databases, no bank-linking services.
 - AI: rules before models, cheapest model for routing, cached prompts, a hard monthly cap; an on-device or free-tier model for routine cases if quality allows.
 - Separate from all of the above: the Money app (Phase 4.3) is purely your personal budget, bills and savings.
-
-## Version two (decided 2026-09-18, after version one is solid)
-
-- Jarvis becomes a completely separate app with its own address and deployment, not a page inside Evergrove. Browsers can't share storage across separate sites, so the two apps stay in step through the encrypted sync relay (same passphrase, same log). Evergrove and every other app keep working on their own.
-- Groundwork already in place: Jarvis code lives in `src/jarvis` and `api/jarvis.js`, talks to apps only through the command registry, and sync exists.
