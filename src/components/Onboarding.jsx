@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { requestNotificationPermission, notificationsSupported } from '../lib/notifications'
+import { pushSupported, enablePushReminders } from '../lib/push'
 
 export default function Onboarding({ onFinish }) {
   const [name, setName] = useState('My Grove')
@@ -9,9 +9,13 @@ export default function Onboarding({ onFinish }) {
 
   async function finish() {
     let reminderEnabled = false
-    if (wantsReminder && notificationsSupported()) {
-      const perm = await requestNotificationPermission()
-      reminderEnabled = perm === 'granted'
+    if (wantsReminder && pushSupported()) {
+      try {
+        await enablePushReminders(reminderTime)
+        reminderEnabled = true
+      } catch {
+        reminderEnabled = false
+      }
     }
     onFinish({ treeName: name.trim() || 'My Grove', reminderTime, reminderEnabled })
   }

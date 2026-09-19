@@ -11,7 +11,6 @@ export function defaultState() {
     settings: {
       reminderEnabled: false,
       reminderTime: '21:00',
-      lastReminderDate: null,
       onboarded: false,
     },
   }

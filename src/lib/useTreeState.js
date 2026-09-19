@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { defaultState, loadState, saveState, getAccessCode } from './storage'
 import { levelFromXp, skillTotalXp, slugify } from './treeEngine'
 import { DOMAIN_MAP } from './domains'
+import { pingLoggedToday } from './push'
 
 export function useTreeState() {
   const [state, setState] = useState(loadState)
@@ -114,6 +115,7 @@ export function useTreeState() {
         })
 
         setLastResult({ summary: data.summary, updates, levelUps, clarify: updates.length === 0 })
+        if (updates.length > 0) pingLoggedToday()
         return { summary: data.summary, updates, levelUps }
       } catch (err) {
         setLastResult({ error: err.message || 'Something went wrong logging that.' })

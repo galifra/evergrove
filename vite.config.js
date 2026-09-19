@@ -4,14 +4,15 @@ import { defineConfig, loadEnv } from 'vite'
 
 // Vercel serves /api/*.js as serverless functions automatically in prod and
 // via `vercel dev` locally. Plain `vite dev` doesn't know about that folder
-// at all, so this small middleware plugin emulates it for local dev — POST
-// /api/parse-entry is routed to the same handler that runs in production.
+// at all, so this small middleware plugin emulates it for local dev —
+// /api/<name> is routed to the matching api/<name>.js handler.
 function apiDevMiddleware() {
   return {
     name: 'api-dev-middleware',
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
-        if (!req.url?.startsWith('/api/parse-entry') || req.method !== 'POST') {
+        const match = req.url?.match(/^\/api\/([a-z-]+)(?:\?.*)?$/)
+        if (!match) {
           next()
           return
         }
@@ -30,7 +31,7 @@ function apiDevMiddleware() {
             res.end(JSON.stringify(obj))
           }
 
-          const mod = await server.ssrLoadModule('/api/parse-entry.js')
+          const mod = await server.ssrLoadModule(`/api/${match[1]}.js`)
           await mod.default(req, res)
         } catch (err) {
           console.error('[api-dev-middleware]', err)

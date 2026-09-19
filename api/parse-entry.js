@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { checkAppCode } from '../server/auth.js'
 
 // Fixed domain set — kept in sync with src/lib/domains.js. Duplicated here
 // (rather than imported) because this file runs as an isolated serverless
@@ -89,8 +90,7 @@ export default async function handler(req, res) {
     return
   }
 
-  const requiredCode = process.env.APP_ACCESS_CODE
-  if (requiredCode && req.headers['x-app-code'] !== requiredCode) {
+  if (!checkAppCode(req)) {
     res.status(401).json({ error: 'Invalid app code.' })
     return
   }

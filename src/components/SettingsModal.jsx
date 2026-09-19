@@ -2,19 +2,43 @@ import { useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Download, Upload, X } from 'lucide-react'
 import { exportStateAsFile, getAccessCode, setAccessCode } from '../lib/storage'
-import { notificationsSupported, requestNotificationPermission } from '../lib/notifications'
+import { pushSupported, enablePushReminders, disablePushReminders } from '../lib/push'
 
 export default function SettingsModal({ state, updateSettings, renameTree, resetAll, importState, onClose }) {
   const [name, setName] = useState(state.treeName)
   const [code, setCode] = useState(getAccessCode())
+  const [reminderError, setReminderError] = useState('')
+  const [reminderBusy, setReminderBusy] = useState(false)
   const fileRef = useRef(null)
 
   async function handleReminderToggle(checked) {
-    if (checked) {
-      const perm = await requestNotificationPermission()
-      updateSettings({ reminderEnabled: perm === 'granted' })
-    } else {
+    setReminderError('')
+    setReminderBusy(true)
+    try {
+      if (checked) {
+        await enablePushReminders(state.settings.reminderTime)
+        updateSettings({ reminderEnabled: true })
+      } else {
+        await disablePushReminders()
+        updateSettings({ reminderEnabled: false })
+      }
+    } catch (err) {
+      setReminderError(err.message || 'Could not update reminder settings.')
       updateSettings({ reminderEnabled: false })
+    } finally {
+      setReminderBusy(false)
+    }
+  }
+
+  async function handleReminderTimeChange(value) {
+    updateSettings({ reminderTime: value })
+    if (state.settings.reminderEnabled) {
+      // re-subscribe so the server has the updated time
+      try {
+        await enablePushReminders(value)
+      } catch {
+        // non-fatal — they can re-toggle if this silently fails
+      }
     }
   }
 
@@ -64,22 +88,25 @@ export default function SettingsModal({ state, updateSettings, renameTree, reset
               <input
                 type="checkbox"
                 checked={state.settings.reminderEnabled}
+                disabled={reminderBusy}
                 onChange={(e) => handleReminderToggle(e.target.checked)}
                 className="w-4 h-4 accent-emerald-500"
               />
             </div>
-            {!notificationsSupported() && (
+            {!pushSupported() && (
               <p className="text-xs text-amber-300/80 mt-1">
-                This browser doesn't support notifications.
+                This browser doesn't support push notifications.
               </p>
             )}
+            {reminderError && <p className="text-xs text-rose-300 mt-1">{reminderError}</p>}
             <p className="text-xs text-white/40 mt-1">
-              Nudges you once a day if nothing's logged yet — only while a tab is open.
+              A real notification, even if Evergrove isn't open — only if nothing's logged
+              that day.
             </p>
             <input
               type="time"
               value={state.settings.reminderTime}
-              onChange={(e) => updateSettings({ reminderTime: e.target.value })}
+              onChange={(e) => handleReminderTimeChange(e.target.value)}
               className="mt-2 rounded-lg bg-white/5 border border-white/10 px-3 py-1.5"
             />
           </div>
