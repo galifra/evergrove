@@ -59,10 +59,15 @@ export async function disablePushReminders() {
   }
 }
 
-// Called after every successful entry so the reminder cron knows not to nag.
-export function pingLoggedToday() {
-  fetch('/api/mark-logged', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-app-code': getAccessCode() },
-  }).catch(() => {})
+
+// Shows what tonight's notification will look like, right now, so it can be
+// checked without waiting for the evening. Uses the same text the real one uses.
+export async function showBriefingPreview(brief) {
+  if (typeof Notification === 'undefined') throw new Error('This browser cannot show notifications.')
+  const permission = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission()
+  if (permission !== 'granted') throw new Error('Notification permission was not granted.')
+  const options = { body: brief.body, icon: '/icon-192.png', tag: 'evergrove-preview', data: { url: '/#/jarvis/brief' } }
+  const registration = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration('/sw.js') : null
+  if (registration) await registration.showNotification(brief.title, options)
+  else new Notification(brief.title, options)
 }

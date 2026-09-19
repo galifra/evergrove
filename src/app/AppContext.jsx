@@ -44,6 +44,20 @@ export function AppProvider({ children }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [runtime])
 
+  // The service worker builds the evening briefing from the device's own data
+  // and cannot see localStorage, so the two privacy choices live in the database too.
+  useEffect(() => {
+    if (!runtime) return
+    runtime.store.setMeta('briefingPrefs', { detail: settings.briefingDetail, showAmounts: settings.showAmounts })
+  }, [runtime, settings.briefingDetail, settings.showAmounts])
+
+  // Re-registering checks for a newer service worker, so the briefing code updates.
+  useEffect(() => {
+    if (runtime && settings.reminderEnabled && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {})
+    }
+  }, [runtime, settings.reminderEnabled])
+
   const evState = useMemo(() => deriveEvergrove(events), [events])
   const insights = useMemo(() => deriveInsights(evState), [evState])
 

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Bot, Check, Loader2, Mic, Send, Square, Undo2, X } from 'lucide-react'
 import { useApp } from '../app/AppContext'
+import { useRoute } from '../app/router'
+import { composeBriefing } from '../evergrove/briefing'
 import { newId } from '../core/events'
 import { approveStep, askJarvis, buildRequest, planFromContent, runAutoSteps } from '../jarvis/jarvis'
 import { getAccessCode } from '../lib/storage'
@@ -9,6 +11,9 @@ import { describeLocal } from '../modules/calendar'
 import { AccessCodePrompt, Button, Empty, PageHeader } from '../components/ui'
 
 const CHAT_KEY = 'evergrove_jarvis_chat_v1'
+
+// Outside the component so a remount (React dev mode does this on purpose) can't post the briefing twice.
+let lastLandingAt = 0
 
 function loadChat() {
   try {
@@ -37,6 +42,8 @@ const prettyArgs = (args) =>
 
 export default function JarvisPage() {
   const { runtime, events, settings } = useApp()
+  const route = useRoute()
+  const briefed = useRef(false)
   const [messages, setMessages] = useState(loadChat)
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
@@ -138,6 +145,31 @@ export default function JarvisPage() {
     }
   }
 
+  // Tomorrow's briefing, built here from your own data. No AI call, so it is
+  // free, instant and works offline.
+  async function postBriefing() {
+    const prefs = await runtime.store.getMeta('briefingPrefs')
+    const b = composeBriefing(runtime.log.getEvents(), new Date(), prefs)
+    setMessages((ms) => [
+      ...ms,
+      { id: newId(), role: 'assistant', text: `${b.title}\n${b.lines.join('\n')}`, memo: `Showed the briefing for ${b.tomorrow}.`, steps: [] },
+    ])
+  }
+
+  // Tapping the evening notification lands here.
+  useEffect(() => {
+    if (route.param === 'brief' && runtime && !briefed.current) {
+      briefed.current = true
+      if (Date.now() - lastLandingAt > 3000) {
+        lastLandingAt = Date.now()
+        postBriefing()
+      }
+      window.location.hash = '#/jarvis'
+    }
+    // postBriefing only reads from runtime; it is safe to run once per landing
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [route.param, runtime])
+
   async function approve(msg, step) {
     await approveStep(step, runtime.registry, msg.correlationId)
     patchStep(msg.id, step.id, { status: step.status, result: step.result, commandId: step.commandId })
@@ -184,7 +216,7 @@ export default function JarvisPage() {
             <div key={m.id} className="flex gap-2">
               <span className="mt-1 grid place-items-center w-7 h-7 rounded-full bg-white/10 shrink-0"><Bot size={14} /></span>
               <div className="max-w-[90%] space-y-2">
-                {m.text && <div className="rounded-2xl rounded-bl-md bg-white/[0.06] border border-white/10 px-4 py-2 text-sm">{m.text}</div>}
+                {m.text && <div className="rounded-2xl rounded-bl-md bg-white/[0.06] border border-white/10 px-4 py-2 text-sm whitespace-pre-line">{m.text}</div>}
                 {m.steps?.map((s) => (
                   <div key={s.id} className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm">
                     <div className="flex items-center justify-between gap-3">
@@ -223,6 +255,12 @@ export default function JarvisPage() {
           />
         )}
         <div ref={bottom} />
+      </div>
+
+      <div className="pb-2">
+        <button onClick={postBriefing} className="text-xs px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white/70">
+          Brief me on tomorrow
+        </button>
       </div>
 
       {seen && (

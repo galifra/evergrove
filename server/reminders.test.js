@@ -11,7 +11,6 @@ vi.mock('web-push', () => ({
 
 import webpush from 'web-push'
 import saveHandler from '../api/save-subscription.js'
-import markHandler from '../api/mark-logged.js'
 import sendHandler from '../api/send-reminder.js'
 import { getKv } from './store.js'
 import { loadReminderState, normalize } from './kv.js'
@@ -105,13 +104,25 @@ describe('the reminder job', () => {
     expect(webpush.sendNotification).toHaveBeenCalledTimes(1)
   })
 
-  it('stays quiet if something was already logged today', async () => {
+  it('sends only a content-free wake-up: no names, dates or amounts ever leave for the server', async () => {
     await save('laptop', now())
-    await call(markHandler, { body: {} })
+    await call(sendHandler, { method: 'GET', headers: cron })
+    const [, payload] = vi.mocked(webpush.sendNotification).mock.calls[0]
+    expect(JSON.parse(payload)).toEqual({
+      type: 'daily',
+      title: 'Evergrove',
+      body: 'Your briefing for tomorrow is ready. Open Evergrove to see it.',
+      test: false,
+    })
+  })
+
+  it('still sends on days you logged something (the briefing is the point)', async () => {
+    await save('laptop', now())
+    const state = await loadReminderState()
+    state.lastEntryDate = localDateString('UTC')
+    await getKv().set('evergrove:reminder', state)
     const r = await call(sendHandler, { method: 'GET', headers: cron })
-    expect(r.body.devices[0].skipped).toBe('already logged today')
-    expect(webpush.sendNotification).not.toHaveBeenCalled()
-    expect((await loadReminderState()).lastEntryDate).toBe(localDateString('UTC'))
+    expect(r.body.devices[0].sent).toBe(true)
   })
 
   it('a test send reaches every device and does not use up the real reminder', async () => {

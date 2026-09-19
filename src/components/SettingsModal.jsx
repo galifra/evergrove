@@ -3,7 +3,8 @@ import { motion } from 'framer-motion'
 import { Download, RefreshCw, Upload, X } from 'lucide-react'
 import { useApp } from '../app/AppContext'
 import { getAccessCode, setAccessCode } from '../lib/storage'
-import { pushSupported, enablePushReminders, disablePushReminders } from '../lib/push'
+import { pushSupported, enablePushReminders, disablePushReminders, showBriefingPreview } from '../lib/push'
+import { composeBriefing } from '../evergrove/briefing'
 import { listApps } from '../modules'
 import { AccessCodePrompt } from './ui'
 
@@ -55,6 +56,15 @@ export default function SettingsModal({ onClose }) {
   async function handleReminderTime(value) {
     updateSettings({ reminderTime: value })
     if (settings.reminderEnabled) await enablePushReminders(value).catch(() => {})
+  }
+
+  async function previewBriefing() {
+    setReminderError('')
+    try {
+      await showBriefingPreview(composeBriefing(events, new Date(), { detail: settings.briefingDetail, showAmounts: settings.showAmounts }))
+    } catch (err) {
+      setReminderError(err.message)
+    }
   }
 
   function toggleShare(id, on) {
@@ -118,13 +128,40 @@ export default function SettingsModal({ onClose }) {
             </div>
             {!pushSupported() && <p className="text-xs text-amber-300/80 mt-1">This browser doesn't support push notifications.</p>}
             {reminderError && <p className="text-xs text-rose-300 mt-1">{reminderError}</p>}
-            <p className="text-xs text-white/55 mt-1">A real notification even if Evergrove isn't open, only if nothing's logged that day.</p>
+            <p className="text-xs text-white/55 mt-1">Every evening at this time, a real notification tells you what tomorrow holds, even if Evergrove isn't open. It's built on this device from your own data; the server only sends a wake-up.</p>
             <input
               type="time"
               value={settings.reminderTime}
               onChange={(e) => handleReminderTime(e.target.value)}
               className="mt-2 rounded-lg bg-white/5 border border-white/10 px-3 py-1.5"
             />
+            <div className="mt-3 space-y-2 border-t border-white/10 pt-3">
+              <label className="flex items-center justify-between gap-3">
+                <span className="text-white/70 text-xs">What it shows on your lock screen</span>
+                <select
+                  value={settings.briefingDetail}
+                  onChange={(e) => updateSettings({ briefingDetail: e.target.value })}
+                  className="rounded-lg bg-white/5 border border-white/10 px-2 py-1 text-xs"
+                >
+                  <option value="full" className="bg-[#0e1a13]">Names and times</option>
+                  <option value="counts" className="bg-[#0e1a13]">Counts only</option>
+                </select>
+              </label>
+              {settings.briefingDetail === 'full' && (
+                <label className="flex items-center justify-between gap-3">
+                  <span className="text-white/70 text-xs">Include bill amounts</span>
+                  <input
+                    type="checkbox"
+                    checked={settings.showAmounts}
+                    onChange={(e) => updateSettings({ showAmounts: e.target.checked })}
+                    className="w-4 h-4 accent-emerald-500"
+                  />
+                </label>
+              )}
+              <button onClick={previewBriefing} className="text-xs underline text-white/60 hover:text-white/90">
+                Show me tonight's notification now
+              </button>
+            </div>
           </div>
 
           <div className={section}>

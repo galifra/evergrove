@@ -1,6 +1,23 @@
 {
   "crons": [
-    { "path": "/api/send-reminder", "schedule": "0 2 * * *" },
-    { "path": "/api/send-reminder", "schedule": "0 3 * * *" }
+    {
+      "path": "/api/send-reminder",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/send-reminder",
+      "schedule": "0 3 * * *"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    }
   ]
 }

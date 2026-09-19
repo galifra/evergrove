@@ -54,8 +54,3 @@ export async function patchDevice(endpoint, patch) {
   return save(state)
 }
 
-export async function markLoggedToday(date) {
-  const state = await loadReminderState()
-  state.lastEntryDate = date
-  return save(state)
-}

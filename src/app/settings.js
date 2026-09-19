@@ -6,6 +6,8 @@ export function defaultSettings() {
     treeName: 'My Grove',
     reminderEnabled: false,
     reminderTime: '21:00',
+    briefingDetail: 'full',
+    showAmounts: false,
     onboarded: false,
     shareSensitive: [],
     syncPassphrase: '',

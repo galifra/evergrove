@@ -5,7 +5,6 @@ import { validateEvent } from '../core/events'
 import { createAppRegistry, runMaintenance } from '../modules'
 import { legacyToEvents } from '../evergrove/migrate'
 import { getAccessCode } from '../lib/storage'
-import { pingLoggedToday } from '../lib/push'
 import { loadLegacyTree } from './settings'
 
 // One runtime per page: the store, the log, the app registry and sync. Nothing
@@ -60,13 +59,11 @@ async function createRuntime() {
     syncTimer = setTimeout(syncNow, 2000)
   }
 
-  // Every local write nudges the reminder job ("logged today") and schedules a
-  // sync. Events that arrive from sync (`remote`) do neither.
+  // Every local write schedules a sync. Events that arrive from sync (`remote`) don't.
   const rawAppend = log.append.bind(log)
   log.append = async (input, opts = {}) => {
     const added = await rawAppend(input, opts)
     if (added.length && !opts.remote) {
-      if (added.some((e) => (e.actor === 'user' || e.actor === 'jarvis') && e.area)) pingLoggedToday()
       scheduleSync()
     }
     return added

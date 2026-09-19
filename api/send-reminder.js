@@ -45,21 +45,18 @@ export default async function handler(req, res) {
         results.push({ skipped: 'outside reminder window', nowHM, target: device.reminderTime })
         continue
       }
-      if (state.lastEntryDate === today) {
-        await patchDevice(endpoint, { lastNotifiedDate: today })
-        results.push({ skipped: 'already logged today' })
-        continue
-      }
     }
 
     try {
+      // Content-free on purpose: the device's service worker builds tomorrow's
+      // briefing from its own data. The text here is only a fallback.
       await webpush.sendNotification(
         device.subscription,
         JSON.stringify({
+          type: 'daily',
           title: 'Evergrove',
-          body: force
-            ? "Test: your reminders work. Tonight's real one is still scheduled."
-            : "Haven't heard from you today — what did you get done?",
+          body: 'Your briefing for tomorrow is ready. Open Evergrove to see it.',
+          test: force,
         })
       )
       if (!force) await patchDevice(endpoint, { lastNotifiedDate: today })
