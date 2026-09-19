@@ -3,6 +3,7 @@ import { Undo2 } from 'lucide-react'
 import { useApp } from '../app/AppContext'
 import { effectiveEvents, localDate } from '../core/events'
 import { DOMAIN_MAP } from '../lib/domains'
+import { weeklyTotals } from '../evergrove/trackers'
 import { Button, Card, Empty, ErrorNote, Field, PageHeader, Select, TextInput } from '../components/ui'
 import { useAction } from '../components/useAction'
 
@@ -27,6 +28,10 @@ export default function TrackerPage({ trackerId }) {
   const statTotal = def.stat
     ? thisWeek.reduce((s, e) => s + (Number(e.data.values?.[def.stat.field]) || 0), 0)
     : null
+
+  const weeks = weeklyTotals(entries, def)
+  const peak = Math.max(1, ...weeks.map((w) => w.value))
+  const unit = def.stat ? def.stat.label : entries.length === 1 ? 'entry' : 'entries'
 
   async function submit(e) {
     e.preventDefault()
@@ -80,6 +85,28 @@ export default function TrackerPage({ trackerId }) {
             <ErrorNote>{error}</ErrorNote>
           </div>
         </form>
+      </Card>
+
+      <Card title={`Last 8 weeks (${def.stat ? def.stat.label : 'entries'} per week)`} className="mt-4">
+        <div className="flex items-end gap-2 h-24" role="img" aria-label="Weekly totals">
+          {weeks.map((w, i) => (
+            <div key={w.start} className="flex-1 flex flex-col items-center justify-end h-full min-w-0" title={`Week of ${w.start}: ${w.value} ${unit}`}>
+              <span className="text-[10px] text-white/40 mb-0.5">{w.value || ''}</span>
+              <div
+                className="w-full rounded-t-md"
+                style={{
+                  height: `${Math.max(w.value ? 6 : 2, (w.value / peak) * 100)}%`,
+                  background: DOMAIN_MAP[def.area].color,
+                  opacity: i === weeks.length - 1 ? 1 : 0.55,
+                }}
+              />
+            </div>
+          ))}
+        </div>
+        <div className="flex justify-between text-[10px] text-white/30 mt-1">
+          <span>{weeks[0].start.slice(5)}</span>
+          <span>this week</span>
+        </div>
       </Card>
 
       <Card title="Recent" className="mt-4">

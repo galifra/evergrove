@@ -3,7 +3,7 @@ import { createEvent } from '../core/events'
 import { deriveEvergrove } from './derive'
 import { deriveInsights, growthStreak } from './insights'
 import { legacyToEvents } from './migrate'
-import { normalizeTrackerDef, trackerGrowth, validateEntry, BUILTIN_TRACKERS } from './trackers'
+import { normalizeTrackerDef, trackerGrowth, validateEntry, weeklyTotals, BUILTIN_TRACKERS } from './trackers'
 import { levelFromXp } from '../lib/treeEngine'
 
 let n = 0
@@ -184,6 +184,24 @@ describe('trackers', () => {
   it('trackerGrowth falls back to the minimum xp on missing numbers', () => {
     const body = BUILTIN_TRACKERS.find((t) => t.id === 'body')
     expect(trackerGrowth(body, { kind: 'Yoga' }).xp).toBe(3)
+  })
+})
+
+describe('weekly totals for tracker charts', () => {
+  const body = BUILTIN_TRACKERS.find((t) => t.id === 'body')
+  const entry = (iso, minutes) => ({ occurredAt: iso, data: { values: { minutes } } })
+  const NOW = new Date(2026, 4, 15, 12, 0, 0) // Friday, week of Mon May 11
+
+  it('sums the headline number per Monday-start week, oldest first', () => {
+    const t = weeklyTotals([entry(new Date(2026, 4, 11, 8).toISOString(), 30), entry(new Date(2026, 4, 15, 8).toISOString(), 20), entry(new Date(2026, 4, 5, 8).toISOString(), 45)], body, 3, NOW)
+    expect(t.map((w) => w.start)).toEqual(['2026-04-27', '2026-05-04', '2026-05-11'])
+    expect(t.map((w) => w.value)).toEqual([0, 45, 50])
+  })
+
+  it('counts entries when a tracker has no headline number, and ignores older weeks', () => {
+    const travel = BUILTIN_TRACKERS.find((t) => t.id === 'travel')
+    const t = weeklyTotals([{ occurredAt: new Date(2026, 4, 12).toISOString(), data: { values: {} } }, { occurredAt: new Date(2025, 0, 1).toISOString(), data: { values: {} } }], travel, 2, NOW)
+    expect(t.map((w) => w.value)).toEqual([0, 1])
   })
 })
 

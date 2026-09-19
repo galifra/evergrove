@@ -285,3 +285,31 @@ export function trackerGrowth(def, values = {}) {
   }
   return { domain: def.area, skillId: slugify(name), skillName: name, xp }
 }
+
+// Totals per calendar week (Monday start), oldest first, for the bar chart on a
+// tracker's page: the sum of its headline number if it has one, else the count.
+export function weeklyTotals(entries, def, weeks = 8, now = new Date()) {
+  const monday = (d) => {
+    const x = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+    x.setDate(x.getDate() - ((x.getDay() + 6) % 7))
+    return x
+  }
+  const thisWeek = monday(now)
+  const buckets = []
+  for (let i = weeks - 1; i >= 0; i--) {
+    const start = new Date(thisWeek)
+    start.setDate(start.getDate() - i * 7)
+    buckets.push({ start, value: 0 })
+  }
+  for (const e of entries) {
+    const at = monday(new Date(e.occurredAt))
+    const b = buckets.find((x) => x.start.getTime() === at.getTime())
+    if (!b) continue
+    b.value += def.stat ? Number(e.data.values?.[def.stat.field]) || 0 : 1
+  }
+  const pad = (n) => String(n).padStart(2, '0')
+  return buckets.map((b) => ({
+    start: `${b.start.getFullYear()}-${pad(b.start.getMonth() + 1)}-${pad(b.start.getDate())}`,
+    value: b.value,
+  }))
+}

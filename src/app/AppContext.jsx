@@ -61,6 +61,7 @@ export function AppProvider({ children }) {
       treeName: evState.treeName ?? settings.treeName,
       skills: evState.skills,
       entries: evState.entries,
+      paused: evState.paused,
       settings: {
         reminderEnabled: settings.reminderEnabled,
         reminderTime: settings.reminderTime,

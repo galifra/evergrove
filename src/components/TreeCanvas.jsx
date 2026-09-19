@@ -6,6 +6,7 @@ import { levelFromXp, skillTotalXp } from '../lib/treeEngine'
 export default function TreeCanvas({ state, onSelectDomain }) {
   const tree = useMemo(() => buildTree(state), [state])
   const [hovered, setHovered] = useState(null)
+  const paused = new Set(state.paused ?? [])
 
   return (
     <div className="relative w-full max-w-3xl mx-auto select-none">
@@ -44,7 +45,7 @@ export default function TreeCanvas({ state, onSelectDomain }) {
             animate={{ x2: b.x2, y2: b.y2, strokeWidth: b.width, stroke: b.color }}
             transition={{ type: 'spring', stiffness: 55, damping: 15 }}
             strokeLinecap="round"
-            opacity={b.dormant ? 0.5 : 1}
+            opacity={b.dormant ? 0.5 : paused.has(b.domain.id) ? 0.35 : 1}
             onMouseEnter={() => setHovered(b.domain.id)}
             onMouseLeave={() => setHovered(null)}
             onClick={() => onSelectDomain?.(b.domain.id)}
@@ -62,7 +63,7 @@ export default function TreeCanvas({ state, onSelectDomain }) {
             animate={{ x2: t.x2, y2: t.y2, strokeWidth: t.width, stroke: t.color }}
             transition={{ type: 'spring', stiffness: 90, damping: 14 }}
             strokeLinecap="round"
-            opacity={0.85}
+            opacity={paused.has(t.domain.id) ? 0.3 : 0.85}
           />
         ))}
 
@@ -72,7 +73,7 @@ export default function TreeCanvas({ state, onSelectDomain }) {
             <motion.circle
               key={l.key}
               initial={{ scale: 0, opacity: 0, cx: l.x, cy: l.y }}
-              animate={{ scale: 1, opacity: 1, cx: l.x, cy: l.y }}
+              animate={{ scale: 1, opacity: paused.has(l.domainId) ? 0.35 : 1, cx: l.x, cy: l.y }}
               exit={{ scale: 0, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 200, damping: 14 }}
               r={l.r}
@@ -125,6 +126,7 @@ export function DomainLegend({ state, onSelectDomain, domains }) {
           >
             <span className="w-2 h-2 rounded-full" style={{ background: d.color }} />
             <span className="opacity-80">{d.name}</span>
+            {state.paused?.includes(d.id) && <span className="text-[10px] text-white/40">paused</span>}
             <span className="opacity-50">{skillCount ? `${skillCount}` : ''}</span>
           </button>
         )

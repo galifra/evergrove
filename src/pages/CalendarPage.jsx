@@ -3,6 +3,9 @@ import { AlertTriangle, X } from 'lucide-react'
 import { useApp } from '../app/AppContext'
 import { localDate } from '../core/events'
 import { deriveCalendar, overlaps } from '../modules/calendar'
+import { deriveMoney, formatCents } from '../modules/money'
+import { deriveTasks } from '../modules/tasks'
+import { derivePeople } from '../modules/people'
 import { Button, Card, Empty, ErrorNote, Field, PageHeader, TextInput } from '../components/ui'
 import { useAction } from '../components/useAction'
 
@@ -27,12 +30,36 @@ export default function CalendarPage() {
         clashes.add(upcoming[j].id)
       }
 
+  // Read-only reminders pulled from the other apps: things with a date that
+  // belong on a calendar even though they live elsewhere.
+  const extras = useMemo(() => {
+    const out = []
+    const money = deriveMoney(events)
+    for (const b of money.bills) {
+      if (!b.paid && b.daysUntil <= 45) {
+        out.push({ id: 'bill-' + b.id, day: b.overdue ? today : b.dueOn, kind: b.overdue ? 'Overdue bill' : 'Bill due', text: `${b.name} ${formatCents(b.amountCents)}` })
+      }
+    }
+    for (const t of deriveTasks(events).open) {
+      if (t.due) out.push({ id: 'task-' + t.id, day: t.due < today ? today : t.due, kind: t.due < today ? 'Overdue task' : 'Task due', text: t.title })
+    }
+    for (const p of derivePeople(events).upcomingBirthdays) {
+      out.push({ id: 'bday-' + p.id, day: p.nextBirthday.date, kind: 'Birthday', text: p.name })
+    }
+    return out
+  }, [events, today])
+
   const byDay = new Map()
   for (const e of upcoming) {
     const d = e.start.slice(0, 10)
-    if (!byDay.has(d)) byDay.set(d, [])
-    byDay.get(d).push(e)
+    if (!byDay.has(d)) byDay.set(d, { events: [], extras: [] })
+    byDay.get(d).events.push(e)
   }
+  for (const x of extras) {
+    if (!byDay.has(x.day)) byDay.set(x.day, { events: [], extras: [] })
+    byDay.get(x.day).extras.push(x)
+  }
+  const days = [...byDay].sort(([a], [b]) => a.localeCompare(b))
 
   async function add(e) {
     e.preventDefault()
@@ -64,13 +91,19 @@ export default function CalendarPage() {
       </Card>
 
       <Card title="Agenda">
-        {upcoming.length === 0 && <Empty>Nothing scheduled.</Empty>}
-        {[...byDay].map(([day, list]) => (
+        {days.length === 0 && <Empty>Nothing scheduled.</Empty>}
+        {days.map(([day, { events: list, extras: notes }]) => (
           <div key={day} className="mb-3">
             <div className="text-xs uppercase tracking-wide text-white/40 mb-1">
               {new Date(`${day}T00:00`).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
             </div>
             <ul className="space-y-1.5">
+              {notes.map((x) => (
+                <li key={x.id} className="rounded-lg border border-dashed border-white/10 px-3 py-1.5 text-sm flex items-center gap-2">
+                  <span className={`text-[11px] px-1.5 py-0.5 rounded-full shrink-0 ${x.kind.startsWith('Overdue') ? 'bg-rose-500/15 text-rose-300' : 'bg-white/8 text-white/50'}`}>{x.kind}</span>
+                  <span className="truncate">{x.text}</span>
+                </li>
+              ))}
               {list.map((e) => (
                 <li key={e.id} className="rounded-lg bg-white/5 border border-white/10 px-3 py-2">
                   <div className="flex items-center justify-between gap-3">

@@ -124,6 +124,7 @@ export function buildTree(state) {
         const pos = project(twigTip.x, twigTip.y, twigAngle + jitterAngle, jitterLen)
         leaves.push({
           key: `leaf-${domain.id}-${skill.id}-${li}`,
+          domainId: domain.id,
           x: pos.x,
           y: pos.y,
           r: isBloom ? 5.5 : 3.5 + lrng() * 1.5,
