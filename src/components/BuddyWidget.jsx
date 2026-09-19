@@ -45,11 +45,11 @@ export default function BuddyWidget({ state, onOpenSettings }) {
             <div className="mt-3 grid grid-cols-2 gap-2 text-center">
               <div className="rounded-xl bg-white/5 py-2">
                 <p className="text-lg font-semibold">{today.length}</p>
-                <p className="text-[11px] text-white/45">logged today</p>
+                <p className="text-[11px] text-white/55">logged today</p>
               </div>
               <div className="rounded-xl bg-white/5 py-2">
                 <p className="text-lg font-semibold">{streak}</p>
-                <p className="text-[11px] text-white/45">day streak</p>
+                <p className="text-[11px] text-white/55">day streak</p>
               </div>
             </div>
 
@@ -71,14 +71,14 @@ export default function BuddyWidget({ state, onOpenSettings }) {
                         style={{ width: `${xp > 0 ? Math.max(6, progress * 100) : 0}%`, background: d.color }}
                       />
                     </div>
-                    <span className="w-6 text-right text-white/40">{xp > 0 ? level : '-'}</span>
+                    <span className="w-6 text-right text-white/55">{xp > 0 ? level : '-'}</span>
                   </div>
                 )
               })}
             </div>
 
             {today.length === 0 && (
-              <p className="mt-3 text-xs text-white/45 italic">
+              <p className="mt-3 text-xs text-white/55 italic">
                 Nothing logged yet today — I'll check back with you later. 🌱
               </p>
             )}

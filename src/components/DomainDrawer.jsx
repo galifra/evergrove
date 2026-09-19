@@ -53,7 +53,7 @@ export default function DomainDrawer({ domainId, state, paused, onClose, onAddSk
               </button>
             </div>
             <div className="flex items-center justify-between mb-5">
-              <p className="text-white/40 text-xs">
+              <p className="text-white/55 text-xs">
                 {sorted.length} skill{sorted.length === 1 ? '' : 's'} growing here{paused ? ' · paused' : ''}
               </p>
               <button
@@ -103,7 +103,7 @@ export default function DomainDrawer({ domainId, state, paused, onClose, onAddSk
                       <div className="h-full rounded-full" style={{ width: `${Math.max(4, progress * 100)}%`, background: domain.color }} />
                     </div>
                     <div className="mt-1.5 flex items-center justify-between">
-                      <p className="text-[11px] text-white/35">
+                      <p className="text-[11px] text-white/55">
                         {skillTotalXp(skill)} xp · {xpForNext} to next level
                       </p>
                       <div className="flex gap-1.5">
@@ -127,13 +127,13 @@ export default function DomainDrawer({ domainId, state, paused, onClose, onAddSk
                     </div>
                     {openHistory === skill.id && (
                       <ul className="mt-2 border-t border-white/10 pt-2 space-y-1.5">
-                        {historyFor(skill.id).length === 0 && <li className="text-[11px] text-white/35">No history yet.</li>}
+                        {historyFor(skill.id).length === 0 && <li className="text-[11px] text-white/55">No history yet.</li>}
                         {historyFor(skill.id).map((h) => (
                           <li key={h.id} className="flex items-center justify-between gap-2 text-[11px]">
                             <span className="min-w-0 truncate text-white/60">
                               +{h.xp} · {new Date(h.at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} · {h.text}
                             </span>
-                            <button onClick={() => onUndo(h.id)} className="shrink-0 text-white/40 hover:text-rose-300" aria-label="Undo this">
+                            <button onClick={() => onUndo(h.id)} className="shrink-0 text-white/55 hover:text-rose-300" aria-label="Undo this">
                               <Undo2 size={12} />
                             </button>
                           </li>

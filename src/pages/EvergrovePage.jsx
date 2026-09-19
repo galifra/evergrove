@@ -16,7 +16,7 @@ export default function EvergrovePage() {
     <div className="flex flex-col items-center">
       <header className="text-center mb-2">
         <h1 className="font-display text-3xl">{viewState.treeName}</h1>
-        <p className="text-white/45 text-sm mt-1">
+        <p className="text-white/55 text-sm mt-1">
           {stage.name} · {stage.blurb}
         </p>
       </header>

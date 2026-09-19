@@ -60,7 +60,7 @@ export default function VaultPage() {
             <Button type="submit" disabled={pass.length < 6}>{state.items.length ? 'Unlock' : 'Start vault'}</Button>
           </form>
           <ErrorNote>{error}</ErrorNote>
-          <p className="text-xs text-white/40 mt-3">
+          <p className="text-xs text-white/55 mt-3">
             The passphrase stays in memory only while unlocked and is never sent anywhere. It cannot be recovered. If you forget it, the items cannot be opened. Jarvis never sees this area.
           </p>
         </Card>
@@ -85,7 +85,7 @@ export default function VaultPage() {
               {state.items.map((it) => (
                 <li key={it.id} className="py-2">
                   <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0"><div className="truncate">{it.title}</div><div className="text-xs text-white/40">{it.kind}</div></div>
+                    <div className="min-w-0"><div className="truncate">{it.title}</div><div className="text-xs text-white/55">{it.kind}</div></div>
                     <div className="flex gap-2 shrink-0">
                       <Button variant="ghost" onClick={() => toggle(it)} aria-label="Show or hide">{revealed[it.id] !== undefined ? <EyeOff size={14} /> : <Eye size={14} />}</Button>
                       <Button variant="danger" onClick={() => { if (confirm(`Delete "${it.title}"?`)) runtime.log.append(createEvent({ type: 'vault.item.deleted', app: 'vault', data: { itemId: it.id } })) }} aria-label="Delete"><Trash2 size={14} /></Button>

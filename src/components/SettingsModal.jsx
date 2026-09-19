@@ -118,7 +118,7 @@ export default function SettingsModal({ onClose }) {
             </div>
             {!pushSupported() && <p className="text-xs text-amber-300/80 mt-1">This browser doesn't support push notifications.</p>}
             {reminderError && <p className="text-xs text-rose-300 mt-1">{reminderError}</p>}
-            <p className="text-xs text-white/40 mt-1">A real notification even if Evergrove isn't open, only if nothing's logged that day.</p>
+            <p className="text-xs text-white/55 mt-1">A real notification even if Evergrove isn't open, only if nothing's logged that day.</p>
             <input
               type="time"
               value={settings.reminderTime}
@@ -130,14 +130,14 @@ export default function SettingsModal({ onClose }) {
           <div className={section}>
             <div className="flex items-center justify-between">
               <span className="text-white/80">Sync between devices</span>
-              <span className="text-xs text-white/40">
+              <span className="text-xs text-white/55">
                 {syncStatus.state === 'off' && 'Off'}
                 {syncStatus.state === 'syncing' && 'Syncing...'}
                 {syncStatus.state === 'ok' && syncStatus.message}
                 {syncStatus.state === 'error' && <span className="text-rose-300">Problem</span>}
               </span>
             </div>
-            <p className="text-xs text-white/40 mt-1">
+            <p className="text-xs text-white/55 mt-1">
               Use the same passphrase on each device. Your data is encrypted on the device before it leaves; the server only stores scrambled data. Nothing runs in the background: it syncs when you open the app, return to it, or save something.
             </p>
             <div className="mt-2 flex gap-2">
@@ -170,12 +170,12 @@ export default function SettingsModal({ onClose }) {
                 {spend ? `$${spend.spentUsd.toFixed(3)} of $${spend.capUsd.toFixed(2)} this month` : '...'}
               </span>
             </div>
-            <p className="text-xs text-white/40 mt-1">A hard monthly cap. When it's reached the AI stops until next month; everything else keeps working.</p>
+            <p className="text-xs text-white/55 mt-1">A hard monthly cap. When it's reached the AI stops until next month; everything else keeps working.</p>
           </div>
 
           <div className={section}>
             <span className="text-white/80">Share private areas with Jarvis</span>
-            <p className="text-xs text-white/40 mt-1">
+            <p className="text-xs text-white/55 mt-1">
               Off by default. Jarvis can still log to these when you tell it something, but it won't see summaries of what's inside unless you turn a switch on. The vault is never shared.
             </p>
             <div className="mt-2 space-y-1.5">

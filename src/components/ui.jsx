@@ -95,7 +95,7 @@ export function ErrorNote({ children }) {
 }
 
 export function Empty({ children }) {
-  return <p className="text-sm text-white/40 italic">{children}</p>
+  return <p className="text-sm text-white/55 italic">{children}</p>
 }
 
 export function ProgressBar({ value, color = '#4ade80', over = false }) {

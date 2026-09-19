@@ -91,7 +91,7 @@ export default function TrackerPage({ trackerId }) {
         <div className="flex items-end gap-2 h-24" role="img" aria-label="Weekly totals">
           {weeks.map((w, i) => (
             <div key={w.start} className="flex-1 flex flex-col items-center justify-end h-full min-w-0" title={`Week of ${w.start}: ${w.value} ${unit}`}>
-              <span className="text-[10px] text-white/40 mb-0.5">{w.value || ''}</span>
+              <span className="text-[10px] text-white/55 mb-0.5">{w.value || ''}</span>
               <div
                 className="w-full rounded-t-md"
                 style={{
@@ -103,7 +103,7 @@ export default function TrackerPage({ trackerId }) {
             </div>
           ))}
         </div>
-        <div className="flex justify-between text-[10px] text-white/30 mt-1">
+        <div className="flex justify-between text-[10px] text-white/55 mt-1">
           <span>{weeks[0].start.slice(5)}</span>
           <span>this week</span>
         </div>
@@ -121,7 +121,7 @@ export default function TrackerPage({ trackerId }) {
                     .filter((v) => v !== undefined && v !== '')
                     .join(' · ')}
                 </div>
-                <div className="text-xs text-white/40">{new Date(e.occurredAt).toLocaleString()}</div>
+                <div className="text-xs text-white/55">{new Date(e.occurredAt).toLocaleString()}</div>
               </div>
               <Button variant="ghost" onClick={() => reverseEvent(e.id)} aria-label="Undo entry">
                 <Undo2 size={14} />
@@ -131,7 +131,7 @@ export default function TrackerPage({ trackerId }) {
         </ul>
       </Card>
       {def.sensitive && (
-        <p className="text-xs text-white/35 mt-3">
+        <p className="text-xs text-white/55 mt-3">
           Private area: Jarvis doesn't see a summary of this unless you share it in Settings.
         </p>
       )}

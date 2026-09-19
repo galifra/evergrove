@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { Bot, Check, Loader2, Send, Undo2, X } from 'lucide-react'
+import { Bot, Check, Loader2, Mic, Send, Square, Undo2, X } from 'lucide-react'
 import { useApp } from '../app/AppContext'
 import { newId } from '../core/events'
 import { approveStep, askJarvis, buildRequest, planFromContent, runAutoSteps } from '../jarvis/jarvis'
 import { getAccessCode } from '../lib/storage'
+import { speechSupported, startListening } from '../lib/speech'
 import { describeLocal } from '../modules/calendar'
 import { AccessCodePrompt, Button, Empty, PageHeader } from '../components/ui'
 
@@ -42,6 +43,9 @@ export default function JarvisPage() {
   const [error, setError] = useState('')
   const [needsCode, setNeedsCode] = useState(false)
   const [seen, setSeen] = useState(null)
+  const [listening, setListening] = useState(false)
+  const [voiceError, setVoiceError] = useState('')
+  const stopVoice = useRef(null)
   const [spend, setSpend] = useState(null)
   const bottom = useRef(null)
 
@@ -111,6 +115,29 @@ export default function JarvisPage() {
     }
   }
 
+  function toggleVoice() {
+    if (listening) {
+      stopVoice.current?.()
+      return
+    }
+    setVoiceError('')
+    const base = text.trim()
+    setListening(true)
+    try {
+      stopVoice.current = startListening({
+        onText: (heard) => setText(base ? `${base} ${heard}` : heard),
+        onEnd: () => setListening(false),
+        onError: (message) => {
+          setVoiceError(message)
+          setListening(false)
+        },
+      })
+    } catch {
+      setVoiceError('Voice input could not start in this browser.')
+      setListening(false)
+    }
+  }
+
   async function approve(msg, step) {
     await approveStep(step, runtime.registry, msg.correlationId)
     patchStep(msg.id, step.id, { status: step.status, result: step.result, commandId: step.commandId })
@@ -128,7 +155,7 @@ export default function JarvisPage() {
         title="Jarvis"
         subtitle="Say what you did or what you need. I'll use the right apps and ask before anything that matters."
         right={
-          <div className="text-right text-xs text-white/40 shrink-0">
+          <div className="text-right text-xs text-white/55 shrink-0">
             {spend && (
               <>
                 AI this month
@@ -162,7 +189,7 @@ export default function JarvisPage() {
                   <div key={s.id} className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm">
                     <div className="flex items-center justify-between gap-3">
                       <div className="min-w-0">
-                        <div className="text-xs text-white/40">{s.moduleName} · {s.name.split('__')[1].replaceAll('_', ' ')}</div>
+                        <div className="text-xs text-white/55">{s.moduleName} · {s.name.split('__')[1].replaceAll('_', ' ')}</div>
                         <div className="text-white/70 text-xs break-words">{prettyArgs(s.args)}</div>
                       </div>
                       <span className={`text-xs shrink-0 ${s.status === 'done' ? 'text-emerald-300' : s.status === 'error' ? 'text-rose-300' : 'text-amber-200'}`}>
@@ -185,7 +212,7 @@ export default function JarvisPage() {
             </div>
           )
         )}
-        {busy && <div className="text-sm text-white/40 flex items-center gap-2"><Loader2 size={14} className="animate-spin" /> Thinking...</div>}
+        {busy && <div className="text-sm text-white/55 flex items-center gap-2"><Loader2 size={14} className="animate-spin" /> Thinking...</div>}
         {error && <div className="text-sm text-rose-300">{error}</div>}
         {needsCode && (
           <AccessCodePrompt
@@ -199,7 +226,7 @@ export default function JarvisPage() {
       </div>
 
       {seen && (
-        <details className="text-xs text-white/40 pb-2">
+        <details className="text-xs text-white/55 pb-2">
           <summary className="cursor-pointer hover:text-white/60">What the AI saw for your last message</summary>
           <div className="mt-2 space-y-2 rounded-lg bg-white/[0.03] border border-white/10 p-3">
             <p>Your message plus {Math.max(0, seen.turns - 1)} earlier chat turn{seen.turns === 2 ? '' : 's'}, the list of {seen.tools} actions it can use, and today's date.</p>
@@ -211,6 +238,9 @@ export default function JarvisPage() {
           </div>
         </details>
       )}
+
+      {voiceError && <p className="text-xs text-rose-300 pb-1">{voiceError}</p>}
+      {speechSupported() && listening && <p className="text-xs text-white/55 pb-1">Listening... your browser's speech service turns your voice into text.</p>}
 
       <form onSubmit={send} className="sticky bottom-20 flex gap-2 items-end bg-[#0b140f]/90 backdrop-blur py-2">
         <textarea
@@ -226,6 +256,17 @@ export default function JarvisPage() {
           placeholder="Talk to Jarvis..."
           className="flex-1 resize-none rounded-2xl bg-white/[0.05] border border-white/10 px-4 py-3 text-[15px] placeholder:text-white/30 focus:outline-none focus:border-emerald-400/50"
         />
+        {speechSupported() && (
+          <Button
+            variant={listening ? 'primary' : 'ghost'}
+            onClick={toggleVoice}
+            className="h-11 w-11 grid place-items-center !p-0 rounded-full"
+            aria-label={listening ? 'Stop listening' : 'Speak to Jarvis'}
+            aria-pressed={listening}
+          >
+            {listening ? <Square size={14} /> : <Mic size={16} />}
+          </Button>
+        )}
         <Button type="submit" disabled={busy || !text.trim()} className="h-11 w-11 grid place-items-center !p-0 rounded-full" aria-label="Send">
           {busy ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
         </Button>

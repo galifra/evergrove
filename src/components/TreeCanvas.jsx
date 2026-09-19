@@ -126,7 +126,7 @@ export function DomainLegend({ state, onSelectDomain, domains }) {
           >
             <span className="w-2 h-2 rounded-full" style={{ background: d.color }} />
             <span className="opacity-80">{d.name}</span>
-            {state.paused?.includes(d.id) && <span className="text-[10px] text-white/40">paused</span>}
+            {state.paused?.includes(d.id) && <span className="text-[10px] text-white/55">paused</span>}
             <span className="opacity-50">{skillCount ? `${skillCount}` : ''}</span>
           </button>
         )

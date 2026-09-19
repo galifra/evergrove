@@ -49,7 +49,7 @@ export default function AppsPage() {
         <span className="font-medium">{a.name}</span>
       </div>
       <p className="text-xs text-white/50 leading-relaxed">{a.description}</p>
-      {a.sensitive && <p className="text-[11px] text-white/30 mt-2">Private</p>}
+      {a.sensitive && <p className="text-[11px] text-white/55 mt-2">Private</p>}
     </button>
   )
 
@@ -62,7 +62,7 @@ export default function AppsPage() {
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{trackers.map((a) => <Tile key={a.id} a={a} />)}</div>
       </div>
       <Card title="Make a new tracker">
-        <p className="text-xs text-white/45 mb-3">
+        <p className="text-xs text-white/55 mb-3">
           Or just tell Jarvis: "make me a tracker for my houseplants". Fields are comma separated. Add # for a number (Water ml#) or :a|b|c for a choice (Health:good|ok|poor).
         </p>
         <form onSubmit={create} className="grid gap-3 sm:grid-cols-3 items-end">

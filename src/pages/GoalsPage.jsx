@@ -45,7 +45,7 @@ export default function GoalsPage() {
 
       {state.goals.length === 0 && <Empty>No goals yet.</Empty>}
       {state.goals.map((g) => (
-        <Card key={g.id} title={g.title} right={<span className="text-xs text-white/40">{DOMAIN_MAP[g.area].name}{g.targetDate ? ` · by ${g.targetDate}` : ''}{g.status !== 'active' ? ` · ${g.status}` : ''}</span>}>
+        <Card key={g.id} title={g.title} right={<span className="text-xs text-white/55">{DOMAIN_MAP[g.area].name}{g.targetDate ? ` · by ${g.targetDate}` : ''}{g.status !== 'active' ? ` · ${g.status}` : ''}</span>}>
           <ProgressBar value={g.progress} color={DOMAIN_MAP[g.area].color} />
           <ul className="mt-3 space-y-1.5">
             {g.milestones.map((m) => (
@@ -59,7 +59,7 @@ export default function GoalsPage() {
                 >
                   {m.done && <Check size={12} />}
                 </button>
-                <span className={m.done ? 'line-through text-white/40' : ''}>{m.text}</span>
+                <span className={m.done ? 'line-through text-white/55' : ''}>{m.text}</span>
               </li>
             ))}
           </ul>

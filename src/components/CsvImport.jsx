@@ -53,7 +53,7 @@ export default function CsvImport() {
 
   return (
     <Card title="Import from a bank CSV (optional)">
-      <p className="text-xs text-white/45 mb-3">
+      <p className="text-xs text-white/55 mb-3">
         Download a CSV from your bank's website and choose it here. It's read on this device and never uploaded. Only money that
         went out becomes a purchase, and importing the same file twice won't double anything.
       </p>
@@ -96,14 +96,14 @@ export default function CsvImport() {
                   </li>
                 ))}
               </ul>
-              {parsed.purchases.length > 5 && <p className="text-xs text-white/35">...and {parsed.purchases.length - 5} more.</p>}
+              {parsed.purchases.length > 5 && <p className="text-xs text-white/55">...and {parsed.purchases.length - 5} more.</p>}
               <Button onClick={doImport}>Import {parsed.purchases.length}</Button>
             </>
           ) : (
             <p className="text-white/60">Nothing importable in that file.</p>
           )}
           {parsed.skipped.length > 0 && (
-            <p className="text-xs text-white/40">
+            <p className="text-xs text-white/55">
               Skipped {parsed.skipped.length} row{parsed.skipped.length === 1 ? '' : 's'} (
               {[...new Set(parsed.skipped.map((s) => s.reason))].slice(0, 3).join('; ')}).
             </p>

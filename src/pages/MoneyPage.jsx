@@ -9,7 +9,7 @@ import CsvImport from '../components/CsvImport'
 function Stat({ label, value, tone }) {
   return (
     <div className="rounded-xl bg-white/5 border border-white/10 p-3">
-      <div className="text-xs text-white/45">{label}</div>
+      <div className="text-xs text-white/55">{label}</div>
       <div className={`text-xl font-medium mt-0.5 ${tone ?? ''}`}>{value}</div>
     </div>
   )
@@ -103,8 +103,8 @@ export default function MoneyPage() {
           {m.bills.map((x) => (
             <li key={x.id} className="py-2 flex items-center justify-between gap-3 text-sm">
               <div className="min-w-0">
-                <div className="truncate">{x.name} <span className="text-white/40">{formatCents(x.amountCents)} {x.cadence}</span></div>
-                <div className={`text-xs ${x.overdue ? 'text-rose-300' : 'text-white/40'}`}>{x.overdue ? `overdue since ${x.dueOn}` : `due ${x.dueOn} (${x.daysUntil} days)`}</div>
+                <div className="truncate">{x.name} <span className="text-white/55">{formatCents(x.amountCents)} {x.cadence}</span></div>
+                <div className={`text-xs ${x.overdue ? 'text-rose-300' : 'text-white/55'}`}>{x.overdue ? `overdue since ${x.dueOn}` : `due ${x.dueOn} (${x.daysUntil} days)`}</div>
               </div>
               <Button onClick={() => bill.act('money__pay_bill', { bill: x.id })}>Mark paid</Button>
             </li>
@@ -163,7 +163,7 @@ export default function MoneyPage() {
         <ul className="divide-y divide-white/5 text-sm">
           {m.accounts.length === 0 && <Empty>Nothing recorded.</Empty>}
           {m.accounts.map((x) => (
-            <li key={x.id} className="py-2 flex justify-between"><span>{x.name} <span className="text-white/40">({x.kind})</span></span><span className={x.kind === 'debt' ? 'text-rose-300' : ''}>{formatCents(x.balanceCents)}</span></li>
+            <li key={x.id} className="py-2 flex justify-between"><span>{x.name} <span className="text-white/55">({x.kind})</span></span><span className={x.kind === 'debt' ? 'text-rose-300' : ''}>{formatCents(x.balanceCents)}</span></li>
           ))}
         </ul>
         <form
@@ -187,11 +187,11 @@ export default function MoneyPage() {
         <ul className="divide-y divide-white/5 text-sm">
           {m.purchases.length === 0 && <Empty>Nothing logged.</Empty>}
           {m.purchases.slice(0, 30).map((x) => (
-            <li key={x.eventId} className="py-2 flex justify-between gap-3"><span className="truncate"><span className="capitalize">{x.category}</span>{x.merchant ? ` · ${x.merchant}` : ''} <span className="text-white/40">{x.date}</span></span><span>{formatCents(x.amountCents)}</span></li>
+            <li key={x.eventId} className="py-2 flex justify-between gap-3"><span className="truncate"><span className="capitalize">{x.category}</span>{x.merchant ? ` · ${x.merchant}` : ''} <span className="text-white/55">{x.date}</span></span><span>{formatCents(x.amountCents)}</span></li>
           ))}
         </ul>
       </Card>
-      <p className="text-xs text-white/35">Private area: Jarvis doesn't see money summaries unless you share them in Settings. This page gives general tracking help, not personal financial advice.</p>
+      <p className="text-xs text-white/55">Private area: Jarvis doesn't see money summaries unless you share them in Settings. This page gives general tracking help, not personal financial advice.</p>
     </div>
   )
 }

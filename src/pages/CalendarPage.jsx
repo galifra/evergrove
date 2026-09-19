@@ -94,7 +94,7 @@ export default function CalendarPage() {
         {days.length === 0 && <Empty>Nothing scheduled.</Empty>}
         {days.map(([day, { events: list, extras: notes }]) => (
           <div key={day} className="mb-3">
-            <div className="text-xs uppercase tracking-wide text-white/40 mb-1">
+            <div className="text-xs uppercase tracking-wide text-white/55 mb-1">
               {new Date(`${day}T00:00`).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
             </div>
             <ul className="space-y-1.5">
@@ -112,7 +112,7 @@ export default function CalendarPage() {
                         {e.title}
                         {clashes.has(e.id) && <AlertTriangle size={14} className="text-amber-300 shrink-0" aria-label="Conflict" />}
                       </div>
-                      <div className="text-xs text-white/40">{e.allDay ? 'All day' : e.start.slice(11)}{e.end && !e.allDay ? ` - ${e.end.slice(11)}` : ''}</div>
+                      <div className="text-xs text-white/55">{e.allDay ? 'All day' : e.start.slice(11)}{e.end && !e.allDay ? ` - ${e.end.slice(11)}` : ''}</div>
                     </div>
                     <div className="flex gap-2 shrink-0">
                       <Button variant="ghost" onClick={() => { setMoving(e.id); setMoveTo(e.start.includes('T') ? e.start : `${e.start}T09:00`) }}>Move</Button>

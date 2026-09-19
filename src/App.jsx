@@ -65,7 +65,7 @@ function Shell() {
       </div>
     )
   }
-  if (!ready) return <div className="min-h-screen grid place-items-center text-white/40 text-sm">Opening your grove...</div>
+  if (!ready) return <div className="min-h-screen grid place-items-center text-white/55 text-sm">Opening your grove...</div>
 
   if (!settings.onboarded) {
     return (

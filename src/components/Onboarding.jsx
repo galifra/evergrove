@@ -100,7 +100,7 @@ export default function Onboarding({ onFinish }) {
                     className="mt-2 rounded-lg bg-white/5 border border-white/10 px-3 py-1.5"
                   />
                 )}
-                <p className="text-[11px] text-white/35 mt-2">
+                <p className="text-[11px] text-white/55 mt-2">
                   On iPhone, reminders only work once Evergrove is added to your Home Screen. You can change this later in
                   Settings.
                 </p>

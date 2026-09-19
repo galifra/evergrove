@@ -57,12 +57,12 @@ export default function PeoplePage() {
               <div className="flex justify-between gap-2">
                 <div>
                   <div className="font-medium">{p.name}</div>
-                  <div className="text-xs text-white/40">{p.relationship || 'no relationship set'}{p.birthday ? ` · birthday ${p.birthday}` : ''}</div>
+                  <div className="text-xs text-white/55">{p.relationship || 'no relationship set'}{p.birthday ? ` · birthday ${p.birthday}` : ''}</div>
                 </div>
                 <div className="text-xs text-white/50 text-right">{p.lastContact ? `${p.daysSince}d ago` : 'no contact yet'}</div>
               </div>
-              {p.likes.length > 0 && <div className="text-xs mt-2"><span className="text-white/40">Likes: </span>{p.likes.join(', ')}</div>}
-              {p.giftIdeas.length > 0 && <div className="text-xs mt-1"><span className="text-white/40">Gift ideas: </span>{p.giftIdeas.join(', ')}</div>}
+              {p.likes.length > 0 && <div className="text-xs mt-2"><span className="text-white/55">Likes: </span>{p.likes.join(', ')}</div>}
+              {p.giftIdeas.length > 0 && <div className="text-xs mt-1"><span className="text-white/55">Gift ideas: </span>{p.giftIdeas.join(', ')}</div>}
               <div className="mt-2 flex gap-2 flex-wrap">
                 {['call', 'text', 'visit', 'gift'].map((k) => (
                   <Button key={k} variant="ghost" onClick={() => act('people__log_contact', { person: p.id, kind: k })}>{k}</Button>
@@ -71,7 +71,7 @@ export default function PeoplePage() {
             </div>
           ))}
         </div>
-        <p className="mt-3 text-xs text-white/35">Logging a contact grows Staying connected. Private area: not shared with Jarvis unless you allow it in Settings.</p>
+        <p className="mt-3 text-xs text-white/55">Logging a contact grows Staying connected. Private area: not shared with Jarvis unless you allow it in Settings.</p>
       </Card>
     </div>
   )
