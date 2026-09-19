@@ -1,15 +1,22 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Pause, Play, Plus, X } from 'lucide-react'
+import { History, Pause, Play, Plus, Undo2, X } from 'lucide-react'
 import { domainById } from '../lib/domains'
 import { levelFromXp, skillTotalXp } from '../lib/treeEngine'
 
-export default function DomainDrawer({ domainId, state, paused, onClose, onAddSkill, onPractice, onTogglePause }) {
+export default function DomainDrawer({ domainId, state, paused, onClose, onAddSkill, onPractice, onTogglePause, onUndo }) {
   const domain = domainId ? domainById(domainId) : null
   const skills = domain ? Object.values(state.skills[domainId] || {}) : []
   const sorted = [...skills].sort((a, b) => skillTotalXp(b) - skillTotalXp(a))
   const [name, setName] = useState('')
   const [error, setError] = useState('')
+  const [openHistory, setOpenHistory] = useState(null)
+
+  // Every entry that fed a skill, newest first: the answer to "why is this level 3?".
+  const historyFor = (skillId) =>
+    state.entries
+      .flatMap((e) => e.updates.filter((u) => u.domain === domainId && u.skillId === skillId).map((u) => ({ id: e.id, at: e.createdAt, xp: u.xpGain, text: e.text })))
+      .slice(0, 8)
 
   async function add(e) {
     e.preventDefault()
@@ -100,6 +107,13 @@ export default function DomainDrawer({ domainId, state, paused, onClose, onAddSk
                         {skillTotalXp(skill)} xp · {xpForNext} to next level
                       </p>
                       <div className="flex gap-1.5">
+                        <button
+                          onClick={() => setOpenHistory(openHistory === skill.id ? null : skill.id)}
+                          className="text-[11px] px-2 py-0.5 rounded-md bg-white/5 hover:bg-white/10 border border-white/10"
+                          aria-label={`History of ${skill.name}`}
+                        >
+                          <History size={11} />
+                        </button>
                         {[5, 15].map((xp) => (
                           <button
                             key={xp}
@@ -111,6 +125,21 @@ export default function DomainDrawer({ domainId, state, paused, onClose, onAddSk
                         ))}
                       </div>
                     </div>
+                    {openHistory === skill.id && (
+                      <ul className="mt-2 border-t border-white/10 pt-2 space-y-1.5">
+                        {historyFor(skill.id).length === 0 && <li className="text-[11px] text-white/35">No history yet.</li>}
+                        {historyFor(skill.id).map((h) => (
+                          <li key={h.id} className="flex items-center justify-between gap-2 text-[11px]">
+                            <span className="min-w-0 truncate text-white/60">
+                              +{h.xp} · {new Date(h.at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} · {h.text}
+                            </span>
+                            <button onClick={() => onUndo(h.id)} className="shrink-0 text-white/40 hover:text-rose-300" aria-label="Undo this">
+                              <Undo2 size={12} />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 )
               })}

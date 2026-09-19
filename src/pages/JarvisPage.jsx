@@ -41,6 +41,7 @@ export default function JarvisPage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [needsCode, setNeedsCode] = useState(false)
+  const [seen, setSeen] = useState(null)
   const [spend, setSpend] = useState(null)
   const bottom = useRef(null)
 
@@ -80,6 +81,7 @@ export default function JarvisPage() {
         m.role === 'assistant' ? { role: 'assistant', text: m.memo || m.text || '(waiting for your approval)' } : m
       )
       const payload = buildRequest({ history: forModel, registry: runtime.registry, events, shareSensitive: settings.shareSensitive })
+      setSeen({ context: payload.context, turns: payload.messages.length, tools: payload.tools.length, shared: settings.shareSensitive })
       const reply = await askJarvis(payload)
       if (reply.spend) setSpend(reply.spend)
       const plan = planFromContent(reply.content, runtime.registry)
@@ -195,6 +197,20 @@ export default function JarvisPage() {
         )}
         <div ref={bottom} />
       </div>
+
+      {seen && (
+        <details className="text-xs text-white/40 pb-2">
+          <summary className="cursor-pointer hover:text-white/60">What the AI saw for your last message</summary>
+          <div className="mt-2 space-y-2 rounded-lg bg-white/[0.03] border border-white/10 p-3">
+            <p>Your message plus {Math.max(0, seen.turns - 1)} earlier chat turn{seen.turns === 2 ? '' : 's'}, the list of {seen.tools} actions it can use, and today's date.</p>
+            <p>Private areas shared: {seen.shared.length ? seen.shared.join(', ') : 'none'}. The vault is never shared.</p>
+            <div>
+              <p className="text-white/50">Summary of your apps that was included:</p>
+              <pre className="mt-1 whitespace-pre-wrap font-sans text-white/60">{seen.context || '(nothing)'}</pre>
+            </div>
+          </div>
+        </details>
+      )}
 
       <form onSubmit={send} className="sticky bottom-20 flex gap-2 items-end bg-[#0b140f]/90 backdrop-blur py-2">
         <textarea

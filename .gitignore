@@ -27,3 +27,5 @@ dist-ssr
 
 .vercel
 .env*
+
+.eval-last.json

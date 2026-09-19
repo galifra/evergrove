@@ -7,7 +7,7 @@ import { DOMAINS } from '../lib/domains'
 import { totalTreeXp, treeStage } from '../lib/treeEngine'
 
 export default function EvergrovePage() {
-  const { viewState, evState, insights, addEntry, pending, lastResult, run } = useApp()
+  const { viewState, evState, insights, addEntry, pending, lastResult, run, reverseEvent } = useApp()
   const [activeDomain, setActiveDomain] = useState(null)
   const stage = treeStage(totalTreeXp(viewState))
 
@@ -44,6 +44,7 @@ export default function EvergrovePage() {
         onClose={() => setActiveDomain(null)}
         onAddSkill={(area, skill) => run('evergrove__add_skill', { area, skill })}
         onPractice={(area, skill, xp) => run('evergrove__practice_skill', { area, skill, xp })}
+        onUndo={reverseEvent}
         onTogglePause={(area, paused) => run(paused ? 'evergrove__resume_area' : 'evergrove__pause_area', { area })}
       />
     </div>
