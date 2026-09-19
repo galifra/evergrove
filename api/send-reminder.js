@@ -1,4 +1,5 @@
 import webpush from 'web-push'
+import { checkCronSecret } from '../server/auth.js'
 import { loadReminderState, patchDevice, removeDevice } from '../server/kv.js'
 import { localDateString, localHourMinute, minutesBetween } from '../server/time.js'
 
@@ -9,8 +10,7 @@ const WINDOW_MINUTES = 35
 
 export default async function handler(req, res) {
   // Vercel signs cron requests with this header when CRON_SECRET is set.
-  const auth = req.headers['authorization']
-  if (process.env.CRON_SECRET && auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!checkCronSecret(req)) {
     res.status(401).json({ error: 'Unauthorized' })
     return
   }

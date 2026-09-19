@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { costOf, budgetAllows, recordUsage, getSpend, capUsd } from './usage.js'
-import { checkAppCode } from './auth.js'
+import { checkAppCode, checkCronSecret, safeEqual } from './auth.js'
 
 describe('AI spend meter', () => {
   it('prices Haiku usage correctly', () => {
@@ -33,11 +33,41 @@ describe('app access code', () => {
     delete process.env.APP_ACCESS_CODE
     expect(checkAppCode({ headers: {} })).toBe(true)
   })
+  it('runs open only outside production when no code is configured', () => {
+    delete process.env.APP_ACCESS_CODE
+    process.env.VERCEL_ENV = 'production'
+    expect(checkAppCode({ headers: {} })).toBe(false)
+    expect(checkAppCode({ headers: { 'x-app-code': '' } })).toBe(false)
+    process.env.VERCEL_ENV = 'preview'
+    expect(checkAppCode({ headers: {} })).toBe(true)
+    delete process.env.VERCEL_ENV
+  })
   it('requires the exact code when configured', () => {
     process.env.APP_ACCESS_CODE = 'abc'
     expect(checkAppCode({ headers: { 'x-app-code': 'abc' } })).toBe(true)
     expect(checkAppCode({ headers: { 'x-app-code': 'abd' } })).toBe(false)
     expect(checkAppCode({ headers: {} })).toBe(false)
     delete process.env.APP_ACCESS_CODE
+  })
+})
+
+describe('cron secret and constant-time compare', () => {
+  it('safeEqual matches only identical strings, including different lengths', () => {
+    expect(safeEqual('abc', 'abc')).toBe(true)
+    expect(safeEqual('abc', 'abd')).toBe(false)
+    expect(safeEqual('abc', 'abcd')).toBe(false)
+    expect(safeEqual('', 'a')).toBe(false)
+  })
+  it('the cron endpoint is closed when no secret is configured', () => {
+    delete process.env.CRON_SECRET
+    expect(checkCronSecret({ headers: { authorization: 'Bearer ' } })).toBe(false)
+    expect(checkCronSecret({ headers: {} })).toBe(false)
+  })
+  it('accepts only the exact bearer token', () => {
+    process.env.CRON_SECRET = 's3cret'
+    expect(checkCronSecret({ headers: { authorization: 'Bearer s3cret' } })).toBe(true)
+    expect(checkCronSecret({ headers: { authorization: 'Bearer s3cre' } })).toBe(false)
+    expect(checkCronSecret({ headers: { authorization: 's3cret' } })).toBe(false)
+    delete process.env.CRON_SECRET
   })
 })
