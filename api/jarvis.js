@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { checkAppCode } from '../server/auth.js'
+import { authorize } from '../server/auth.js'
 import { budgetAllows, recordUsage } from '../server/usage.js'
 
 const MODEL = process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5-20251001'
@@ -27,7 +27,7 @@ function fail(res, code, error) {
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return fail(res, 405, 'Method not allowed')
-  if (!checkAppCode(req)) return fail(res, 401, 'Invalid app code.')
+  if (!(await authorize(req, res))) return
   if (!process.env.ANTHROPIC_API_KEY) return fail(res, 500, 'Server is missing ANTHROPIC_API_KEY.')
 
   const { messages, tools, catalog = '', context = '', today = '', nowLocal = '', weekday = '', days = '' } = req.body || {}

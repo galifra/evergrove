@@ -15,6 +15,7 @@ import MoneyPage from './pages/MoneyPage'
 import GoalsPage from './pages/GoalsPage'
 import PeoplePage from './pages/PeoplePage'
 import VaultPage from './pages/VaultPage'
+import TimelinePage from './pages/TimelinePage'
 
 const MODULE_PAGES = {
   tasks: TasksPage,
@@ -41,6 +42,7 @@ function NavLink({ to, active, icon: Icon, children }) {
 function Page({ route }) {
   if (route.name === 'jarvis') return <JarvisPage />
   if (route.name === 'apps') return <AppsPage />
+  if (route.name === 'timeline') return <TimelinePage />
   if (route.name === 'app' && route.param) {
     const Module = MODULE_PAGES[route.param]
     return Module ? <Module /> : <TrackerPage trackerId={route.param} />

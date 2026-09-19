@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { checkAppCode } from '../server/auth.js'
+import { authorize } from '../server/auth.js'
 import { budgetAllows, recordUsage } from '../server/usage.js'
 
 // Fixed domain set — kept in sync with src/lib/domains.js. Duplicated here
@@ -91,10 +91,7 @@ export default async function handler(req, res) {
     return
   }
 
-  if (!checkAppCode(req)) {
-    res.status(401).json({ error: 'Invalid app code.' })
-    return
-  }
+  if (!(await authorize(req, res))) return
 
   const { text, existingSkills } = req.body || {}
   if (!text || typeof text !== 'string' || !text.trim()) {

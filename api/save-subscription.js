@@ -1,11 +1,8 @@
-import { checkAppCode } from '../server/auth.js'
+import { authorize } from '../server/auth.js'
 import { saveDevice, removeDevice } from '../server/kv.js'
 
 export default async function handler(req, res) {
-  if (!checkAppCode(req)) {
-    res.status(401).json({ error: 'Invalid app code.' })
-    return
-  }
+  if (!(await authorize(req, res))) return
 
   if (req.method === 'POST') {
     const { subscription, reminderTime, timezone } = req.body || {}

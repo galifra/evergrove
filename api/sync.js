@@ -1,4 +1,4 @@
-import { checkAppCode } from '../server/auth.js'
+import { authorize } from '../server/auth.js'
 import { getKv } from '../server/store.js'
 
 // End-to-end encrypted relay. The server only ever sees {id, iv, ct}; it can
@@ -14,10 +14,7 @@ function keys(vaultId) {
 }
 
 export default async function handler(req, res) {
-  if (!checkAppCode(req)) {
-    res.status(401).json({ error: 'Invalid app code.' })
-    return
-  }
+  if (!(await authorize(req, res))) return
   const kv = getKv()
 
   if (req.method === 'POST') {

@@ -4,6 +4,7 @@ import EntryConsole from '../components/EntryConsole'
 import DomainDrawer from '../components/DomainDrawer'
 import TodayCard from '../components/TodayCard'
 import { useApp } from '../app/AppContext'
+import { go } from '../app/router'
 import { DOMAINS } from '../lib/domains'
 import { totalTreeXp, treeStage } from '../lib/treeEngine'
 
@@ -23,6 +24,10 @@ export default function EvergrovePage() {
 
       <TreeCanvas state={viewState} onSelectDomain={setActiveDomain} />
       <DomainLegend state={viewState} domains={DOMAINS} onSelectDomain={setActiveDomain} />
+
+      <button onClick={() => go('/timeline')} className="mt-3 text-xs text-white/55 hover:text-white/80 underline">
+        See everything that has grown your tree
+      </button>
 
       <TodayCard />
 

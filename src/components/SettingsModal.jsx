@@ -5,6 +5,7 @@ import { useApp } from '../app/AppContext'
 import { getAccessCode, setAccessCode } from '../lib/storage'
 import { pushSupported, enablePushReminders, disablePushReminders, showBriefingPreview } from '../lib/push'
 import { composeBriefing } from '../evergrove/briefing'
+import { describeVerification, verifyLog } from '../core/verify'
 import { listApps } from '../modules'
 import { AccessCodePrompt } from './ui'
 
@@ -23,6 +24,7 @@ export default function SettingsModal({ onClose }) {
   const [pass, setPass] = useState(settings.syncPassphrase)
   const [spend, setSpend] = useState(null)
   const [notice, setNotice] = useState('')
+  const [health, setHealth] = useState('')
   const fileRef = useRef(null)
 
   useEffect(() => {
@@ -265,6 +267,16 @@ export default function SettingsModal({ onClose }) {
             <input ref={fileRef} type="file" accept="application/json" onChange={handleImportFile} hidden />
           </div>
           {notice && <p className="text-xs text-white/60">{notice}</p>}
+
+          <div>
+            <button
+              onClick={() => setHealth(describeVerification(verifyLog(events)))}
+              className="text-xs underline text-white/60 hover:text-white/90"
+            >
+              Check my data
+            </button>
+            {health && <p className="mt-1 text-xs text-white/60" role="status">{health}</p>}
+          </div>
 
           <button
             onClick={async () => {

@@ -6,12 +6,22 @@ const clone = (v) => (v === undefined ? v : JSON.parse(JSON.stringify(v)))
 
 function createMemoryKv() {
   const data = new Map()
+  const expires = new Map()
+  const alive = (k) => {
+    if (expires.has(k) && expires.get(k) <= Date.now()) {
+      data.delete(k)
+      expires.delete(k)
+    }
+  }
   return {
     async get(k) {
+      alive(k)
       return clone(data.get(k) ?? null)
     },
-    async set(k, v) {
+    async set(k, v, opts) {
       data.set(k, clone(v))
+      if (opts?.ex) expires.set(k, Date.now() + opts.ex * 1000)
+      else expires.delete(k)
       return 'OK'
     },
     async del(k) {

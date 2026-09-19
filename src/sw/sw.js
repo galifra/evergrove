@@ -5,6 +5,9 @@
 import { composeBriefing } from '../evergrove/briefing'
 
 const DB_NAME = 'evergrove-log'
+// Stamped in at build time so every deploy gets a fresh cache and old ones are dropped.
+const BUILD = typeof __BUILD_ID__ !== 'undefined' ? __BUILD_ID__ : 'dev'
+const CACHE = `evergrove-shell-${BUILD}`
 const FALLBACK = { title: 'Evergrove', body: 'Your briefing for tomorrow is ready. Open Evergrove to see it.' }
 
 // Open the app's existing database without ever creating it: a brand-new empty
@@ -53,7 +56,50 @@ self.addEventListener('install', () => {
 })
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim())
+  event.waitUntil(
+    (async () => {
+      const names = await caches.keys()
+      await Promise.all(names.filter((n) => n.startsWith('evergrove-shell-') && n !== CACHE).map((n) => caches.delete(n)))
+      await self.clients.claim()
+    })()
+  )
+})
+
+// Offline: the app is just files plus a local database, so once it has been
+// opened online it can open with no connection. Pages go network-first (you always
+// get the newest version when online, the last one when not). Built files have
+// content-hashed names, so they are safe to serve straight from the cache.
+// Nothing under /api/ is ever cached: sync, the AI and reminders are online-only.
+async function networkFirst(request) {
+  const cache = await caches.open(CACHE)
+  try {
+    const fresh = await fetch(request)
+    if (fresh.ok) cache.put(request, fresh.clone())
+    return fresh
+  } catch {
+    const hit = (await cache.match(request)) ?? (request.mode === 'navigate' ? await cache.match('/') : undefined)
+    return hit ?? Response.error()
+  }
+}
+
+async function cacheFirst(request) {
+  const cache = await caches.open(CACHE)
+  const hit = await cache.match(request)
+  if (hit) return hit
+  const fresh = await fetch(request)
+  if (fresh.ok) cache.put(request, fresh.clone())
+  return fresh
+}
+
+self.addEventListener('fetch', (event) => {
+  const { request } = event
+  if (request.method !== 'GET') return
+  const url = new URL(request.url)
+  if (url.origin !== self.location.origin) return
+  if (url.pathname.startsWith('/api/') || url.pathname === '/sw.js') return
+  if (request.mode === 'navigate') event.respondWith(networkFirst(request))
+  else if (url.pathname.startsWith('/assets/')) event.respondWith(cacheFirst(request))
+  else if (/\.(png|svg|json|ico)$/.test(url.pathname)) event.respondWith(networkFirst(request))
 })
 
 self.addEventListener('push', (event) => {

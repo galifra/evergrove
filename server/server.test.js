@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { costOf, budgetAllows, recordUsage, getSpend, capUsd } from './usage.js'
-import { checkAppCode, checkCronSecret, safeEqual } from './auth.js'
+import { authorize, checkAppCode, checkCronSecret, safeEqual } from './auth.js'
 
 describe('AI spend meter', () => {
   it('prices Haiku usage correctly', () => {
@@ -69,5 +69,38 @@ describe('cron secret and constant-time compare', () => {
     expect(checkCronSecret({ headers: { authorization: 'Bearer s3cre' } })).toBe(false)
     expect(checkCronSecret({ headers: { authorization: 's3cret' } })).toBe(false)
     delete process.env.CRON_SECRET
+  })
+})
+
+describe('brute-force lockout', () => {
+  const call = async (code, ip = '9.9.9.9') => {
+    const res = {
+      code: 200,
+      status(c) {
+        this.code = c
+        return this
+      },
+      json() {},
+    }
+    const ok = await authorize({ headers: { 'x-app-code': code, 'x-forwarded-for': ip } }, res)
+    return { ok, code: res.code }
+  }
+
+  it('lets the right code through and counts nothing against it', async () => {
+    process.env.APP_ACCESS_CODE = 'right-code'
+    for (let i = 0; i < 30; i++) expect((await call('right-code', '1.1.1.1')).ok).toBe(true)
+  })
+
+  it('refuses an address after 20 wrong codes, even if the next one is right', async () => {
+    process.env.APP_ACCESS_CODE = 'right-code'
+    for (let i = 0; i < 20; i++) expect((await call(`guess-${i}`, '2.2.2.2')).code).toBe(401)
+    const locked = await call('right-code', '2.2.2.2')
+    expect(locked).toEqual({ ok: false, code: 429 })
+  })
+
+  it('only locks out the guesser, not everyone else', async () => {
+    process.env.APP_ACCESS_CODE = 'right-code'
+    for (let i = 0; i < 20; i++) await call(`guess-${i}`, '3.3.3.3')
+    expect((await call('right-code', '4.4.4.4')).ok).toBe(true)
   })
 })

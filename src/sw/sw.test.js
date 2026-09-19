@@ -9,12 +9,41 @@ import { localDate } from '../core/events'
 
 const handlers = {}
 const shown = []
+// A small in-memory stand-in for the browser's Cache Storage.
+function makeCaches() {
+  const stores = new Map()
+  const keyOf = (req) => (typeof req === 'string' ? req : new URL(req.url).pathname)
+  return {
+    stores,
+    async open(name) {
+      if (!stores.has(name)) stores.set(name, new Map())
+      const m = stores.get(name)
+      return {
+        async match(req) {
+          const hit = m.get(keyOf(req))
+          return hit ? hit.clone() : undefined
+        },
+        async put(req, res) {
+          m.set(keyOf(req), res)
+        },
+      }
+    },
+    async keys() {
+      return [...stores.keys()]
+    },
+    async delete(name) {
+      return stores.delete(name)
+    },
+  }
+}
+
 const clientsApi = { claim: vi.fn(), matchAll: vi.fn(async () => []), openWindow: vi.fn(async () => {}) }
 
 beforeAll(async () => {
   globalThis.self = {
     addEventListener: (type, fn) => (handlers[type] = fn),
     skipWaiting: vi.fn(),
+    location: { origin: 'https://app.test' },
     clients: clientsApi,
     registration: { showNotification: vi.fn(async (title, options) => shown.push({ title, options })) },
   }
@@ -112,5 +141,88 @@ describe('tapping the notification', () => {
     handlers.notificationclick({ notification: closeable('/#/jarvis/brief'), waitUntil: (p) => (pending = p) })
     await pending
     expect(clientsApi.openWindow).toHaveBeenCalledWith('/#/jarvis/brief')
+  })
+})
+
+describe('working offline', () => {
+  let online
+  let network
+
+  beforeEach(() => {
+    globalThis.caches = makeCaches()
+    online = true
+    network = []
+    globalThis.fetch = vi.fn(async (req) => {
+      network.push(new URL(req.url).pathname)
+      if (!online) throw new TypeError('offline')
+      return new Response('body of ' + new URL(req.url).pathname, { status: 200 })
+    })
+  })
+
+  const request = (path, { mode = 'cors', method = 'GET', origin = 'https://app.test' } = {}) => {
+    const r = new Request(origin + path, { method })
+    Object.defineProperty(r, 'mode', { value: mode })
+    return r
+  }
+
+  async function ask(req) {
+    let response
+    let handled = false
+    handlers.fetch({ request: req, respondWith: (p) => { handled = true; response = p } })
+    return { handled, response: handled ? await response : undefined }
+  }
+
+  it('serves the page from cache when the network is gone, and the newest copy when it is back', async () => {
+    const first = await ask(request('/', { mode: 'navigate' }))
+    expect(await first.response.text()).toBe('body of /')
+    online = false
+    const offline = await ask(request('/', { mode: 'navigate' }))
+    expect(await offline.response.text()).toBe('body of /')
+    online = true
+    globalThis.fetch = vi.fn(async () => new Response('newer page', { status: 200 }))
+    expect(await (await ask(request('/', { mode: 'navigate' }))).response.text()).toBe('newer page')
+  })
+
+  it('opens any in-app route offline by falling back to the cached app shell', async () => {
+    await ask(request('/', { mode: 'navigate' }))
+    online = false
+    const r = await ask(request('/some/deep/route', { mode: 'navigate' }))
+    expect(await r.response.text()).toBe('body of /')
+  })
+
+  it('built files are served from cache without touching the network again', async () => {
+    await ask(request('/assets/index-abc123.js'))
+    network.length = 0
+    online = false
+    const r = await ask(request('/assets/index-abc123.js'))
+    expect(await r.response.text()).toBe('body of /assets/index-abc123.js')
+    expect(network).toEqual([])
+  })
+
+  it('never caches or intercepts the API, other sites, non-GET requests, or itself', async () => {
+    expect((await ask(request('/api/usage'))).handled).toBe(false)
+    expect((await ask(request('/api/sync', { method: 'POST' }))).handled).toBe(false)
+    expect((await ask(request('/', { method: 'POST', mode: 'navigate' }))).handled).toBe(false)
+    expect((await ask(request('/x.js', { origin: 'https://fonts.example' }))).handled).toBe(false)
+    expect((await ask(request('/sw.js'))).handled).toBe(false)
+    expect([...globalThis.caches.stores.values()].every((m) => m.size === 0)).toBe(true)
+  })
+
+  it('fails cleanly, not with a hang, when offline and nothing is cached yet', async () => {
+    online = false
+    const r = await ask(request('/', { mode: 'navigate' }))
+    expect(r.response.type).toBe('error')
+  })
+
+  it("a new version clears the old version's cache when it activates", async () => {
+    await globalThis.caches.open('evergrove-shell-old-build')
+    await globalThis.caches.open('some-other-app-cache')
+    let pending
+    handlers.activate({ waitUntil: (p) => (pending = p) })
+    await pending
+    const names = await globalThis.caches.keys()
+    expect(names).not.toContain('evergrove-shell-old-build')
+    expect(names).toContain('some-other-app-cache')
+    expect(clientsApi.claim).toHaveBeenCalled()
   })
 })
