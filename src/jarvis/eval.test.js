@@ -36,7 +36,7 @@ const lower = (v) => String(v ?? '').toLowerCase()
 
 // Each case: what the user says, and a check over the planned tool calls.
 const CASES = [
-  ['ran for 30 minutes', (s, t) => s.some((x) => isTracker(x, 'body') && Number(x.args.values?.minutes) === 30) || s.some((x) => x.name === 'evergrove__practice_skill' && x.args.area === 'health')],
+  ['ran for 30 minutes', (s) => s.some((x) => isTracker(x, 'body') && Number(x.args.values?.minutes) === 30) || s.some((x) => x.name === 'evergrove__practice_skill' && x.args.area === 'health')],
   ['I read for 20 minutes', (s) => s.some((x) => (isTracker(x, 'learning') || isTracker(x, 'mind')) || (x.name === 'evergrove__practice_skill' && x.args.area === 'mind'))],
   ['I spent $12.50 on lunch', (s) => Number(find(s, 'money__log_purchase')?.args.amount) === 12.5],
   ['spent 9 dollars on coffee yesterday', (s) => find(s, 'money__log_purchase')?.args.date === '2026-09-17' || (Number(find(s, 'money__log_purchase')?.args.amount) === 9 && !find(s, 'money__log_purchase')?.args.date)],
