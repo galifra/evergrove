@@ -1,16 +1,16 @@
-import { kv } from '@vercel/kv'
+import { getKv } from './store.js'
 
 // Single-user app — one fixed record holds the push subscription and the
 // bits of state the reminder cron needs (it runs server-side with no
-// access to the browser's localStorage, which is where everything else
-// lives).
+// access to the browser's data, which is where everything else lives).
 const KEY = 'evergrove:reminder'
 
 export function loadReminderState() {
-  return kv.get(KEY)
+  return getKv().get(KEY)
 }
 
 export async function mergeReminderState(patch) {
+  const kv = getKv()
   const current = (await kv.get(KEY)) || {}
   const next = { ...current, ...patch }
   await kv.set(KEY, next)
@@ -18,5 +18,5 @@ export async function mergeReminderState(patch) {
 }
 
 export async function clearReminderState() {
-  await kv.del(KEY)
+  await getKv().del(KEY)
 }
