@@ -173,6 +173,12 @@ describe('calendar', () => {
     expect(addMinutes('2026-05-20T23:30', 60)).toBe('2026-05-21T00:30')
     expect(overlaps({ start: '2026-05-20T10:00', end: '2026-05-20T11:00' }, { start: '2026-05-20T11:00', end: '2026-05-20T12:00' })).toBe(false)
   })
+
+  it('all-day items never conflict with anything', () => {
+    const dayMarker = { start: '2026-05-20', allDay: true }
+    expect(overlaps(dayMarker, { start: '2026-05-20T10:00', end: '2026-05-20T11:00' })).toBe(false)
+    expect(overlaps(dayMarker, { start: '2026-05-20', allDay: true })).toBe(false)
+  })
 })
 
 describe('money (tracking only, integer cents)', () => {

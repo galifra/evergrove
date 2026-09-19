@@ -30,11 +30,13 @@ export function describeLocal(local) {
   return `${day} at ${t}`
 }
 
+// All-day items are day markers, not blocks of time, so they never conflict.
 export function overlaps(a, b) {
-  const aStart = a.allDay ? `${a.start}T00:00` : a.start
-  const aEnd = a.allDay ? `${a.start}T23:59` : endOf(a)
-  const bStart = b.allDay ? `${b.start}T00:00` : b.start
-  const bEnd = b.allDay ? `${b.start}T23:59` : endOf(b)
+  if (a.allDay || b.allDay) return false
+  const aStart = a.start
+  const aEnd = endOf(a)
+  const bStart = b.start
+  const bEnd = endOf(b)
   return aStart < bEnd && bStart < aEnd
 }
 
