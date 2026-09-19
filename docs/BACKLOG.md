@@ -117,3 +117,8 @@ Each app below gets: page, manifest, events, Evergrove rules, Jarvis eval cases,
 - Hosting and storage: local-first data on your device and free tiers only; no paid databases, no bank-linking services.
 - AI: rules before models, cheapest model for routing, cached prompts, a hard monthly cap; an on-device or free-tier model for routine cases if quality allows.
 - Separate from all of the above: the Money app (Phase 4.3) is purely your personal budget, bills and savings.
+
+## Version two (decided 2026-09-18, after version one is solid)
+
+- Jarvis becomes a completely separate app with its own address and deployment, not a page inside Evergrove. Browsers can't share storage across separate sites, so the two apps stay in step through the encrypted sync relay (same passphrase, same log). Evergrove and every other app keep working on their own.
+- Groundwork already in place: Jarvis code lives in `src/jarvis` and `api/jarvis.js`, talks to apps only through the command registry, and sync exists.
