@@ -16,6 +16,7 @@ export default function SettingsModal({ onClose }) {
   const { settings, updateSettings, events, syncStatus } = app
   const [name, setName] = useState(settings.treeName)
   const [code, setCode] = useState(getAccessCode())
+  const [codeSaved, setCodeSaved] = useState(!!getAccessCode())
   const [reminderError, setReminderError] = useState('')
   const [reminderBusy, setReminderBusy] = useState(false)
   const [pass, setPass] = useState(settings.syncPassphrase)
@@ -192,16 +193,30 @@ export default function SettingsModal({ onClose }) {
             </div>
           </div>
 
-          <label className="block">
+          <div>
             <span className="text-white/60 text-xs">App access code</span>
-            <input
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              onBlur={() => setAccessCode(code.trim())}
-              placeholder="only needed if the server has APP_ACCESS_CODE set"
-              className={`mt-1 ${input}`}
-            />
-          </label>
+            <div className="mt-1 flex gap-2">
+              <input
+                value={code}
+                onChange={(e) => {
+                  setCode(e.target.value)
+                  setCodeSaved(false)
+                }}
+                placeholder="only needed if the server has APP_ACCESS_CODE set"
+                autoComplete="off"
+                className={input}
+              />
+              <button
+                onClick={() => {
+                  setAccessCode(code.trim())
+                  setCodeSaved(true)
+                }}
+                className="px-3 rounded-lg bg-emerald-500 text-emerald-950 shrink-0"
+              >
+                {codeSaved ? 'Saved' : 'Save'}
+              </button>
+            </div>
+          </div>
 
           <div className="flex gap-2">
             <button onClick={app.exportBackup} className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 py-2">

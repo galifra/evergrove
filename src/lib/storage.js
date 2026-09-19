@@ -10,4 +10,6 @@ export function getAccessCode() {
 
 export function setAccessCode(code) {
   localStorage.setItem(ACCESS_CODE_KEY, code)
+  // lets sync retry the moment a code is entered, wherever it was entered
+  window.dispatchEvent(new Event('evergrove-code-changed'))
 }

@@ -1,5 +1,5 @@
 import { checkAppCode } from '../server/auth.js'
-import { mergeReminderState, clearReminderState } from '../server/kv.js'
+import { saveDevice, removeDevice } from '../server/kv.js'
 
 export default async function handler(req, res) {
   if (!checkAppCode(req)) {
@@ -13,13 +13,19 @@ export default async function handler(req, res) {
       res.status(400).json({ error: 'Missing subscription, reminderTime, or timezone.' })
       return
     }
-    await mergeReminderState({ subscription, reminderTime, timezone })
+    await saveDevice({ subscription, reminderTime, timezone })
     res.status(200).json({ ok: true })
     return
   }
 
   if (req.method === 'DELETE') {
-    await clearReminderState()
+    // Only this device's subscription is removed; other devices keep theirs.
+    const { endpoint } = req.body || {}
+    if (typeof endpoint !== 'string' || !endpoint) {
+      res.status(400).json({ error: 'Missing endpoint.' })
+      return
+    }
+    await removeDevice(endpoint)
     res.status(200).json({ ok: true })
     return
   }

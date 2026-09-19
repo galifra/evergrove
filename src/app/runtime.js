@@ -49,7 +49,8 @@ async function createRuntime() {
       const r = await sync.syncNow()
       setStatus({ state: 'ok', message: `Sent ${r.pushed}, received ${r.pulled}`, lastAt: new Date().toISOString() })
     } catch (err) {
-      setStatus({ state: 'error', message: err.message })
+      const message = err.message.includes('(401)') ? 'Access code missing or wrong (401)' : err.message
+      setStatus({ state: 'error', message })
     }
   }
 
@@ -72,6 +73,8 @@ async function createRuntime() {
   }
 
   await runMaintenance(log)
+
+  window.addEventListener('evergrove-code-changed', syncNow)
 
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') syncNow()

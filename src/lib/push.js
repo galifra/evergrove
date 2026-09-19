@@ -39,6 +39,7 @@ export async function enablePushReminders(reminderTime) {
     headers: { 'Content-Type': 'application/json', 'x-app-code': getAccessCode() },
     body: JSON.stringify({ subscription, reminderTime, timezone }),
   })
+  if (res.status === 401) throw new Error('Access code missing or wrong. Enter it in Settings first.')
   if (!res.ok) throw new Error('Could not save your subscription to the server.')
 
   return subscription
