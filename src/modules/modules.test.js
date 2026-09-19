@@ -347,6 +347,15 @@ describe('trackers and creating apps by talking', () => {
 })
 
 describe('Jarvis safety', () => {
+  it('tells Jarvis how the last 7 days went so it can answer "how am I doing"', async () => {
+    await call('evergrove__practice_skill', { area: 'health', skill: 'Running', xp: 12 })
+    await call('evergrove__practice_skill', { area: 'mind', skill: 'Reading', xp: 8 })
+    const ctx = buildContext(reg, log.getEvents(), {}, NOW)
+    expect(ctx).toMatch(/Last 7 days: 2 entries, 20 xp/)
+    expect(ctx).toMatch(/Health & Fitness 12xp/)
+    expect(buildContext(reg, [], {}, NOW)).not.toMatch(/Last 7 days/)
+  })
+
   it('sensitive modules never enter the context unless shared', async () => {
     await call('money__log_purchase', { amount: 99, category: 'secretcat', merchant: 'SecretMerchant' })
     await call('tasks__add_task', { title: 'Buy milk' })
@@ -369,12 +378,16 @@ describe('Jarvis safety', () => {
   })
 
   it('gives the model a computed weekday list so it never does date math', () => {
-    const list = upcomingDays(NOW, 21).split('\n')
-    expect(list[0]).toBe('Friday 2026-05-15 (today)')
-    expect(list[1]).toBe('Saturday 2026-05-16 (tomorrow)')
-    expect(list).toContain('Tuesday 2026-05-19')
-    expect(list).toContain('Tuesday 2026-05-26')
-    expect(list.length).toBe(21)
+    const list = upcomingDays(NOW).split('\n')
+    expect(list).toContain('Thursday 2026-05-14 (yesterday, -1)')
+    expect(list).toContain('Friday 2026-05-08 (-7 days)')
+    expect(list).toContain('Friday 2026-05-15 (today)')
+    expect(list).toContain('Saturday 2026-05-16 (tomorrow, +1)')
+    expect(list).toContain('Tuesday 2026-05-19 (+4 days)')
+    expect(list).toContain('Tuesday 2026-05-26 (+11 days)')
+    expect(list).toContain('Sunday 2026-05-24 (+9 days)') // "a week from tomorrow" is +8 -> Saturday
+    expect(list).toContain('Saturday 2026-05-23 (+8 days)')
+    expect(list.length).toBe(28)
     expect(buildRequest({ history: [{ role: 'user', text: 'x' }], registry: reg, events: [], now: NOW }).days).toBe(list.join('\n'))
   })
 

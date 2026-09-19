@@ -31,12 +31,14 @@ export function buildContext(registry, events, { shareSensitive = [] } = {}, now
 
 // A lookup the model copies from, so weekday words never depend on it doing
 // date arithmetic (which it gets wrong).
-export function upcomingDays(now = new Date(), count = 21) {
+export function upcomingDays(now = new Date(), ahead = 21, back = 7) {
   const out = []
-  for (let i = 0; i < count; i++) {
+  for (let i = -back; i < ahead; i++) {
     const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i)
     const label = d.toLocaleDateString('en-US', { weekday: 'long' })
-    out.push(`${label} ${localDate(d)}${i === 0 ? ' (today)' : i === 1 ? ' (tomorrow)' : ''}`)
+    const off = `${i > 0 ? '+' : ''}${i}`
+    const note = i === 0 ? ' (today)' : i === 1 ? ' (tomorrow, +1)' : i === -1 ? ' (yesterday, -1)' : ` (${off} days)`
+    out.push(`${label} ${localDate(d)}${note}`)
   }
   return out.join('\n')
 }

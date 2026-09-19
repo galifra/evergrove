@@ -2,7 +2,7 @@ import { AREAS } from '../core/events'
 import { findOne } from '../core/match'
 import { slugify } from '../lib/treeEngine'
 import { deriveEvergrove } from '../evergrove/derive'
-import { deriveInsights } from '../evergrove/insights'
+import { deriveInsights, growthStreak } from '../evergrove/insights'
 import { normalizeTrackerDef, validateEntry } from '../evergrove/trackers'
 import { DOMAIN_MAP } from '../lib/domains'
 
@@ -26,6 +26,17 @@ export const evergroveModule = {
         const top = skills.sort((a, b) => b.xp - a.xp).slice(0, 4).map((s) => `${s.name} ${s.xp}xp`)
         lines.push(`${DOMAIN_MAP[area].name}${state.paused.includes(area) ? ' (paused)' : ''}: ${top.join(', ')}`)
       }
+    }
+    const weekAgo = now.getTime() - 7 * 86400000
+    const week = state.entries.filter((e) => new Date(e.createdAt).getTime() >= weekAgo)
+    if (week.length) {
+      const byArea = {}
+      for (const e of week) for (const u of e.updates) byArea[u.domain] = (byArea[u.domain] ?? 0) + u.xpGain
+      const parts = Object.entries(byArea).filter(([, xp]) => xp > 0).map(([a, xp]) => `${DOMAIN_MAP[a].name} ${xp}xp`)
+      const total = Object.values(byArea).reduce((s, x) => s + x, 0)
+      lines.push(`Last 7 days: ${week.length} entries, ${total} xp (${parts.join(', ') || 'none'}). Growth streak: ${growthStreak(state.growthDays, now)} days.`)
+    } else if (Object.keys(state.skills).length) {
+      lines.push('Last 7 days: no growth logged.')
     }
     const insights = deriveInsights(state, now).map((i) => i.message)
     if (insights.length) lines.push('Insights: ' + insights.join(' '))
