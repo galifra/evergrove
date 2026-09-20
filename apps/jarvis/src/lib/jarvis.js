@@ -75,7 +75,7 @@ export function relativePhrases(now = new Date()) {
   ].join('\n')
 }
 
-export function buildRequest({ history, registry, events, shareSensitive = [], now = new Date() }) {
+export function buildRequest({ history, registry, events, shareSensitive = [], persona = null, now = new Date() }) {
   const evState = deriveEvergrove(events)
   const tools = registry.tools().map((t) => ({ name: t.name, description: t.description, input_schema: t.input }))
   const pad = (n) => String(n).padStart(2, '0')
@@ -89,6 +89,7 @@ export function buildRequest({ history, registry, events, shareSensitive = [], n
     today: localDate(now),
     days: upcomingDays(now),
     phrases: relativePhrases(now),
+    persona: persona ?? undefined,
     nowLocal: `${localDate(now)}T${pad(now.getHours())}:${pad(now.getMinutes())}`,
     weekday: now.toLocaleDateString('en-US', { weekday: 'long' }),
   }

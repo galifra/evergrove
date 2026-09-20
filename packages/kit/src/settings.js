@@ -11,6 +11,13 @@ export function defaultSettings() {
     onboarded: false,
     shareSensitive: [],
     syncPassphrase: '',
+    // Jarvis (docs/v2): how he speaks and how often he speaks up.
+    jarvisStyle: 'plain',
+    jarvisTitle: '',
+    speakReplies: false,
+    voiceURI: '',
+    speechRate: 1,
+    speakUp: 'necessary',
   }
 }
 

@@ -15,6 +15,9 @@ import { AccessCodePrompt, Button, Empty, PageHeader } from '@evergrove/ui/compo
 import TodayCard from '@evergrove/kit/components/TodayCard.jsx'
 import Link from '@evergrove/kit/components/Link.jsx'
 import { greeting, stepLink } from '../lib/home'
+import { replyFor } from '../lib/replies'
+import { isSpeaking, speak, speakableReply, speechOutSupported, stopSpeaking } from '../lib/speak'
+import { listApps } from '@evergrove/rules/registry.js'
 
 const CHAT_KEY = 'evergrove_jarvis_chat_v1'
 
@@ -61,7 +64,17 @@ export default function JarvisPage() {
   const [voiceError, setVoiceError] = useState('')
   const stopVoice = useRef(null)
   const [spend, setSpend] = useState(null)
+  const [speaking, setSpeaking] = useState(false)
   const bottom = useRef(null)
+  const persona = { style: settings.jarvisStyle, title: settings.jarvisTitle }
+
+  // Spoken replies (off by default). Private details are only read aloud when that app is shared.
+  function sayAloud(message) {
+    if (!settings.speakReplies || !speechOutSupported()) return
+    const privateIds = new Set(listApps(events).filter((a) => a.sensitive).map((a) => a.id))
+    const line = speakableReply(message, { privateIds, shared: settings.shareSensitive })
+    if (line) speak(line, { voiceURI: settings.voiceURI, rate: settings.speechRate, onEnd: () => setSpeaking(false) }) && setSpeaking(isSpeaking())
+  }
 
   useEffect(() => {
     try {
@@ -129,7 +142,7 @@ export default function JarvisPage() {
       const forModel = history.map((m) =>
         m.role === 'assistant' ? { role: 'assistant', text: m.memo || m.text || '(waiting for your approval)' } : m
       )
-      const payload = buildRequest({ history: forModel, registry: runtime.registry, events, shareSensitive: settings.shareSensitive })
+      const payload = buildRequest({ history: forModel, registry: runtime.registry, events, shareSensitive: settings.shareSensitive, persona })
       setSeen({
         context: payload.context,
         turns: payload.messages.length,
@@ -157,20 +170,22 @@ export default function JarvisPage() {
       const correlationId = newId()
       await runAutoSteps(plan.steps, runtime.registry, correlationId)
       const done = plan.steps.filter((s) => s.status === 'done').map((s) => s.result)
-      const modelText = plan.text || (plan.steps.length ? '' : "I'm not sure what to do with that. Can you say it another way?")
+      // The assistant's own words when it has them; otherwise a routine line from the templates.
+      const shown = replyFor({ text: plan.text, steps: plan.steps, seed: correlationId })
       setMessages((ms) => [
         ...ms,
         {
           id: newId(),
           role: 'assistant',
-          text: modelText,
+          text: shown,
           // history for the next turn includes what actually ran, so follow-ups make sense
-          memo: [modelText, done.length ? `(Done: ${done.join(' ')})` : ''].filter(Boolean).join(' '),
+          memo: [plan.text, done.length ? `(Done: ${done.join(' ')})` : ''].filter(Boolean).join(' ') || shown,
           correlationId,
           escalated,
           steps: plan.steps,
         },
       ])
+      sayAloud({ text: plan.text || shown, steps: plan.steps })
     } catch (err) {
       setError(err.message)
       setNeedsCode(err.status === 401)
@@ -253,6 +268,9 @@ export default function JarvisPage() {
                 AI this month
                 <div className="text-white/60">${spend.spentUsd.toFixed(3)} of ${spend.capUsd.toFixed(2)}</div>
               </>
+            )}
+            {speaking && (
+              <button onClick={() => { stopSpeaking(); setSpeaking(false) }} className="mt-1 underline hover:text-white/70 block ml-auto">Stop speaking</button>
             )}
             {messages.length > 0 && (
               <button onClick={() => setMessages([])} className="mt-1 underline hover:text-white/70">Clear chat</button>

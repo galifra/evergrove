@@ -47,3 +47,17 @@ A running log of what was measured while building, so the checked boxes in `docs
 - Live link with the apps, tested with two windows on one log (the same mechanism two tabs use): a task added through Jarvis is on the Tasks app and the Today list within a moment; a workout logged in the Body app changes what Jarvis knows on his next answer; an undo in one is an undo in the other; a change made while the other window was closed is there when it opens.
 - Checked live: `/jarvis/` shows the greeting and the real Today list.
 - Still open: the browser's install prompt for Jarvis (needs a real window), and the routing eval score from the new location (run once at the end, after the last prompt change).
+
+## Phase 5: the butler's voice
+
+- The instructions are now four layers in `server/prompt.js` (identity, voice, boundaries, tool rules), tested for order and content. What the person chooses (a name, butler style, a form of address) is added as a separate, cleaned block: only letters, numbers, spaces, dots, apostrophes and hyphens survive, at most 40 characters, so a name cannot smuggle in instructions.
+- Routine replies (done, waiting for approval, error, "I didn't follow") come from templates and cost nothing; they are never blank and never shout. All fixed lines pass a mechanical tone check (no emoji, no shouting, short, no scolding, nothing that reads as diagnosing or investment advice).
+- Spoken replies use the browser's own voice (voice, speed and a sample in Jarvis settings, a Stop button while speaking). Private details are not read aloud unless that app is shared: a reply that touched Money is spoken as "Done. The details are in Money." (tested).
+- **Reading real replies found real mistakes**, all now fixed in his instructions and covered by routing cases:
+  - "I skipped stretching again" made him check the habit off as done.
+  - "I reached level 10" made him log 40 xp that never happened.
+  - He blamed a monthly total on one category (the money summary now says "across all categories").
+  - He said he would remember, and had forgotten, things with no memory tool to do it.
+  - Several answers ran long; the limits are stated, and the automatic check flags anything over about 420 characters.
+- `npm run tone` runs 25 situations through the real model and writes `docs/v2/TONE-SAMPLE.md` for you to read (about 10 cents). The last run passed every automatic check. Whether the replies feel warm is yours to judge.
+- Still open: the greeting's "one note when something is necessary" (Phase 7), his name as a memory (Phase 6), and your reading of the sample.

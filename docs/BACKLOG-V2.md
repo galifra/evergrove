@@ -138,13 +138,13 @@ Evergrove becomes the **mother app**. Every smaller app gets its own address und
 
 ## Phase 5 - The butler's voice
 
-- [ ] P5.1 Turn the personality guide into a layered system prompt: identity and tone, honesty rules, boundaries, then the existing tool rules.
+- [x] P5.1 Turn the personality guide into a layered system prompt: identity and tone, honesty rules, boundaries, then the existing tool rules.
 - [ ] P5.2 Add a name setting: what Jarvis calls you (asked once, saved as a memory, changeable).
-- [ ] P5.3 Add optional style: plain, or butler ("sir/ma'am" style), your choice, off by default.
-- [ ] P5.4 Write reply templates for the common answers (done, undone, needs approval, error, clarify), so routine replies cost nothing and sound consistent.
-- [ ] P5.5 Add spoken replies with the browser's built-in voice: toggle, voice choice, speed, and a stop button.
+- [x] P5.3 Add optional style: plain, or butler ("sir/ma'am" style), your choice, off by default.
+- [x] P5.4 Write reply templates for the common answers (done, undone, needs approval, error, clarify), so routine replies cost nothing and sound consistent.
+- [x] P5.5 Add spoken replies with the browser's built-in voice: toggle, voice choice, speed, and a stop button.
 - [ ] P5.6 Add the opening line: greets by time of day and, only if something is necessary, adds one note (Phase 7).
-- [ ] P5.7 Add a personality check set of 25 phrases with a written rubric (warm, honest, short, no emoji, no advice claims, no guilt), scored by reading, not by machine.
+- [x] P5.7 Add a personality check set of 25 phrases with a written rubric (warm, honest, short, no emoji, no advice claims, no guilt), scored by reading, not by machine.
 - [ ] TP5 Templates never produce a blank reply; spoken replies never read out private data unless you have shared it; the personality set is reviewed by you once and adjusted.
 
 ## Phase 6 - Memory

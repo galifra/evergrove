@@ -11,7 +11,8 @@
     "lint": "oxlint",
     "test": "vitest run",
     "eval": "node scripts/eval.mjs",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "tone": "node scripts/tone.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.125.0",

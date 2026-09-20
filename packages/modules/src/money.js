@@ -296,9 +296,9 @@ export const moneyModule = {
   derive: deriveMoney,
   maintenance: monthClosingEvents,
   context(state) {
-    const lines = [`Spent this month: ${formatCents(state.thisMonth.totalCents)}`]
+    const lines = [`Spent this month across all categories: ${formatCents(state.thisMonth.totalCents)}`]
     const over = state.budgets.filter((b) => b.over).map((b) => b.category)
-    if (over.length) lines.push(`Over budget: ${over.join(', ')}`)
+    if (over.length) lines.push(`Categories over their budget: ${over.join(", ")}`)
     const due = state.bills.filter((b) => !b.paid && b.daysUntil <= 7).map((b) => `${b.name} ${b.dueOn}`)
     if (due.length) lines.push(`Bills due soon: ${due.join('; ')}`)
     return lines.join('\n')
