@@ -453,3 +453,23 @@ export function briefingNote(events, now = new Date(), { speakUp = 'necessary' }
   const shownBefore = fb.shown.filter((n) => n.obsId === pick.obsId && n.date !== today).length
   return { obsId: pick.obsId, private: pick.private, text: notificationLine(pick, shownBefore) }
 }
+
+// What each kind is called where the person manages them (the muted list).
+export const OBS_LABELS = {
+  'bill.overdue': 'Overdue bills',
+  'bill.soon': 'Bills coming due',
+  'deadline.soon': 'Deadlines coming up',
+  'event.clash': 'Calendar clashes',
+  'task.overdue': 'Tasks well overdue',
+  'streak.risk': 'Streaks at risk',
+  'goal.stalled': 'Stalled goals',
+  'budget.over': 'Budgets over two months running',
+  'review.overflow': 'Review queue piling up',
+  'area.silent': 'Quiet areas',
+  'habit.dip': 'Habits that have dipped',
+  'focus.skew': 'Lopsided months',
+  'win.level': 'Level-up wins',
+  'win.streak': 'Streak wins',
+  'win.goal': 'Goal wins',
+  'win.first': 'First-in-an-area wins',
+}

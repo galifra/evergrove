@@ -4,10 +4,25 @@ import { useAction } from '@evergrove/kit/components/useAction.js'
 import { Button, Card, ErrorNote, Field, PageHeader, Select, TextInput } from '@evergrove/ui/components/ui.jsx'
 import { deriveMemory, nameNote } from '@evergrove/modules/memory.js'
 import { listVoices, speak, speechOutSupported, stopSpeaking } from '../lib/speak'
+import { OBS_LABELS, SPEAK_UP_LABELS, feedbackState } from '@evergrove/rules/observations.js'
+import { exportFeedback, feedbackEvent } from '../lib/notes'
 
 // How Jarvis speaks to you. Everything here is stored on this device.
 export default function JarvisSettings() {
-  const { settings, updateSettings, events } = useApp()
+  const { settings, updateSettings, events, runtime } = useApp()
+  const fb = useMemo(() => feedbackState(events), [events])
+  const muted = fb.muted
+  const ratedCount = fb.ratings.filter((r) => r.value === 'up' || r.value === 'down' || r.value === 'not_useful').length
+
+  function downloadFeedback() {
+    const blob = new Blob([JSON.stringify(exportFeedback(events), null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `jarvis-feedback-${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
   const { act, error: nameError, busy } = useAction()
   const memory = useMemo(() => deriveMemory(events), [events])
   const [nameDraft, setNameDraft] = useState(null)
@@ -62,6 +77,47 @@ export default function JarvisSettings() {
           )}
         </div>
         <p className="mt-2 text-xs text-white/55">Only your name, the style and this word are sent to the assistant. He is always honest and short either way.</p>
+      </Card>
+
+
+      <Card title="Speaking up">
+        <div className="grid gap-3 max-w-xl">
+          <Field label="Jarvis speaks up">
+            <Select
+              value={settings.speakUp}
+              onChange={(e) => updateSettings({ speakUp: e.target.value })}
+              options={Object.entries(SPEAK_UP_LABELS).map(([value, label]) => ({ value, label }))}
+            />
+          </Field>
+          <p className="text-xs text-white/55">
+            {settings.speakUp === 'never'
+              ? 'He stays quiet: no notes on his home, none in the evening briefing. You can still ask him what he thinks.'
+              : settings.speakUp === 'often'
+                ? 'Up to 4 notes a day, including wins and balance across your areas. Never at night, except something urgent.'
+                : 'Up to 2 notes a day, only for things that need you or have really slipped. Never at night, except something urgent. Private things reach a notification only as "something in Money needs a look".'}
+          </p>
+          <div>
+            <p className="text-sm text-white/80">Muted for 30 days</p>
+            {muted.length === 0 ? (
+              <p className="mt-1 text-xs text-white/55">Nothing is muted. "Not useful" on a note quiets that kind for a month.</p>
+            ) : (
+              <ul className="mt-1 space-y-1">
+                {muted.map((m) => (
+                  <li key={m.obsId} className="flex items-center justify-between gap-3 text-sm">
+                    <span>{OBS_LABELS[m.obsId] ?? m.obsId} <span className="text-xs text-white/50">until {m.until}</span></span>
+                    <Button variant="ghost" onClick={() => runtime.log.append(feedbackEvent({ targetKind: 'note', targetId: m.obsId, value: 'unmuted' }))}>Unmute</Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      </Card>
+
+      <Card title="Your feedback">
+        <p className="text-sm text-white/70">{ratedCount} rating{ratedCount === 1 ? '' : 's'} so far, of his replies and his notes.</p>
+        <p className="mt-1 text-xs text-white/55">"Export my feedback" saves them as a file you can turn into test cases. Replies about private apps keep only the action names. You can also type it in the chat.</p>
+        <div className="mt-2"><Button variant="ghost" onClick={downloadFeedback}>Export my feedback</Button></div>
       </Card>
 
       <Card title="Speaking aloud">

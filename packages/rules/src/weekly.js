@@ -21,7 +21,7 @@ const addDays = (date, n) => {
 const areaName = (a) => DOMAIN_MAP[a]?.name ?? a
 const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`
 const short = (date) => new Date(`${date}T00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-const list = (items) => (items.length <= 2 ? items.join(' and ') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`)
+const listOf = (items) => (items.length <= 2 ? items.join(' and ') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`)
 
 // One question a week, from a fixed list, rotating by week so it changes.
 export const QUESTIONS = [
@@ -101,17 +101,24 @@ export function composeWeekly(events, now = new Date()) {
     title: 'What grew',
     lines: grewAreas.length
       ? [
-          `${list(grewAreas.slice(0, 3).map((a) => `${a.name} (${a.xp} xp)`))}${grewAreas.length > 3 ? `, and ${plural(grewAreas.length - 3, 'more area')}` : ''}.`,
-          `Most of it came from ${list(topSkills.map((s) => s.name))}.`,
+          `${listOf(grewAreas.slice(0, 3).map((a) => `${a.name} (${a.xp} xp)`))}${grewAreas.length > 3 ? `, and ${plural(grewAreas.length - 3, 'more area')}` : ''}.`,
+          `Most of it came from ${listOf(topSkills.map((s) => s.name))}.`,
           `You grew on ${days.size} of 7 days${tasksDone || habitChecks ? `, finished ${plural(tasksDone, 'task')} and ticked ${plural(habitChecks, 'habit check')}` : ''}.`,
         ]
       : ['Nothing grew this week, and that is allowed.'],
   })
   const stalled = []
-  if (stalledAreas.length) stalled.push(`Quiet this week: ${list(stalledAreas.map((a) => a.name))}.`)
-  if (dips.length) stalled.push(`${list(dips)} slipped compared with the weeks before.`)
+  if (stalledAreas.length) stalled.push(`Quiet this week: ${listOf(stalledAreas.map((a) => a.name))}.`)
+  if (dips.length) stalled.push(`${listOf(dips)} slipped compared with the weeks before.`)
   sections.push({ id: 'stalled', title: 'What stalled', lines: stalled.length ? stalled : ['Nothing stalled that I can see.'] })
-  sections.push({ id: 'wins', title: 'Wins', lines: wins.length ? wins.map((w) => wording(w, 0)) : ['No big wins this week, only steady ones, if any.'] })
+  const winLinesFor = (list) => {
+    // First-in-an-area wins are folded into one line, and the list is kept short.
+    const firsts = list.filter((w) => w.obsId === 'win.first')
+    const rest = list.filter((w) => w.obsId !== 'win.first').map((w) => wording(w, 0))
+    const folded = firsts.length > 1 ? [`First growth this week in ${listOf(firsts.map((w) => w.params.area))}. Everything grows from there.`] : firsts.map((w) => wording(w, 0))
+    return [...rest, ...folded].slice(0, 5)
+  }
+  sections.push({ id: 'wins', title: 'Wins', lines: wins.length ? winLinesFor(wins) : ['No big wins this week, only steady ones, if any.'] })
   sections.push({ id: 'suggestion', title: 'One suggestion', lines: [top ? wording(top, 0) : 'Nothing needs you right now. Keep going as you are.'] })
   sections.push({ id: 'question', title: 'One question', lines: [question] })
 
@@ -119,7 +126,7 @@ export function composeWeekly(events, now = new Date()) {
   const text = [title, ...sections.flatMap((s) => [`${s.title}:`, ...s.lines])].join('\n')
 
   // What may be sent for an optional AI polish: the same review, without anything private.
-  const publicWins = wins.filter((w) => !w.private).map((w) => wording(w, 0))
+  const publicWins = winLinesFor(wins.filter((w) => !w.private))
   const winLines = [...publicWins, ...(wins.some((w) => w.private) ? ['A win in a private area.'] : [])]
   const aiSections = sections.map((sec) => {
     if (sec.id === 'wins') return { ...sec, lines: winLines.length ? winLines : ['No big wins this week.'] }

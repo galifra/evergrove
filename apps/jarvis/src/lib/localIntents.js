@@ -32,6 +32,20 @@ const NOT_A_NAME = new Set(['later', 'back', 'tomorrow', 'today', 'tonight', 'no
 const NOT_A_TARGET = /^(it|this|nothing|everything|all|that)[.!]?$/i
 const LIST_MEMORY = /^(what do you (remember|know) about me|what have you (saved|noted|remembered)|show (me )?(my )?(memory|memories|notes))[.!?]*$/i
 
+// Feedback commands (docs/v2/FEEDBACK-SPEC.md). "What do you think" is answered by the AI on request;
+// the weekly review and the export are built on the device.
+const OPINION = /^(?:what do you (?:honestly |really )?think(?: (?:about|of|of how)(?: how)? (.{2,80}?))?|how am i (?:really )?doing(?: (?:with|in|on|at) (.{2,80}?))?|give me (?:your |some )?(?:honest )?(?:feedback|opinion|thoughts)(?: (?:on|about) (.{2,80}?))?|be honest with me)[.!?]*$/i
+const WEEKLY = /^(?:(?:show |open )?(?:my |the )?(?:weekly review|week in review|weekly)|how was my week|review my week)[.!?]*$/i
+const EXPORT_FEEDBACK = /^export (?:my )?feedback[.!?]*$/i
+
+function matchFeedbackIntent(t) {
+  if (EXPORT_FEEDBACK.test(t)) return { type: 'exportfeedback' }
+  if (WEEKLY.test(t)) return { type: 'weekly' }
+  const m = t.match(OPINION)
+  if (m) return { type: 'opinion', topic: (m[1] || m[2] || m[3] || '').trim() }
+  return null
+}
+
 function matchMemoryIntent(t) {
   for (const re of REMEMBER) {
     const m = t.match(re)
@@ -51,6 +65,10 @@ export function matchLocalIntent(text) {
   if (t && t.length <= 300) {
     const memory = matchMemoryIntent(t)
     if (memory) return memory
+  }
+  if (t && t.length <= 120) {
+    const feedback = matchFeedbackIntent(t)
+    if (feedback) return feedback
   }
   if (!t || t.length > 60) return null
   for (const [type, re] of PATTERNS) if (re.test(t)) return { type }

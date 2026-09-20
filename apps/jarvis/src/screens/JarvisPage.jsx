@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Bot, Check, Loader2, Mic, Send, Square, Undo2, X } from 'lucide-react'
 import { useApp } from '@evergrove/kit/AppContext.jsx'
 import { go, useRoute } from '@evergrove/kit/router.js'
@@ -15,6 +15,11 @@ import { AccessCodePrompt, Button, Empty, PageHeader } from '@evergrove/ui/compo
 import TodayCard from '@evergrove/kit/components/TodayCard.jsx'
 import Link from '@evergrove/kit/components/Link.jsx'
 import { greeting, stepLink } from '../lib/home'
+import { feedbackState } from '@evergrove/rules/observations.js'
+import { composeWeekly } from '@evergrove/rules/weekly.js'
+import { buildOpinionRequest, exportFeedback } from '../lib/notes'
+import JarvisNotes from './JarvisNotes.jsx'
+import ReplyFeedback from './ReplyFeedback.jsx'
 import { replyFor } from '../lib/replies'
 import { isSpeaking, speak, speakableReply, speechOutSupported, stopSpeaking } from '../lib/speak'
 import { listApps } from '@evergrove/rules/registry.js'
@@ -70,6 +75,12 @@ export default function JarvisPage() {
   const [speaking, setSpeaking] = useState(false)
   const bottom = useRef(null)
   const myName = deriveMemory(events).name
+  const privateIds = useMemo(() => new Set(listApps(events).filter((a) => a.sensitive).map((a) => a.id)), [events])
+  const repliesRated = useMemo(() => {
+    const out = new Map()
+    for (const r of feedbackState(events).ratings) if (r.targetKind === 'reply') out.set(r.targetId, r.value)
+    return out
+  }, [events])
   const persona = { style: settings.jarvisStyle, title: settings.jarvisTitle }
 
   // Spoken replies (off by default). Private details are only read aloud when that app is shared.
@@ -109,6 +120,22 @@ export default function JarvisPage() {
     setMessages((ms) => [...ms, { id: newId(), role: 'user', text: value }])
     if (intent.type === 'briefing') return postBriefing()
     if (intent.type === 'help') return setMessages((ms) => [...ms, say('assistant', HELP_TEXT)])
+    if (intent.type === 'weekly') {
+      const review = composeWeekly(runtime.log.getEvents(), new Date())
+      return setMessages((ms) => [...ms, say('assistant', review.text, { link: { path: '/jarvis/weekly', label: 'your week' } })])
+    }
+    if (intent.type === 'exportfeedback') {
+      const data = exportFeedback(runtime.log.getEvents())
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `jarvis-feedback-${new Date().toISOString().slice(0, 10)}.json`
+      a.click()
+      URL.revokeObjectURL(url)
+      return setMessages((ms) => [...ms, say('assistant', `Saved ${data.cases.length} rated repl${data.cases.length === 1 ? 'y' : 'ies'} and your ratings of my notes to a file. Replies about private apps carry only the action names.`)])
+    }
+    if (intent.type === 'opinion') return askOpinion(intent.topic)
     if (intent.type === 'remember') {
       const r = await runtime.registry.invoke('memory__remember', { text: intent.text.slice(0, 240), via: 'command' }, { approved: true, actor: 'user' })
       if (r.status === 'done') lastMemory.current = deriveMemory(runtime.log.getEvents()).notes.find((n) => n.text === intent.text.trim().replace(/\s+/g, ' '))?.text ?? null
@@ -155,6 +182,41 @@ export default function JarvisPage() {
       }
     }
     return setMessages((ms) => [...ms, say('assistant', "There's nothing recent to undo.")])
+  }
+
+  // "What do you think?": the one place he gives an opinion, and an AI call you asked for. It sees
+  // the same shared data as the chat plus the week's review with anything private left out, and it
+  // stops early in the month if the budget is running low.
+  async function askOpinion(topic) {
+    setError('')
+    setNeedsCode(false)
+    setBusy(true)
+    try {
+      const payload = buildOpinionRequest({ topic, registry: runtime.registry, events, shareSensitive: settings.shareSensitive, persona })
+      setSeen({
+        context: payload.context,
+        turns: 1,
+        tools: 0,
+        shared: settings.shareSensitive,
+        sources: contextSources(runtime.registry, events, { shareSensitive: settings.shareSensitive }),
+        memories: memoriesFor(events, [{ role: 'user', text: topic ?? '' }], settings.shareSensitive),
+        sent: JSON.stringify(payload, null, 2),
+      })
+      const body = await askJarvis(payload)
+      if (body.spend) setSpend(body.spend)
+      const reply = body.content?.find((b) => b.type === 'text')?.text?.trim()
+      const words = reply || "I don't have enough to give you a fair opinion yet."
+      setMessages((ms) => [...ms, say('assistant', words)])
+      sayAloud({ text: words, steps: [] })
+    } catch (err) {
+      if (err.status === 429) setMessages((ms) => [...ms, say('assistant', err.message)])
+      else {
+        setError(err.message)
+        setNeedsCode(err.status === 401)
+      }
+    } finally {
+      setBusy(false)
+    }
   }
 
   async function send(e) {
@@ -334,6 +396,7 @@ export default function JarvisPage() {
             <button type="button" className="text-xs underline text-white/50 hover:text-white/70" onClick={() => updateSettings({ nameAsked: true })}>Not now</button>
           </form>
         )}
+        <JarvisNotes />
         <div className="-mt-2"><TodayCard /></div>
       </section>
 
@@ -343,7 +406,7 @@ export default function JarvisPage() {
             Try: "ran 30 minutes and read 20 pages", "add dentist Friday 3pm", "I spent $12 on lunch", or "make me a tracker for houseplants".
           </Empty>
         )}
-        {messages.map((m) =>
+        {messages.map((m, i) =>
           m.role === 'user' ? (
             <div key={m.id} className="flex justify-end">
               <div className="max-w-[85%] rounded-2xl rounded-br-md bg-emerald-500/20 border border-emerald-400/20 px-4 py-2 text-sm">{m.text}</div>
@@ -359,6 +422,9 @@ export default function JarvisPage() {
                   </div>
                 )}
                 {m.escalated && <div className="text-[11px] text-white/45">Double-checked with a stronger model.</div>}
+                {(m.text || m.steps?.length > 0) && (
+                  <ReplyFeedback message={m} said={messages.slice(0, i).reverse().find((x) => x.role === 'user')?.text} privateIds={privateIds} rated={repliesRated.get(m.id)} runtime={runtime} />
+                )}
                 {m.steps?.map((s) => (
                   <div key={s.id} className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm">
                     <div className="flex items-center justify-between gap-3">

@@ -116,6 +116,7 @@ const SUMMARIES = {
   'memory.noted': (d) => `Remembered: ${d.text}`,
   'memory.revised': () => 'Changed a memory',
   'memory.forgotten': () => 'Forgot a memory',
+  'weekly.polished': () => 'Jarvis put the week into words',
   'note.shown': (d) => `Jarvis mentioned: ${d.obsId}`,
   'feedback.given': (d) => `Feedback: ${d.value}`,
 }
