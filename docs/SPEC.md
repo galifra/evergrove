@@ -97,3 +97,14 @@ Principles: tree never shrinks, areas can be paused (gentle mode: no nudges, no 
 ## 8. Paper test (all walked through the code as tests)
 
 1. Log "ran 3 miles" -> skill.practiced -> Running grows. 2. Same event applied twice -> same tree. 3. Undo it -> tree back to before. 4. Undo the undo -> restored. 5. Event recorded a day late with an earlier occurredAt -> streak computed on occurredAt. 6. Two devices append offline then sync -> identical logs. 7. Habit checked twice same day -> 4 xp once. 8. Task completed then reopened -> xp removed. 9. Bill paid late -> no xp. 10. Purchase logged -> no xp, budget updates. 11. Month closed twice -> one event. 12. Calendar event rescheduled and cancelled -> final state cancelled. 13. Jarvis proposes a delete -> nothing runs until approved. 14. Injection text in a task title cannot approve an action. 15. Old localStorage tree migrated -> identical tree.
+
+## 9. Version 2 (built on the `v2` branch)
+
+Version 2 keeps everything above and changes the shape of the site, not the data. The design is in `docs/v2/`:
+
+- `ARCHITECTURE.md`: one address, one app per path, the route table, the package layout and the boundary rule.
+- `JARVIS-PERSONALITY.md`, `MEMORY-SPEC.md`, `FEEDBACK-SPEC.md`: who Jarvis is, what he remembers, when he speaks up.
+- `COST-PLAN.md`: the $2 a month AI cap stays; what fits inside it.
+- `CUTOVER.md`, `ACCEPTANCE.md`, `PAPER-TEST.md`: how it goes live, how you check it, and the scenarios walked before any code.
+
+Decisions: free address kept forever, one address for all apps (Jarvis at `/jarvis` as its own installable app), AI cap unchanged at $2, Jarvis speaks up unprompted only when necessary, encryption at rest parked. The stored format is unchanged; new event types are ignored by version 1 code.
