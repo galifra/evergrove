@@ -3,6 +3,7 @@ import { useApp } from '../app/AppContext'
 import { localDate } from '../core/events'
 import { debtsOf, deriveMoney, formatCents, toCents } from '../modules/money'
 import { compareStrategies } from '../modules/moneyPlanner'
+import { sideIncomeCents } from '../evergrove/trackerViews'
 import { Button, Card, Empty, ErrorNote, Field, PageHeader, ProgressBar, Select, TextInput } from '../components/ui'
 import { useAction } from '../components/useAction'
 import CsvImport from '../components/CsvImport'
@@ -31,6 +32,7 @@ export default function MoneyPage() {
   const [h, setH] = useState({ name: '', kind: 'fund', value: '' })
   const [dl, setDl] = useState({ name: '', kind: 'insurance', date: '', yearly: true, amount: '' })
   const [extra, setExtra] = useState('')
+  const sideIncome = useMemo(() => ({ month: sideIncomeCents(events, m.month), all: sideIncomeCents(events) }), [events, m.month])
   const payoff = useMemo(() => {
     const debts = debtsOf(m)
     return debts.length ? compareStrategies(debts, { extraCents: extra ? toCents(extra) : 0, startMonth: m.month }) : null
@@ -57,6 +59,12 @@ export default function MoneyPage() {
         <Stat label="Bills per month" value={formatCents(m.subscriptionsMonthlyCents)} />
         <Stat label="Overdue bills" value={String(m.bills.filter((x) => x.overdue).length)} tone={m.bills.some((x) => x.overdue) ? 'text-rose-300' : ''} />
       </div>
+
+      {sideIncome.all > 0 && (
+        <Card title="Side income">
+          <p className="text-sm">{formatCents(sideIncome.month)} earned this month from side hustles, {formatCents(sideIncome.all)} in total. Logged in the Side hustles app, shown here so your money picture is complete.</p>
+        </Card>
+      )}
 
       {m.guidance.length > 0 && (
         <Card title="Worth knowing">

@@ -5,6 +5,7 @@ import { deriveTasks } from '../modules/tasks'
 import { deriveCalendar, expandCalendar } from '../modules/calendar'
 import { deriveMoney, formatCents } from '../modules/money'
 import { derivePeople } from '../modules/people'
+import { reviewQueue, trackerEntries } from './trackerViews'
 
 // One calm list for "what needs me today", pulled from every app. Pure and
 // derived: nothing here is stored, so it can never drift from the real data.
@@ -43,7 +44,11 @@ export function deriveToday(events, now = new Date()) {
     items.push({ id: `event:${e.id}:${today}`, priority: 3, kind: 'event', route: '/app/calendar', text: `${e.title} at ${when}.`.replace('at today', 'today') })
   }
 
-  const undone = tasks.habits.filter((h) => h.cadence === 'daily' && !h.checkedToday)
+  // Gentle mode: a paused area gets no nudges at all.
+  const evState = deriveEvergrove(events)
+  const paused = new Set(evState.paused)
+
+  const undone = tasks.habits.filter((h) => h.cadence === 'daily' && !h.checkedToday && !paused.has(h.area))
   if (undone.length) {
     const first = undone[0]
     items.push({
@@ -58,6 +63,20 @@ export function deriveToday(events, now = new Date()) {
     })
   }
 
+  const learning = evState.trackers.find((t) => t.id === 'learning')
+  if (learning && !paused.has(learning.area)) {
+    const due = reviewQueue(trackerEntries(events, 'learning'), now).filter((q) => q.due)
+    if (due.length) {
+      items.push({
+        id: `review:${today}`,
+        priority: 3,
+        kind: 'review',
+        route: '/app/learning',
+        text: `${plural(due.length, 'thing')} to review: ${due.slice(0, 3).map((q) => q.subject).join(', ')}.`,
+      })
+    }
+  }
+
   const people = derivePeople(events, now)
   for (const p of people.upcomingBirthdays) {
     if (p.nextBirthday.inDays > 7) continue
@@ -65,7 +84,7 @@ export function deriveToday(events, now = new Date()) {
     items.push({ id: `birthday:${p.id}:${p.nextBirthday.date}`, priority: 3, kind: 'birthday', route: '/app/people', text: `${p.name}'s birthday is ${when}.` })
   }
 
-  for (const i of deriveInsights(deriveEvergrove(events), now)) {
+  for (const i of deriveInsights(evState, now)) {
     if (i.kind === 'quiet') items.push({ id: i.id, priority: 4, kind: 'quiet', route: '/', text: i.message, snoozeDays: 7 })
   }
 
