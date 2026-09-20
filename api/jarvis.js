@@ -84,10 +84,9 @@ ${context || '(nothing shared)'}`
 
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   try {
-    const message = await anthropic.messages.create({
+    const params = {
       model: MODEL,
       max_tokens: 1024,
-      temperature: 0, // routing should be repeatable: the same words should always do the same thing
       system: [
         { type: 'text', text: STATIC_SYSTEM },
         { type: 'text', text: dynamic },
@@ -95,7 +94,16 @@ ${context || '(nothing shared)'}`
       tools: cleanTools,
       tool_choice: { type: 'auto' },
       messages: messages.map((m) => ({ role: m.role, content: m.content })),
-    })
+    }
+    // Repeatable routing on the small model (the same words should always do the same thing).
+    // Some models don't accept a temperature setting; if one refuses, retry without it.
+    let message
+    try {
+      message = await anthropic.messages.create(escalate === true ? params : { ...params, temperature: 0 })
+    } catch (err) {
+      if (escalate === true || err?.status !== 400 || !/temperature/i.test(String(err?.message))) throw err
+      message = await anthropic.messages.create(params)
+    }
     const spend = await recordUsage(message.usage, MODEL)
     const allowed = new Set(cleanTools.map((t) => t.name))
     const dropped = message.content.filter((b) => b.type === 'tool_use' && !allowed.has(b.name)).length
