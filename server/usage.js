@@ -33,6 +33,29 @@ function monthKey(now = new Date()) {
   return `evergrove:usage:${now.toISOString().slice(0, 7)}`
 }
 
+function countKey(now = new Date()) {
+  return `evergrove:usagecount:${now.toISOString().slice(0, 7)}`
+}
+
+// Spend and request count for the last few months, newest first, for the
+// monthly cost review. Months with nothing recorded are left out, except the current one.
+export async function getHistory(now = new Date(), months = 6) {
+  const out = []
+  for (let i = 0; i < months; i++) {
+    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1))
+    const spentUsd = Number((await getKv().get(monthKey(d))) ?? 0)
+    const requests = Number((await getKv().get(countKey(d))) ?? 0)
+    if (i > 0 && !spentUsd && !requests) continue
+    out.push({
+      month: d.toISOString().slice(0, 7),
+      spentUsd,
+      requests,
+      avgPerRequestUsd: requests ? spentUsd / requests : null,
+    })
+  }
+  return { capUsd: capUsd(), months: out }
+}
+
 export async function getSpend(now = new Date()) {
   const spent = Number((await getKv().get(monthKey(now))) ?? 0)
   return { spentUsd: spent, capUsd: capUsd(), month: now.toISOString().slice(0, 7) }
@@ -47,5 +70,6 @@ export async function recordUsage(usage, model, now = new Date()) {
   const cost = costOf(usage, model)
   if (cost <= 0) return getSpend(now)
   await getKv().incrbyfloat(monthKey(now), cost)
+  await getKv().incrbyfloat(countKey(now), 1)
   return getSpend(now)
 }

@@ -1,82 +1,138 @@
 # Evergrove
 
-A living skill tree for your life. Tell it what you just did — a workout, a
-chapter read, a hard conversation, a habit kept — and it grows a real branch
-for it. Every part of your life (health, mind, discipline, craft,
-relationships, creativity, inner life) gets its own limb that thickens,
-extends, and blossoms as you put time into it.
+A living skill tree for your life, and the hub of a small set of personal apps.
+Tell it what you did (typing, or your voice) and a real tree grows a branch for
+it. Every area of life (health, mind, discipline, craft, relationships,
+creativity, inner life) gets its own limb that thickens as you put time into it.
 
-- **Vite + React**, Tailwind for styling, Framer Motion for the tree's growth
-  animations.
-- A procedurally generated SVG tree — deterministic per your data, so it only
-  changes shape when your actual progress changes, never randomly.
-- One text box: "what did you just do?" → a Vercel serverless function calls
-  the Claude API to turn that into structured XP updates against your
-  existing skills (reusing skill names it already knows about, so "ran" and
-  "running" don't become two different branches).
-- Everything lives in **your device's IndexedDB** as an append-only event log. Devices can sync through an end-to-end encrypted relay (Settings). Export/import a backup any time.
-- Jarvis (chat) and 18 apps (tasks, calendar, money, goals, people, vault and 12 trackers) all read and write that one log; see docs/SPEC.md.
-- A floating "buddy" widget in the corner you can check throughout the day,
-  and a best-effort end-of-day browser notification if nothing's logged yet.
+Live: <https://evergrove-neon.vercel.app>. Everything is built to cost close to
+nothing to run: free hosting tiers, data on your own devices, and a hard cap on
+AI spend.
 
-## Local setup
+## What is in it
+
+- **Evergrove (the tree).** Reads the shared event log and grows. The tree never
+  shrinks; mistakes are fixed with correction events, never by editing history.
+- **Jarvis (chat).** Type or speak. Exact, simple commands ("undo", "brief me",
+  "what's today") are handled on the device for free. Everything else goes to a
+  small Claude model that can only use the actions the apps declare, each with a
+  permission tier (runs automatically, asks first, or suggestion only) that is
+  enforced in code, not in the prompt.
+- **Apps.** Tasks and habits (with repeating tasks and goal links), Calendar
+  (repeating events, conflicts), Money (tracking only: purchases, budgets, bills,
+  savings, debts and a payoff planner, holdings, deadlines, CSV import), Goals,
+  People, Vault (encrypted), plus twelve trackers (body, health and diet, mind,
+  self-care, learning with spaced review, creativity, career, side hustles,
+  travel, home, records, Compass). New trackers can be made by talking to Jarvis;
+  a whole new app becomes a ready-to-build spec on the Apps page.
+- **Today and the evening briefing.** One derived list of what needs you, and a
+  real push notification each evening about tomorrow, built on the device.
+- **Sync.** Optional, end-to-end encrypted between your phone and laptop.
+
+## How it fits together
+
+Everything an app does is an append-only event (`noun.verb`, with a type,
+version, time, actor and small JSON data). The current state of every app is a
+pure function of the log. Because of that: undo is a reversing event, two
+devices merge by taking the union of events (adding the same event twice does
+nothing), and "Check my data" can rebuild everything from scratch and compare.
+
+```
+src/core        event log (IndexedDB), registry + command channel, crypto, sync, verify
+src/evergrove   growth rules, tree derivation, insights, Today, briefing, tracker views
+src/modules     one file per app: state derived from the log, and its actions
+src/jarvis      request building, local intents, routing eval cases
+src/pages       one page per app; src/components shared UI
+src/sw          service worker: push briefing, offline app shell
+api             serverless routes: jarvis, usage, sync, save-subscription, send-reminder
+server          auth, key-value store, spend meter, time helpers
+docs            SPEC.md (design), BACKLOG.md (the plan and what is done), SECURITY.md
+```
+
+## Run it locally
 
 ```bash
 npm install
-cp .env.example .env
-```
-
-Fill in `.env`:
-
-- `ANTHROPIC_API_KEY` — a pay-per-token key from
-  [console.anthropic.com](https://console.anthropic.com). This is separate
-  from any Claude.ai / Claude Code subscription — using it here doesn't touch
-  that usage. Cost is tiny for personal daily use (a few cents a month with
-  the default Haiku model).
-- `APP_ACCESS_CODE` (optional but recommended once deployed) — a passphrase
-  only you know, so a stranger who stumbles on your live URL can't spend your
-  API budget. If you set it here, enter the same value once in the app's
-  Settings panel.
-
-```bash
+cp .env.example .env    # then fill it in, see below
 npm run dev
 ```
 
-The AI parsing lives in a Vercel serverless function (`/api/parse-entry.js`);
-a small Vite middleware (`vite.config.js`) emulates that route during local
-dev, so `npm run dev` alone is enough — no Vercel CLI/login needed locally.
+A small Vite middleware serves every `api/<name>.js` route during `npm run dev`,
+so no Vercel login is needed locally. Without Upstash variables the server uses
+an in-memory store, which is fine for development.
+
+| Command | What it does |
+| --- | --- |
+| `npm test` | Unit and integration tests (fast, free, no network) |
+| `npm run lint` | oxlint |
+| `npm run build` | Production build, including the service worker |
+| `npm run eval` | The Jarvis routing eval against the real model. Costs about 60 cents; run it deliberately |
+
+## Environment variables
+
+| Name | Needed for |
+| --- | --- |
+| `ANTHROPIC_API_KEY` | Jarvis. A separate pay-per-token key, not a Claude subscription |
+| `ANTHROPIC_MODEL` | Optional, defaults to a small Haiku model |
+| `APP_ACCESS_CODE` | Required in production. Every API route rejects requests without it |
+| `AI_MONTHLY_CAP_USD` | Optional hard cap on AI spend, default 2 |
+| `KV_REST_API_URL`, `KV_REST_API_TOKEN` | Upstash Redis: spend meter, sync relay, push subscriptions |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_CONTACT_EMAIL` | Web push |
+| `CRON_SECRET` | Required in production. Only the scheduler may trigger reminders |
+
+In production the server refuses to run without `APP_ACCESS_CODE` and
+`CRON_SECRET` instead of quietly allowing everyone.
 
 ## Deploy
 
-1. **Push to GitHub** — create a new repo (e.g. via
-   [github.com/new](https://github.com/new)) and push this project to it.
-2. **Import into Vercel** — [vercel.com/new](https://vercel.com/new), import
-   the GitHub repo. Vercel auto-detects Vite.
-3. Add the same environment variables from `.env` in the Vercel project's
-   **Settings → Environment Variables** (`ANTHROPIC_API_KEY`, optionally
-   `ANTHROPIC_MODEL` and `APP_ACCESS_CODE`).
-4. Deploy. On first visit, open **Settings** in the app and paste the
-   `APP_ACCESS_CODE` you set (if any) so the app can talk to your API route.
+1. Push to GitHub and import the repo in Vercel (it detects Vite).
+2. Add the environment variables above in the project settings.
+3. Connect an Upstash Redis store to the project.
+4. Deploy. In the app, open Settings and enter the access code once per device.
 
-## The tree, mechanically
+The scheduler in `vercel.json` calls `/api/send-reminder` twice a day (so
+daylight saving never drops a reminder). The server only sends a content-free
+wake-up; the service worker builds the actual briefing from the data on the
+device.
 
-- Seven fixed **domains** (the main limbs): Health & Fitness, Mind &
-  Learning, Discipline & Habits, Craft & Career, Relationships & Social,
-  Creativity & Expression, Inner Life & Purpose. See `src/lib/domains.js`.
-- **Skills** (the twigs) are discovered dynamically — the first time you
-  mention "guitar" it sprouts as a new skill under Creativity; every mention
-  after that adds XP to the same one.
-- XP → level uses a gentle-then-steepening curve (`src/lib/treeEngine.js`) so
-  leveling stays meaningful for months of daily use.
-- The SVG geometry (`src/lib/treeGeometry.js`) is seeded per domain/skill id,
-  so the shape is stable across reloads and only grows when the underlying
-  data does.
+## Using it on a second device
 
-## Notes on the AI parsing
+1. On the first device: Settings, turn on sync, choose a sync passphrase.
+2. On the second device: on the welcome screen choose "I already use Evergrove on
+   another device", then enter the access code and the same sync passphrase.
 
-The serverless function forces the model to respond through a strict tool
-schema (fixed domain enum, clamped XP range 1-40, max 6 updates per entry)
-and re-validates everything server-side before it ever reaches your data —
-an out-of-range or malformed response is clamped or dropped rather than
-corrupting your tree. If an entry is vague or isn't a real activity, it
-returns zero updates and asks you to rephrase instead of guessing.
+The passphrase never leaves the device. The server stores only encrypted blobs.
+If you forget the passphrase, the synced copy cannot be read; your local data is
+unaffected, and Settings has a full export and import.
+
+## Adding something new
+
+- **A tracker** (things you log with a few fields): ask Jarvis ("make me a
+  tracker for houseplants"), or add it to `src/evergrove/trackers.js`.
+- **A whole app**: ask Jarvis for it (it saves a spec), or add a module in
+  `src/modules` with `derive`, an optional `context`, and `actions` (each with a
+  tier), register it in `src/modules/index.js`, add a page, growth rules if it
+  should grow the tree, and tests. `src/modules/vault.js` is the smallest
+  example; `src/modules/tasks.js` shows actions and tiers.
+
+Every new action needs a test that it emits only valid events, and Jarvis
+routing phrases in `src/jarvis/evalCases.js`.
+
+## Backups and recovery
+
+Settings has Export and Import (a JSON file of every event; importing twice does
+nothing) and "Check my data" (rebuilds everything from the log and compares).
+The restore drills are tests: `src/app/backup.test.js` and
+`src/modules/vault.test.js`.
+
+## Troubleshooting
+
+- **"Invalid app code" or sync failing**: the access code is missing or wrong on
+  that device. Settings, paste it, Save.
+- **No evening notification**: notifications must be allowed for the site, the
+  reminder switched on in Settings on that device, and on iPhone the app added
+  to the Home Screen. "Show me tonight's notification now" tests the device half.
+- **AI stopped answering**: the monthly cap was reached. Settings shows spend and
+  a monthly cost review; everything else keeps working.
+
+See `docs/SECURITY.md` for what is protected, what is not, and why.

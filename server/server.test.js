@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { costOf, budgetAllows, recordUsage, getSpend, capUsd } from './usage.js'
+import { costOf, budgetAllows, recordUsage, getSpend, getHistory, capUsd } from './usage.js'
 import { authorize, checkAppCode, checkCronSecret, safeEqual } from './auth.js'
 
 describe('AI spend meter', () => {
@@ -20,6 +20,24 @@ describe('AI spend meter', () => {
     const { spentUsd } = await getSpend(month)
     expect(spentUsd).toBeGreaterThanOrEqual(2)
     expect(await budgetAllows(new Date('2031-04-01T00:00:00Z'))).toBe(true)
+  })
+  it('keeps a monthly history with request counts and a cost per request', async () => {
+    const now = new Date('2033-05-20T12:00:00Z')
+    const prev = new Date('2033-04-02T12:00:00Z')
+    await recordUsage({ input_tokens: 100_000, output_tokens: 10_000 }, 'claude-haiku-4-5', prev) // $0.15
+    await recordUsage({ input_tokens: 100_000, output_tokens: 10_000 }, 'claude-haiku-4-5', prev)
+    await recordUsage({ input_tokens: 200_000, output_tokens: 0 }, 'claude-haiku-4-5', now) // $0.20
+    const h = await getHistory(now, 4)
+    expect(h.capUsd).toBe(2)
+    expect(h.months.map((m) => m.month)).toEqual(['2033-05', '2033-04'])
+    expect(h.months[0]).toMatchObject({ requests: 1 })
+    expect(h.months[0].spentUsd).toBeCloseTo(0.2, 6)
+    expect(h.months[1].requests).toBe(2)
+    expect(h.months[1].avgPerRequestUsd).toBeCloseTo(0.15, 6)
+  })
+  it('the current month is always listed, even before any spend', async () => {
+    const h = await getHistory(new Date('2034-01-05T00:00:00Z'), 3)
+    expect(h.months).toEqual([{ month: '2034-01', spentUsd: 0, requests: 0, avgPerRequestUsd: null }])
   })
   it('honors a custom cap', () => {
     process.env.AI_MONTHLY_CAP_USD = '5'

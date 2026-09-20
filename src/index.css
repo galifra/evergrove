@@ -22,6 +22,45 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Keyboard focus must always be visible. Unlayered, so it beats utility resets. */
+:focus-visible {
+  outline: 2px solid #6ee7b7;
+  outline-offset: 2px;
+}
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline-offset: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -60px;
+  z-index: 100;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: #34d399;
+  color: #052e1b;
+  font-weight: 600;
+  font-size: 14px;
+}
+.skip-link:focus {
+  top: 10px;
+}
+
+/* People who ask their system for less motion get none. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 .font-display {
   font-family: var(--font-display);
 }

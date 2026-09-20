@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { MotionConfig } from 'framer-motion'
 import { Bot, LayoutGrid, Settings, Trees } from 'lucide-react'
 import { AppProvider, useApp } from './app/AppContext'
 import { go, useRoute } from './app/router'
@@ -30,6 +31,7 @@ function NavLink({ to, active, icon: Icon, children }) {
   return (
     <button
       onClick={() => go(to)}
+      aria-current={active ? 'page' : undefined}
       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors ${
         active ? 'bg-emerald-500/20 text-emerald-200' : 'text-white/60 hover:text-white hover:bg-white/5'
       }`}
@@ -82,8 +84,11 @@ function Shell() {
 
   return (
     <div className="min-h-screen">
+      <button type="button" className="skip-link" onClick={() => document.getElementById('main')?.focus()}>
+        Skip to content
+      </button>
       <header className="sticky top-0 z-30 backdrop-blur-md bg-[#0b140f]/80 border-b border-white/5">
-        <nav className="max-w-4xl mx-auto px-4 py-2.5 flex items-center gap-1">
+        <nav aria-label="Main" className="max-w-4xl mx-auto px-4 py-2.5 flex items-center gap-1">
           <span className="font-display text-lg mr-3 hidden sm:block">Evergrove</span>
           <NavLink to="/" active={route.name === 'home'} icon={Trees}>Tree</NavLink>
           <NavLink to="/jarvis" active={route.name === 'jarvis'} icon={Bot}>Jarvis</NavLink>
@@ -94,7 +99,7 @@ function Shell() {
         </nav>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 pt-6 pb-32">
+      <main id="main" tabIndex={-1} className="max-w-4xl mx-auto px-4 pt-6 pb-32 outline-none">
         <Page route={route} />
       </main>
 
@@ -106,8 +111,10 @@ function Shell() {
 
 export default function App() {
   return (
-    <AppProvider>
-      <Shell />
-    </AppProvider>
+    <MotionConfig reducedMotion="user">
+      <AppProvider>
+        <Shell />
+      </AppProvider>
+    </MotionConfig>
   )
 }

@@ -91,7 +91,7 @@ export function Button({ variant = 'primary', className = '', ...props }) {
 }
 
 export function ErrorNote({ children }) {
-  return children ? <p className="text-sm text-rose-300 mt-2">{children}</p> : null
+  return children ? <p role="alert" className="text-sm text-rose-300 mt-2">{children}</p> : null
 }
 
 export function Empty({ children }) {

@@ -8,6 +8,7 @@ import { composeBriefing } from '../evergrove/briefing'
 import { describeVerification, verifyLog } from '../core/verify'
 import { listApps } from '../modules'
 import { AccessCodePrompt } from './ui'
+import { useDialog } from './useDialog'
 
 const section = 'rounded-xl border border-white/10 p-3'
 const input =
@@ -15,6 +16,7 @@ const input =
 
 export default function SettingsModal({ onClose }) {
   const app = useApp()
+  const dialogRef = useDialog(true, onClose)
   const { settings, updateSettings, events, syncStatus } = app
   const [name, setName] = useState(settings.treeName)
   const [code, setCode] = useState(getAccessCode())
@@ -23,6 +25,7 @@ export default function SettingsModal({ onClose }) {
   const [reminderBusy, setReminderBusy] = useState(false)
   const [pass, setPass] = useState(settings.syncPassphrase)
   const [spend, setSpend] = useState(null)
+  const [history, setHistory] = useState(null)
   const [notice, setNotice] = useState('')
   const [health, setHealth] = useState('')
   const fileRef = useRef(null)
@@ -95,12 +98,17 @@ export default function SettingsModal({ onClose }) {
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 backdrop-blur-sm p-4">
       <motion.div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="settings-title"
+        tabIndex={-1}
         initial={{ opacity: 0, scale: 0.96, y: 8 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#0e1a13] p-5 shadow-2xl"
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-display text-xl">Settings</h2>
+          <h2 id="settings-title" className="font-display text-xl">Settings</h2>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/10" aria-label="Close">
             <X size={18} />
           </button>
@@ -210,6 +218,32 @@ export default function SettingsModal({ onClose }) {
               </span>
             </div>
             <p className="text-xs text-white/55 mt-1">A hard monthly cap. When it's reached the AI stops until next month; everything else keeps working.</p>
+            <details
+              className="mt-2 text-xs text-white/60"
+              onToggle={(e) => {
+                if (!e.currentTarget.open || history) return
+                fetch('/api/usage?history=1', { headers: { 'x-app-code': getAccessCode() } })
+                  .then((r) => (r.ok ? r.json() : null))
+                  .then((d) => d && setHistory(d))
+                  .catch(() => {})
+              }}
+            >
+              <summary className="cursor-pointer hover:text-white/80">Monthly cost review</summary>
+              {!history && <p className="mt-1">Loading...</p>}
+              {history && (
+                <ul className="mt-1 space-y-0.5">
+                  {history.months.map((m) => (
+                    <li key={m.month} className="flex justify-between gap-3">
+                      <span>{m.month}</span>
+                      <span>
+                        ${m.spentUsd.toFixed(3)} · {m.requests} request{m.requests === 1 ? '' : 's'}
+                        {m.avgPerRequestUsd !== null ? ` · $${m.avgPerRequestUsd.toFixed(4)} each` : ''}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </details>
           </div>
 
           <div className={section}>
@@ -266,7 +300,8 @@ export default function SettingsModal({ onClose }) {
             </button>
             <input ref={fileRef} type="file" accept="application/json" onChange={handleImportFile} hidden />
           </div>
-          {notice && <p className="text-xs text-white/60">{notice}</p>}
+          <p className="text-xs text-white/55 -mt-2">An export holds everything in plain text (Vault items stay encrypted). Keep the file somewhere private.</p>
+          {notice && <p className="text-xs text-white/60" role="status">{notice}</p>}
 
           <div>
             <button

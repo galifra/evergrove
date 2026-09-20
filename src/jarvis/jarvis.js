@@ -18,15 +18,28 @@ export function trackerCatalog(trackers) {
 // Context is assembled locally. Modules marked sensitive are left out unless
 // the user explicitly shared them; that is enforced here, in code, before any
 // network request exists.
-export function buildContext(registry, events, { shareSensitive = [] } = {}, now = new Date()) {
-  const parts = []
+// Which apps contributed to what the model is told, and which private ones
+// were held back. Sensitive apps are excluded here, in code, unless shared.
+export function contextSources(registry, events, { shareSensitive = [] } = {}, now = new Date()) {
+  const used = []
+  const withheld = []
   for (const m of registry.modules()) {
     if (!m.context || !m.derive) continue
-    if (m.sensitive && !shareSensitive.includes(m.id)) continue
+    if (m.sensitive && !shareSensitive.includes(m.id)) {
+      withheld.push({ id: m.id, name: m.name })
+      continue
+    }
     const text = m.context(m.derive(events, now), now)
-    if (text) parts.push(`[${m.name}]\n${text}`)
+    if (text) used.push({ id: m.id, name: m.name, sensitive: !!m.sensitive, text })
   }
-  return parts.join('\n').slice(0, 3500)
+  return { used, withheld }
+}
+
+export function buildContext(registry, events, options = {}, now = new Date()) {
+  return contextSources(registry, events, options, now)
+    .used.map((u) => `[${u.name}]\n${u.text}`)
+    .join('\n')
+    .slice(0, 3500)
 }
 
 // A lookup the model copies from, so weekday words never depend on it doing

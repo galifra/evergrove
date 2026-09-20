@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { History, Pause, Play, Plus, Undo2, X } from 'lucide-react'
 import { domainById } from '../lib/domains'
 import { levelFromXp, skillTotalXp } from '../lib/treeEngine'
+import { useDialog } from './useDialog'
 
 export default function DomainDrawer({ domainId, state, paused, onClose, onAddSkill, onPractice, onTogglePause, onUndo }) {
   const domain = domainId ? domainById(domainId) : null
@@ -10,6 +11,7 @@ export default function DomainDrawer({ domainId, state, paused, onClose, onAddSk
   const sorted = [...skills].sort((a, b) => skillTotalXp(b) - skillTotalXp(a))
   const [name, setName] = useState('')
   const [error, setError] = useState('')
+  const dialogRef = useDialog(!!domain, onClose)
   const [openHistory, setOpenHistory] = useState(null)
 
   // Every entry that fed a skill, newest first: the answer to "why is this level 3?".
@@ -37,6 +39,11 @@ export default function DomainDrawer({ domainId, state, paused, onClose, onAddSk
           onClick={onClose}
         >
           <motion.div
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={domain.name}
+            tabIndex={-1}
             initial={{ x: 360 }}
             animate={{ x: 0 }}
             exit={{ x: 360 }}

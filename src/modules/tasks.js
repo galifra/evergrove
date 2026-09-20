@@ -256,7 +256,8 @@ export const tasksModule = {
     {
       name: 'add_habit',
       tier: 'auto',
-      description: 'Create a recurring habit to track (daily, or weekly with a target count).',
+      description:
+        'Create a habit: a personal routine the user is building and wants a streak for (daily, or weekly with a target count). Chores and upkeep on a schedule are repeating tasks instead (add_task with repeatEveryDays).',
       input: {
         type: 'object',
         properties: {

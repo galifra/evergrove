@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { Bot, Check, Loader2, Mic, Send, Square, Undo2, X } from 'lucide-react'
 import { useApp } from '../app/AppContext'
-import { useRoute } from '../app/router'
+import { go, useRoute } from '../app/router'
 import { composeBriefing } from '../evergrove/briefing'
 import { deriveToday } from '../evergrove/today'
 import { HELP_TEXT, matchLocalIntent } from '../jarvis/localIntents'
 import { newId } from '../core/events'
-import { approveStep, askJarvis, buildRequest, planFromContent, runAutoSteps } from '../jarvis/jarvis'
+import { approveStep, askJarvis, buildRequest, contextSources, planFromContent, runAutoSteps } from '../jarvis/jarvis'
 import { getAccessCode } from '../lib/storage'
 import { speechSupported, startListening } from '../lib/speech'
 import { describeLocal } from '../modules/calendar'
@@ -43,7 +43,7 @@ const prettyArgs = (args) =>
     .join(' · ')
 
 export default function JarvisPage() {
-  const { runtime, events, settings } = useApp()
+  const { runtime, events, settings, updateSettings } = useApp()
   const route = useRoute()
   const briefed = useRef(false)
   const [messages, setMessages] = useState(loadChat)
@@ -52,6 +52,7 @@ export default function JarvisPage() {
   const [error, setError] = useState('')
   const [needsCode, setNeedsCode] = useState(false)
   const [seen, setSeen] = useState(null)
+  const [copiedSent, setCopiedSent] = useState(false)
   const [listening, setListening] = useState(false)
   const [voiceError, setVoiceError] = useState('')
   const stopVoice = useRef(null)
@@ -125,7 +126,14 @@ export default function JarvisPage() {
         m.role === 'assistant' ? { role: 'assistant', text: m.memo || m.text || '(waiting for your approval)' } : m
       )
       const payload = buildRequest({ history: forModel, registry: runtime.registry, events, shareSensitive: settings.shareSensitive })
-      setSeen({ context: payload.context, turns: payload.messages.length, tools: payload.tools.length, shared: settings.shareSensitive })
+      setSeen({
+        context: payload.context,
+        turns: payload.messages.length,
+        tools: payload.tools.length,
+        shared: settings.shareSensitive,
+        sources: contextSources(runtime.registry, events, { shareSensitive: settings.shareSensitive }),
+        sent: JSON.stringify({ messages: payload.messages, context: payload.context, today: payload.today, nowLocal: payload.nowLocal }, null, 2),
+      })
       const reply = await askJarvis(payload)
       if (reply.spend) setSpend(reply.spend)
       const plan = planFromContent(reply.content, runtime.registry)
@@ -234,7 +242,7 @@ export default function JarvisPage() {
         }
       />
 
-      <div className="flex-1 space-y-3 pb-4">
+      <div className="flex-1 space-y-3 pb-4" role="log" aria-live="polite" aria-relevant="additions" aria-label="Conversation">
         {messages.length === 0 && (
           <Empty>
             Try: "ran 30 minutes and read 20 pages", "add dentist Friday 3pm", "I spent $12 on lunch", or "make me a tracker for houseplants".
@@ -277,8 +285,8 @@ export default function JarvisPage() {
             </div>
           )
         )}
-        {busy && <div className="text-sm text-white/55 flex items-center gap-2"><Loader2 size={14} className="animate-spin" /> Thinking...</div>}
-        {error && <div className="text-sm text-rose-300">{error}</div>}
+        {busy && <div role="status" className="text-sm text-white/55 flex items-center gap-2"><Loader2 size={14} className="animate-spin" /> Thinking...</div>}
+        {error && <div role="alert" className="text-sm text-rose-300">{error}</div>}
         {needsCode && (
           <AccessCodePrompt
             onSaved={() => {
@@ -304,7 +312,51 @@ export default function JarvisPage() {
             <p>Private areas shared: {seen.shared.length ? seen.shared.join(', ') : 'none'}. The vault is never shared.</p>
             <div>
               <p className="text-white/50">Summary of your apps that was included:</p>
-              <pre className="mt-1 whitespace-pre-wrap font-sans text-white/60">{seen.context || '(nothing)'}</pre>
+              {seen.sources.used.length === 0 && <p className="mt-1 text-white/60">(nothing)</p>}
+              <ul className="mt-1 space-y-2">
+                {seen.sources.used.map((u) => (
+                  <li key={u.id} className="rounded-md bg-white/[0.03] border border-white/10 p-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-white/70">{u.name}{u.sensitive ? ' (private, shared by you)' : ''}</span>
+                      <span className="flex gap-2">
+                        <button type="button" className="underline hover:text-white/80" onClick={() => go(u.id === 'evergrove' ? '/' : `/app/${u.id}`)}>Correct it</button>
+                        {u.sensitive && (
+                          <button
+                            type="button"
+                            className="underline text-rose-300 hover:text-rose-200"
+                            onClick={() => {
+                              updateSettings({ shareSensitive: settings.shareSensitive.filter((id) => id !== u.id) })
+                              setSeen({ ...seen, shared: seen.shared.filter((id) => id !== u.id), sources: { used: seen.sources.used.filter((x) => x.id !== u.id), withheld: [...seen.sources.withheld, { id: u.id, name: u.name }] } })
+                            }}
+                          >
+                            Stop sharing
+                          </button>
+                        )}
+                      </span>
+                    </div>
+                    <pre className="mt-1 whitespace-pre-wrap font-sans text-white/60">{u.text}</pre>
+                  </li>
+                ))}
+              </ul>
+              {seen.sources.withheld.length > 0 && <p className="mt-2 text-white/50">Kept private and not sent: {seen.sources.withheld.map((w) => w.name).join(', ')}.</p>}
+            </div>
+            <div className="flex gap-2 items-center">
+              <button
+                type="button"
+                className="px-2 py-1 rounded-md bg-white/5 hover:bg-white/10 border border-white/10"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(seen.sent)
+                    setCopiedSent(true)
+                    setTimeout(() => setCopiedSent(false), 2000)
+                  } catch {
+                    setError('Copying was blocked by the browser.')
+                  }
+                }}
+              >
+                {copiedSent ? 'Copied' : 'Copy exactly what was sent'}
+              </button>
+              <span className="text-white/45">The action list and a few fixed instructions are not included in the copy.</span>
             </div>
           </div>
         </details>
