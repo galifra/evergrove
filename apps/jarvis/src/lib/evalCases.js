@@ -95,6 +95,7 @@ export const CASES = [
   ['remember to call mom on Sunday', (s) => has(s, 'tasks__add_task') && !has(s, 'memory__remember'), 'new'],
   ['I really prefer working out in the mornings', (s) => !has(s, 'memory__remember') || (lower(find(s, 'memory__remember')?.args.text).includes('morning') && !practiced(s) && !logged(s, 'body')), 'new'],
   ['I skipped the gym today because I was tired', (s) => !has(s, 'memory__remember') && noPurchase(s), 'new'],
+  ['just so you know, I am vegetarian', (s) => lower(find(s, 'memory__remember')?.args.text).includes('vegetarian') && !logged(s, 'health'), 'new'],
   ['I just had a weird dream about a lighthouse', (s) => !has(s, 'memory__remember'), 'new'],
   ['remember to pick up the dry cleaning', (s) => lower(find(s, 'tasks__add_task')?.args.title).includes('dry'), 'single'],
   ['add a task to renew my license by the end of the month', (s) => find(s, 'tasks__add_task')?.args.due === '2026-09-30', 'single'],

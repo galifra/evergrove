@@ -60,4 +60,16 @@ A running log of what was measured while building, so the checked boxes in `docs
   - He said he would remember, and had forgotten, things with no memory tool to do it.
   - Several answers ran long; the limits are stated, and the automatic check flags anything over about 420 characters.
 - `npm run tone` runs 25 situations through the real model and writes `docs/v2/TONE-SAMPLE.md` for you to read (about 10 cents). The last run passed every automatic check. Whether the replies feel warm is yours to judge.
-- Still open: the greeting's "one note when something is necessary" (Phase 7), his name as a memory (Phase 6), and your reading of the sample.
+- Still open: the greeting's "one note when something is necessary" (Phase 7), and your reading of the sample.
+
+## Phase 6: memory
+
+- Jarvis keeps short notes about you (`memory.noted`, `memory.revised`, `memory.forgotten` events): preference, routine, goal, person or fact, with a private flag. Nothing is saved silently: you type "remember that ..." (your own command), or he offers a note and it waits for your click, like any other action. Forgetting asks first, is undoable, and deletes nothing from the log.
+- Limits, all tested: 200 notes, 20 new a day, 240 characters, no duplicates.
+- What he is told is chosen on the device by a fixed rule, with no AI call: private notes are left out unless you share "Memory"; preferences, routines and goals come first; words shared with your message and recent notes rank higher; at most 12 notes and about 1,600 characters. The notes travel as a marked block of data, cleaned and capped on the server, and a hostile note triggers no action and can't approve itself (tests).
+- Forgetting really forgets: a forgotten note is absent from every later request, and the removal reaches another window on the same log (tests).
+- `/jarvis/memory`: list, edit, change kind, mark private, forget (with confirmation), filter, and the count against 200. Private notes are masked (text and kind) until you tick "Show private notes", which is never remembered. Checked in the browser at phone width: no sideways scroll.
+- Your name: asked once on Jarvis's home ("Not now" ends it), saved as a note, used in the greeting ("Good afternoon, Gabe.") and sent to the assistant as the cleaned name field; changeable in Jarvis settings or from the notes list. Checked live.
+- Chat: "remember that ...", "call me ...", "what do you remember", "forget that" (the note saved a moment ago) and "forget <words>" (one match asks first; several asks which). Checked live: remember, forget that, Do it, and the confirmation.
+- The "What the AI saw" panel lists the notes that were included, with a Correct-it link, and the copyable request now includes the name and notes.
+- Real-model routing (a real call, about 2 cents each run): "remember to call mom on Sunday" first became a memory note, a real mistake, and is now taught to be a task; a lasting fact ("I am vegetarian") was offered as a note 3 of 3 times; a preference, a skipped gym day and a passing dream were never saved as notes. Five memory cases are in the routing set (140 phrases). The full 95% score is still to be re-run once at the end.

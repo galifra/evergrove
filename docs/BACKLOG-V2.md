@@ -139,7 +139,7 @@ Evergrove becomes the **mother app**. Every smaller app gets its own address und
 ## Phase 5 - The butler's voice
 
 - [x] P5.1 Turn the personality guide into a layered system prompt: identity and tone, honesty rules, boundaries, then the existing tool rules.
-- [ ] P5.2 Add a name setting: what Jarvis calls you (asked once, saved as a memory, changeable).
+- [x] P5.2 Add a name setting: what Jarvis calls you (asked once, saved as a memory, changeable).
 - [x] P5.3 Add optional style: plain, or butler ("sir/ma'am" style), your choice, off by default.
 - [x] P5.4 Write reply templates for the common answers (done, undone, needs approval, error, clarify), so routine replies cost nothing and sound consistent.
 - [x] P5.5 Add spoken replies with the browser's built-in voice: toggle, voice choice, speed, and a stop button.
@@ -149,16 +149,16 @@ Evergrove becomes the **mother app**. Every smaller app gets its own address und
 
 ## Phase 6 - Memory
 
-- [ ] P6.1 Add the event types `memory.noted`, `memory.revised` and `memory.forgotten` (forgetting is a reversal, nothing is deleted from the log).
-- [ ] P6.2 Add the action `remember` (saves after you say "remember", or say yes to his offer).
-- [ ] P6.3 Add the action `forget` (asks first).
-- [ ] P6.4 Add categories: preference, routine, goal, person, fact, and a private flag for sensitive notes.
-- [ ] P6.5 Build `/jarvis/memory`: list, edit, delete, filter, and a count against the 200-note limit.
-- [ ] P6.6 Choose which memories go to the AI with a local rule (private ones excluded unless shared; recent and keyword-relevant first; at most about 400 tokens), no AI call needed.
-- [ ] P6.7 Let Jarvis offer to remember: when you state a lasting preference he asks "Want me to remember that?" and saves only on yes.
-- [ ] P6.8 Treat memory text as data, never as instructions (covered by an injection test).
-- [ ] P6.9 Show which memories informed an answer in the "what the AI saw" panel.
-- [ ] TP6 Nothing is ever saved without consent; forgetting removes it from all future requests and syncs to other devices; the limit is enforced; a hostile memory text triggers no action; a private memory never appears in a request unless shared.
+- [x] P6.1 Add the event types `memory.noted`, `memory.revised` and `memory.forgotten` (forgetting is a reversal, nothing is deleted from the log).
+- [x] P6.2 Add the action `remember` (saves after you say "remember", or say yes to his offer).
+- [x] P6.3 Add the action `forget` (asks first).
+- [x] P6.4 Add categories: preference, routine, goal, person, fact, and a private flag for sensitive notes.
+- [x] P6.5 Build `/jarvis/memory`: list, edit, delete, filter, and a count against the 200-note limit.
+- [x] P6.6 Choose which memories go to the AI with a local rule (private ones excluded unless shared; recent and keyword-relevant first; at most about 400 tokens), no AI call needed.
+- [x] P6.7 Let Jarvis offer to remember: when you state a lasting preference he asks "Want me to remember that?" and saves only on yes.
+- [x] P6.8 Treat memory text as data, never as instructions (covered by an injection test).
+- [x] P6.9 Show which memories informed an answer in the "what the AI saw" panel.
+- [x] TP6 Nothing is ever saved without consent; forgetting removes it from all future requests and syncs to other devices; the limit is enforced; a hostile memory text triggers no action; a private memory never appears in a request unless shared.
 
 ## Phase 7 - Honest feedback, and speaking up when necessary
 

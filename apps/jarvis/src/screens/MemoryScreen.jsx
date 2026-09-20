@@ -42,14 +42,13 @@ function Note({ note, revealed, act, busy }) {
             </p>
           )}
           <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-white/50">
-            <Select
+            {!masked && <Select
               aria-label="Category"
               value={note.category}
               onChange={(e) => act('memory__revise', { note: note.text, category: e.target.value })}
               options={CATEGORIES.map((c) => ({ value: c, label: LABEL[c] }))}
               className="!w-auto !py-0.5 !text-[11px]"
-              disabled={masked}
-            />
+            />}
             <label className="inline-flex items-center gap-1 cursor-pointer">
               <input type="checkbox" className="accent-sky-400" checked={note.private} disabled={masked} onChange={(e) => act('memory__revise', { note: note.text, private: e.target.checked })} />
               Private
