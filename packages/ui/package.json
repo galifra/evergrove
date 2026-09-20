@@ -1,0 +1,13 @@
+{
+  "name": "@evergrove/ui",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared building blocks and the tree drawing. Depends on core.",
+  "exports": {
+    "./*": "./src/*"
+  },
+  "dependencies": {
+    "@evergrove/core": "*"
+  }
+}

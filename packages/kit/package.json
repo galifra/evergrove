@@ -1,0 +1,16 @@
+{
+  "name": "@evergrove/kit",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The runtime every app runs on: store, sync, settings, router, push, speech, service worker, settings screen. Depends on all packages below it.",
+  "exports": {
+    "./*": "./src/*"
+  },
+  "dependencies": {
+    "@evergrove/core": "*",
+    "@evergrove/modules": "*",
+    "@evergrove/rules": "*",
+    "@evergrove/ui": "*"
+  }
+}

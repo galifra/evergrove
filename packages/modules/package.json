@@ -1,0 +1,13 @@
+{
+  "name": "@evergrove/modules",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Each app's own logic (tasks, calendar, money, goals, people, vault, csv). Depends on core.",
+  "exports": {
+    "./*": "./src/*"
+  },
+  "dependencies": {
+    "@evergrove/core": "*"
+  }
+}

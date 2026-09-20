@@ -60,7 +60,7 @@ async function bundleServiceWorker(write) {
       outDir: 'dist',
       emptyOutDir: false,
       minify: true,
-      lib: { entry: 'src/sw/sw.js', formats: ['iife'], name: 'EvergroveSW', fileName: () => 'sw.js' },
+      lib: { entry: 'packages/kit/src/sw/sw.js', formats: ['iife'], name: 'EvergroveSW', fileName: () => 'sw.js' },
     },
   })
   const out = Array.isArray(result) ? result[0] : result

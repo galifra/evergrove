@@ -1,0 +1,14 @@
+{
+  "name": "@evergrove/rules",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Growth rules, insights, Today, briefing, tracker views, the app registry and Evergrove's own actions. Depends on core and modules.",
+  "exports": {
+    "./*": "./src/*"
+  },
+  "dependencies": {
+    "@evergrove/core": "*",
+    "@evergrove/modules": "*"
+  }
+}

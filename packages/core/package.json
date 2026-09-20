@@ -1,0 +1,10 @@
+{
+  "name": "@evergrove/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Event log, store, registry, schema, crypto, sync, browser storage, domains and tree maths. Depends on nothing.",
+  "exports": {
+    "./*": "./src/*"
+  }
+}
