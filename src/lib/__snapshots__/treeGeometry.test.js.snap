@@ -1,0 +1,51 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`the recorded picture at each stage > matches what was reviewed 1`] = `
+{
+  "ancient": {
+    "blooms": 0,
+    "branches": 7,
+    "dormant": 0,
+    "fingerprint": "c934ee87",
+    "leaves": 294,
+    "trunkHeight": 280,
+    "twigs": 42,
+  },
+  "mature": {
+    "blooms": 0,
+    "branches": 7,
+    "dormant": 0,
+    "fingerprint": "5b4b018b",
+    "leaves": 84,
+    "trunkHeight": 280,
+    "twigs": 21,
+  },
+  "sapling": {
+    "blooms": 0,
+    "branches": 7,
+    "dormant": 4,
+    "fingerprint": "3dc4fc13",
+    "leaves": 6,
+    "trunkHeight": 248,
+    "twigs": 3,
+  },
+  "seed": {
+    "blooms": 0,
+    "branches": 7,
+    "dormant": 7,
+    "fingerprint": "342d6e53",
+    "leaves": 0,
+    "trunkHeight": 90,
+    "twigs": 0,
+  },
+  "sprout": {
+    "blooms": 0,
+    "branches": 7,
+    "dormant": 6,
+    "fingerprint": "7fcd99b6",
+    "leaves": 1,
+    "trunkHeight": 152,
+    "twigs": 1,
+  },
+}
+`;

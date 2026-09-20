@@ -21,9 +21,11 @@ export function deriveEvergrove(events) {
       if (!AREAS.includes(g.domain)) continue
       const area = (skills[g.domain] ??= {})
       const existing = area[g.skillId]
+      // A skill that any private tracker has fed stays private (the safe direction).
+      const priv = existing?.private ?? g.source ?? null
       area[g.skillId] = existing
-        ? { ...existing, xp: existing.xp + g.xp, updatedAt: e.occurredAt }
-        : { id: g.skillId, name: g.skillName, xp: g.xp, createdAt: e.occurredAt, updatedAt: e.occurredAt }
+        ? { ...existing, xp: existing.xp + g.xp, updatedAt: e.occurredAt, private: priv }
+        : { id: g.skillId, name: g.skillName, xp: g.xp, createdAt: e.occurredAt, updatedAt: e.occurredAt, private: priv }
       if (g.xp > 0) {
         if (!lastGrowthAt[g.domain] || e.occurredAt > lastGrowthAt[g.domain]) lastGrowthAt[g.domain] = e.occurredAt
         growthDays.add(localDate(e.occurredAt))
@@ -34,7 +36,7 @@ export function deriveEvergrove(events) {
       id: e.id,
       text: grown[0].text || e.data.text || e.type,
       createdAt: e.occurredAt,
-      updates: grown.map((g) => ({ domain: g.domain, skillId: g.skillId, skillName: g.skillName, xpGain: g.xp })),
+      updates: grown.map((g) => ({ domain: g.domain, skillId: g.skillId, skillName: g.skillName, xpGain: g.xp, source: g.source ?? null })),
       summary: e.data.summary || '',
     })
   }

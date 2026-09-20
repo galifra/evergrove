@@ -200,7 +200,7 @@ export default function MoneyPage() {
           }}
         >
           <Field label="What"><TextInput value={dl.name} onChange={(e) => setDl({ ...dl, name: e.target.value })} placeholder="Car insurance renewal" /></Field>
-          <Field label="Kind"><Select value={dl.kind} onChange={(e) => setDl({ ...dl, kind: e.target.value })} options={['insurance', 'tax', 'license', 'other']} /></Field>
+          <Field label="Kind"><Select value={dl.kind} onChange={(e) => setDl({ ...dl, kind: e.target.value })} options={['insurance', 'tax', 'warranty', 'license', 'other']} /></Field>
           <Field label="Date"><TextInput type="date" value={dl.date} onChange={(e) => setDl({ ...dl, date: e.target.value })} /></Field>
           <Field label="Amount ($, optional)"><TextInput type="number" step="0.01" min="0" value={dl.amount} onChange={(e) => setDl({ ...dl, amount: e.target.value })} /></Field>
           <label className="flex items-center gap-2 text-sm pb-2"><input type="checkbox" checked={dl.yearly} onChange={(e) => setDl({ ...dl, yearly: e.target.checked })} /> Every year</label>

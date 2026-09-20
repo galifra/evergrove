@@ -91,7 +91,8 @@ export const RULES = {
       const def = ctx.trackers.get(e.data.trackerId)
       if (!def) return []
       const g = trackerGrowth(def, e.data.values)
-      return [{ ...g, text: summarizeValues(def, e.data.values) }]
+      // `source` marks growth that came from a private tracker, so what it is called never reaches the AI unless shared.
+      return [{ ...g, text: summarizeValues(def, e.data.values), source: def.sensitive ? def.id : null }]
     },
   },
   'task.completed': {

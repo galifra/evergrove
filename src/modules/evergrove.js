@@ -18,17 +18,22 @@ export const evergroveModule = {
   area: null,
   description: 'The tree: every area of your life, grown from everything you do.',
   derive: (events) => deriveEvergrove(events),
-  context(state, now = new Date()) {
+  // `shared` lists the private apps the user has chosen to share. Growth from a
+  // private tracker (health, mind, Compass) is left out of this summary otherwise.
+  context(state, now = new Date(), { shared = [] } = {}) {
+    const visible = (source) => !source || shared.includes(source)
     const lines = []
     for (const area of AREAS) {
-      const skills = Object.values(state.skills[area] ?? {})
+      const skills = Object.values(state.skills[area] ?? {}).filter((s) => visible(s.private))
       if (skills.length) {
         const top = skills.sort((a, b) => b.xp - a.xp).slice(0, 4).map((s) => `${s.name} ${s.xp}xp`)
         lines.push(`${DOMAIN_MAP[area].name}${state.paused.includes(area) ? ' (paused)' : ''}: ${top.join(', ')}`)
       }
     }
     const weekAgo = now.getTime() - 7 * 86400000
-    const week = state.entries.filter((e) => new Date(e.createdAt).getTime() >= weekAgo)
+    const week = state.entries
+      .map((e) => ({ ...e, updates: e.updates.filter((u) => visible(u.source)) }))
+      .filter((e) => new Date(e.createdAt).getTime() >= weekAgo && e.updates.length)
     if (week.length) {
       const byArea = {}
       for (const e of week) for (const u of e.updates) byArea[u.domain] = (byArea[u.domain] ?? 0) + u.xpGain
@@ -36,7 +41,8 @@ export const evergroveModule = {
       const total = Object.values(byArea).reduce((s, x) => s + x, 0)
       lines.push(`Last 7 days: ${week.length} entries, ${total} xp (${parts.join(', ') || 'none'}). Growth streak: ${growthStreak(state.growthDays, now)} days.`)
     } else if (Object.keys(state.skills).length) {
-      lines.push('Last 7 days: no growth logged.')
+      const hidden = state.entries.some((e) => e.updates.some((u) => !visible(u.source)))
+      lines.push(hidden ? 'Last 7 days: no growth logged in the shared apps (private apps are not included).' : 'Last 7 days: no growth logged.')
     }
     const insights = deriveInsights(state, now).map((i) => i.message)
     if (insights.length) lines.push('Insights: ' + insights.join(' '))
@@ -136,6 +142,7 @@ export const evergroveModule = {
           },
           skillName: { type: 'string', maxLength: 40, description: 'Skill on the tree that entries grow' },
           xpPerEntry: { type: 'integer', minimum: 1, maximum: 40 },
+          private: { type: 'boolean', description: 'true when it is about health, mental health, money, relationships or anything sensitive: what it grows is then never sent to the AI unless the user shares it' },
         },
         required: ['name', 'area', 'fields'],
       },
@@ -147,6 +154,7 @@ export const evergroveModule = {
           description: args.description,
           fields: args.fields,
           growth: { skill: { fixed: args.skillName ?? args.name }, xp: { flat: args.xpPerEntry ?? 4 } },
+          sensitive: args.private === true,
         })
         if (!def) return { error: 'That tracker definition is not valid.' }
         if (state.trackers.some((t) => t.id === def.id)) return { error: `A tracker called "${def.name}" already exists.` }

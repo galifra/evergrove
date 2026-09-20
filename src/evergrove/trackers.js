@@ -174,7 +174,7 @@ export const BUILTIN_TRACKERS = [
     description: 'A log of things done: bills, errands, filings, warranties.',
     fields: [
       f.text('what', 'What got done', { required: true }),
-      f.sel('category', 'Category', ['bill', 'errand', 'filing', 'warranty', 'insurance', 'tax', 'other'], { required: true }),
+      f.sel('category', 'Category', ['bill', 'receipt', 'errand', 'filing', 'warranty', 'insurance', 'tax', 'other'], { required: true }),
       f.num('amountCents', 'Amount (cents)', { min: 0 }),
       f.text('notes', 'Notes'),
     ],

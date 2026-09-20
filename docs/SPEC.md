@@ -55,7 +55,7 @@ Permission tiers per action:
 - `ask`: Jarvis shows a preview and waits (reschedule, cancel, delete, create an app).
 - `suggest`: Jarvis may only describe it, never run it.
 Tiers are enforced in code before an action runs, never by trusting the model.
-Anything you type into chat is by definition shared with the model. "Never send" covers stored data and summaries.
+Anything you type into chat is by definition shared with the model. "Never send" covers stored data and summaries. Growth that comes from a private tracker (health, mind, Compass, or one you mark private) is left out of the tree summary unless that tracker is shared.
 
 ## 4. Evergrove growth rules (versioned; rules version 1)
 
@@ -90,6 +90,8 @@ Principles: tree never shrinks, areas can be paused (gentle mode: no nudges, no 
 
 - Monthly AI cap (default $2) enforced on the server from real token usage; requests are refused once reached.
 - Cheapest model by default; tools use one shared tracker tool instead of one tool per tracker; prompt caching where supported.
+- Routing order: exact commands are matched on the device first (free, offline); then the cheap model; a stronger model is tried once only when the cheap model's answer is unusable (an invented tool, arguments that break the schema, or no answer). A clarifying question is never escalated. Every call, escalated or not, counts against the same cap.
+- The routing eval (130+ phrases: single, multi-app, typos, ambiguous, adversarial) records misroute rate, latency and cost per request; see docs/SECURITY.md for the release checklist.
 - Hosting on free tiers only. No bank linking, no paid services.
 
 ## 8. Paper test (all walked through the code as tests)

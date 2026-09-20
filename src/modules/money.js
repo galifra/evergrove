@@ -583,13 +583,13 @@ export const moneyModule = {
       name: 'add_deadline',
       tier: 'auto',
       description:
-        'Track an insurance renewal, tax deadline or similar date that must not be missed. Repeats every year unless one-time. Shows on the calendar and in Today, and can be ticked off when done.',
+        'Track an insurance renewal, tax deadline, warranty expiry or similar date that must not be missed. Repeats every year unless one-time. Shows on the calendar and in Today, and can be ticked off when done. Only for a date still to come; something the user already did (filed, renewed, claimed) belongs in the Records tracker instead.',
       input: {
         type: 'object',
         properties: {
           name: { type: 'string', maxLength: 60 },
           date: DATE,
-          kind: { type: 'string', enum: ['tax', 'insurance', 'license', 'other'] },
+          kind: { type: 'string', enum: ['tax', 'insurance', 'warranty', 'license', 'other'] },
           yearly: { type: 'boolean', description: 'true (default) if it comes round every year' },
           amount: { type: 'number', minimum: 0.01, maximum: 10_000_000, description: 'Amount due in dollars, if known' },
         },

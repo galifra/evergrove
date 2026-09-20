@@ -213,3 +213,17 @@ describe('general guidance', () => {
     expect(formatCents(-1234)).toBe('-$12.34')
   })
 })
+
+describe('warranties and receipts (records)', () => {
+  it('a warranty expiry is tracked like any other deadline, with no fake amount', async () => {
+    const r = await call('money__add_deadline', { name: 'Laptop warranty ends', date: '2026-05-18', kind: 'warranty', yearly: false })
+    expect(r.status).toBe('done')
+    expect(money().deadlines[0]).toMatchObject({ name: 'Laptop warranty ends', category: 'warranty', daysUntil: 3 })
+    expect(deriveToday(log.getEvents(), NOW).map((i) => i.text).join(' ')).toMatch(/Laptop warranty ends is due in 3 days\./)
+  })
+
+  it('the Records tracker accepts a receipt with its amount', async () => {
+    const r = await reg.invoke('evergrove__log_tracker_entry', { tracker: 'records', values: { what: 'Laptop receipt', category: 'receipt', amountCents: 129900 } }, { now: NOW })
+    expect(r.status).toBe('done')
+  })
+})

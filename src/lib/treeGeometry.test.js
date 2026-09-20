@@ -83,3 +83,20 @@ describe('drawing the tree', () => {
     expect(buildTree({ ...STAGES.mature, paused: ['health'] })).toEqual(buildTree(STAGES.mature))
   })
 })
+
+// A recorded picture of the tree at each growth stage. If the drawing changes on
+// purpose, review the difference and update the snapshot; if it changes by
+// accident, this is what catches it. `fingerprint` covers every drawn coordinate.
+const fingerprint = (t) => {
+  const text = JSON.stringify(t)
+  let h = 2166136261
+  for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 16777619) >>> 0
+  return h.toString(16)
+}
+
+describe('the recorded picture at each stage', () => {
+  it('matches what was reviewed', () => {
+    const picture = Object.fromEntries(Object.entries(STAGES).map(([name, s]) => [name, { ...summary(buildTree(s)), fingerprint: fingerprint(buildTree(s)) }]))
+    expect(picture).toMatchSnapshot()
+  })
+})

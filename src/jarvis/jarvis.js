@@ -30,7 +30,7 @@ export function contextSources(registry, events, { shareSensitive = [] } = {}, n
       withheld.push({ id: m.id, name: m.name })
       continue
     }
-    const text = m.context(m.derive(events, now), now)
+    const text = m.context(m.derive(events, now), now, { shared: shareSensitive })
     if (text) used.push({ id: m.id, name: m.name, sensitive: !!m.sensitive, text })
   }
   return { used, withheld }
