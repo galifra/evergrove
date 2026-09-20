@@ -66,10 +66,21 @@ export async function budgetAllows(now = new Date()) {
   return spentUsd < cap
 }
 
-export async function recordUsage(usage, model, now = new Date()) {
+export async function recordUsage(usage, model, now = new Date(), purpose = 'chat') {
   const cost = costOf(usage, model)
   if (cost <= 0) return getSpend(now)
   await getKv().incrbyfloat(monthKey(now), cost)
+  // The same spend, counted again under what it was for, so the cost review can split it.
+  await getKv().incrbyfloat(`${monthKey(now)}:${purpose}`, cost)
   await getKv().incrbyfloat(countKey(now), 1)
   return getSpend(now)
+}
+
+// Optional AI (the weekly polish, opinions) stops at 80% of the monthly cap, so the chat, which
+// matters more, always has the last fifth to itself (docs/v2/COST-SPEC).
+export const RATION_AT = 0.8
+
+export async function optionalAllows(now = new Date()) {
+  const { spentUsd, capUsd: cap } = await getSpend(now)
+  return spentUsd < cap * RATION_AT
 }
