@@ -37,6 +37,21 @@ function countKey(now = new Date()) {
   return `evergrove:usagecount:${now.toISOString().slice(0, 7)}`
 }
 
+// What the money was spent on. Every request says which of these it is; the total above is the
+// sum, so a request with an unknown purpose still counts against the cap.
+export const PURPOSES_TRACKED = ['chat', 'logging', 'weekly', 'opinion']
+export const PURPOSE_LABELS = { chat: 'Chat with Jarvis', logging: 'Typed entries on the tree', weekly: 'Weekly write-up', opinion: 'Opinions you asked for' }
+
+// Spend by purpose for one month, in dollars; purposes with nothing spent are left out.
+export async function getSpendByPurpose(now = new Date()) {
+  const out = {}
+  for (const p of PURPOSES_TRACKED) {
+    const v = Number((await getKv().get(`${monthKey(now)}:${p}`)) ?? 0)
+    if (v > 0) out[p] = v
+  }
+  return out
+}
+
 // Spend and request count for the last few months, newest first, for the
 // monthly cost review. Months with nothing recorded are left out, except the current one.
 export async function getHistory(now = new Date(), months = 6) {
@@ -51,14 +66,16 @@ export async function getHistory(now = new Date(), months = 6) {
       spentUsd,
       requests,
       avgPerRequestUsd: requests ? spentUsd / requests : null,
+      byPurpose: await getSpendByPurpose(d),
     })
   }
-  return { capUsd: capUsd(), months: out }
+  return { capUsd: capUsd(), rationAt: RATION_AT, purposeLabels: PURPOSE_LABELS, months: out }
 }
 
 export async function getSpend(now = new Date()) {
   const spent = Number((await getKv().get(monthKey(now))) ?? 0)
-  return { spentUsd: spent, capUsd: capUsd(), month: now.toISOString().slice(0, 7) }
+  const cap = capUsd()
+  return { spentUsd: spent, capUsd: cap, month: now.toISOString().slice(0, 7), rationed: spent >= cap * RATION_AT, stopped: spent >= cap }
 }
 
 export async function budgetAllows(now = new Date()) {
@@ -76,11 +93,25 @@ export async function recordUsage(usage, model, now = new Date(), purpose = 'cha
   return getSpend(now)
 }
 
-// Optional AI (the weekly polish, opinions) stops at 80% of the monthly cap, so the chat, which
-// matters more, always has the last fifth to itself (docs/v2/COST-SPEC).
+// Rationing (docs/v2/COST-PLAN.md). Optional AI (the weekly write-up, opinions) stops at 80% of the
+// monthly cap so the chat, which matters more, keeps the last fifth to itself. Proactive AI, which
+// is the weekly write-up, may also never take more than 10% of the cap. At 100% everything stops.
 export const RATION_AT = 0.8
+export const PROACTIVE_SHARE = 0.1
 
 export async function optionalAllows(now = new Date()) {
   const { spentUsd, capUsd: cap } = await getSpend(now)
   return spentUsd < cap * RATION_AT
+}
+
+export async function proactiveAllows(now = new Date()) {
+  const spent = Number((await getKv().get(`${monthKey(now)}:weekly`)) ?? 0)
+  return spent < capUsd() * PROACTIVE_SHARE
+}
+
+// What he says when the money runs short, in plain words, so nothing fails quietly.
+export const MESSAGES = {
+  ration: "I'm on a short ration this month, so I'm keeping what's left for our chats. The weekly write-up and opinions pause until next month.",
+  proactive: "I've already used my share of the month on weekly write-ups, so I'll leave that one for next month.",
+  stopped: "I've used this month's AI allowance, so I can only do the quick commands until it resets on the 1st: undo, brief me, today, remember, forget and the weekly review. Everything in your apps still works.",
 }

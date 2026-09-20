@@ -1,0 +1,49 @@
+{
+  "measuredAt": "2026-09-20T21:37:42.544Z",
+  "model": "claude-haiku-4-5-20251001",
+  "coldFirst": {
+    "model": "claude-haiku-4-5-20251001",
+    "input": 784,
+    "output": 87,
+    "cacheRead": 8582,
+    "cacheWrite": 0,
+    "costUsd": 0.0020772
+  },
+  "summary": {
+    "chat": {
+      "n": 10,
+      "model": "claude-haiku-4-5-20251001",
+      "input": 786,
+      "cacheRead": 8582,
+      "cacheWrite": 0,
+      "output": 100,
+      "costUsd": 0.0021465000000000004,
+      "maxCostUsd": 0.0029992
+    },
+    "weekly": {
+      "n": 2,
+      "model": "claude-haiku-4-5-20251001",
+      "input": 741,
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "output": 90,
+      "costUsd": 0.001191,
+      "maxCostUsd": 0.001201
+    },
+    "opinion": {
+      "n": 3,
+      "model": "claude-haiku-4-5-20251001",
+      "input": 1327,
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "output": 84,
+      "costUsd": 0.0017483333333333333,
+      "maxCostUsd": 0.001823
+    }
+  },
+  "chatPromptTokens": {
+    "min": 9364,
+    "max": 9374
+  },
+  "chatCacheHits": "10 of 10"
+}

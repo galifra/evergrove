@@ -156,6 +156,8 @@ export async function askJarvis(payload, fetchImpl = fetch) {
   if (!res.ok) {
     const err = new Error(body.error || `Jarvis request failed (${res.status})`)
     err.status = res.status
+    err.ration = body.ration === true // optional AI is paused for the month
+    err.stopped = body.stopped === true // the whole allowance is used
     throw err
   }
   return body

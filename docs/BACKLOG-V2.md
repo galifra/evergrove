@@ -180,13 +180,13 @@ Evergrove becomes the **mother app**. Every smaller app gets its own address und
 
 ## Phase 8 - Cost control ($2 a month stays)
 
-- [ ] P8.1 Measure real tokens per request type (chat turn, weekly polish, opinion), including memory and observation context, and record them.
-- [ ] P8.2 Verify prompt caching is really hitting (cache-read tokens) after the prompt grows, and trim the tool list where the routing eval allows.
-- [ ] P8.3 Set the ration rules: proactive AI use may take at most 10% of the cap; at 80% of the cap Jarvis stops all optional AI (weekly polish, opinions) and says so once; at 100% the existing hard stop applies.
-- [ ] P8.4 Make him budget-aware in plain words: "I'm on a short ration this month" instead of failing quietly.
-- [ ] P8.5 Show the monthly cost history with a per-feature split.
-- [ ] P8.6 Add a simulation test: a heavy month (about 15 chats a day plus weekly extras) stays under $2 using the recorded token costs.
-- [ ] TP8 The 80% and 100% behaviors are tested; local commands and templates keep working at 100%; the cap counter is shared by every app on the address.
+- [x] P8.1 Measure real tokens per request type (chat turn, weekly polish, opinion), including memory and observation context, and record them.
+- [x] P8.2 Verify prompt caching is really hitting (cache-read tokens) after the prompt grows, and trim the tool list where the routing eval allows.
+- [x] P8.3 Set the ration rules: proactive AI use may take at most 10% of the cap; at 80% of the cap Jarvis stops all optional AI (weekly polish, opinions) and says so once; at 100% the existing hard stop applies.
+- [x] P8.4 Make him budget-aware in plain words: "I'm on a short ration this month" instead of failing quietly.
+- [x] P8.5 Show the monthly cost history with a per-feature split.
+- [x] P8.6 Add a simulation test: a heavy month (about 15 chats a day plus weekly extras) stays under $2 using the recorded token costs.
+- [x] TP8 The 80% and 100% behaviors are tested; local commands and templates keep working at 100%; the cap counter is shared by every app on the address.
 
 ## Phase 9 - Cutover
 

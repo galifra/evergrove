@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useApp } from '@evergrove/kit/AppContext.jsx'
 import { useAction } from '@evergrove/kit/components/useAction.js'
 import { Button, Card, ErrorNote, Field, PageHeader, Select, TextInput } from '@evergrove/ui/components/ui.jsx'
+import AiBudget from '@evergrove/kit/components/AiBudget.jsx'
 import { deriveMemory, nameNote } from '@evergrove/modules/memory.js'
 import { listVoices, speak, speechOutSupported, stopSpeaking } from '../lib/speak'
 import { OBS_LABELS, SPEAK_UP_LABELS, feedbackState } from '@evergrove/rules/observations.js'
@@ -112,6 +113,10 @@ export default function JarvisSettings() {
             )}
           </div>
         </div>
+      </Card>
+
+      <Card title="AI budget">
+        <AiBudget />
       </Card>
 
       <Card title="Your feedback">

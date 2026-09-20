@@ -19,7 +19,7 @@ export default function JarvisApp() {
   const active = TABS.some(([id]) => id === sub) ? sub : ''
   return (
     <div>
-      <nav aria-label="Jarvis screens" className="mb-4 flex gap-2">
+      <nav aria-label="Jarvis screens" className="mb-4 flex flex-wrap gap-2">
         {TABS.map(([id, label, path]) => (
           <Link
             key={id || 'chat'}

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { useApp } from '@evergrove/kit/AppContext.jsx'
 import Link from '@evergrove/kit/components/Link.jsx'
@@ -6,6 +6,7 @@ import { Button, Card, ErrorNote, PageHeader } from '@evergrove/ui/components/ui
 import { createEvent } from '@evergrove/core/events.js'
 import { effectiveEvents } from '@evergrove/core/events.js'
 import { composeWeekly } from '@evergrove/rules/weekly.js'
+import { getAccessCode } from '@evergrove/core/lib/storage.js'
 import { askJarvis } from '../lib/jarvis.js'
 import { buildWeeklyPolishRequest } from '../lib/notes.js'
 
@@ -26,6 +27,15 @@ export default function WeeklyScreen() {
   }, [events, review.range.from])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [rationed, setRationed] = useState(false)
+
+  // When the month's budget is running low the optional write-up is off, and the button says why.
+  useEffect(() => {
+    fetch('/api/usage', { headers: { 'x-app-code': getAccessCode() } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d && setRationed(!!d.rationed))
+      .catch(() => {})
+  }, [])
 
   async function polish() {
     setBusy(true)
@@ -69,10 +79,10 @@ export default function WeeklyScreen() {
           <p className="text-xs text-white/55">I've already put this week into words. That costs about a cent, once a week at most.</p>
         ) : (
           <div className="flex flex-wrap items-center gap-3">
-            <Button variant="ghost" onClick={polish} disabled={busy}>
+            <Button variant="ghost" onClick={polish} disabled={busy || rationed}>
               {busy ? <span className="inline-flex items-center gap-2"><Loader2 size={14} className="animate-spin" /> Writing...</span> : 'Put it in my words'}
             </Button>
-            <span className="text-xs text-white/55">Optional. One short AI call, about a cent. Anything private is left out, and it stops if the month's budget is running low.</span>
+            <span className="text-xs text-white/55">{rationed ? "I'm on a short ration this month, so this waits until next month. The review above is complete without it." : "Optional. One short AI call, about a cent. Anything private is left out, and it stops if the month's budget is running low."}</span>
           </div>
         )}
         <ErrorNote>{error}</ErrorNote>

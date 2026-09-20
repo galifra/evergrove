@@ -37,7 +37,7 @@ describe('AI spend meter', () => {
   })
   it('the current month is always listed, even before any spend', async () => {
     const h = await getHistory(new Date('2034-01-05T00:00:00Z'), 3)
-    expect(h.months).toEqual([{ month: '2034-01', spentUsd: 0, requests: 0, avgPerRequestUsd: null }])
+    expect(h.months).toEqual([{ month: '2034-01', spentUsd: 0, requests: 0, avgPerRequestUsd: null, byPurpose: {} }])
   })
   it('honors a custom cap', () => {
     process.env.AI_MONTHLY_CAP_USD = '5'

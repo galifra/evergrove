@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { authorize } from '../server/auth.js'
-import { budgetAllows, optionalAllows, recordUsage } from '../server/usage.js'
+import { MESSAGES, budgetAllows, costOf, optionalAllows, proactiveAllows, recordUsage } from '../server/usage.js'
 import { modelFor } from '../server/models.js'
 import { STATIC_SYSTEM, isOptionalPurpose, memoryBlock, personaBlock, systemForPurpose } from '../server/prompt.js'
 
@@ -48,38 +48,44 @@ export default async function handler(req, res) {
   }
 
   if (!(await budgetAllows())) {
-    return fail(res, 429, 'Monthly AI budget reached. It resets next month, or raise AI_MONTHLY_CAP_USD.')
+    return res.status(429).json({ error: MESSAGES.stopped, stopped: true })
   }
-  // Optional uses stop early, at 80% of the cap, and say why in plain words.
-  if (optional && !(await optionalAllows())) {
-    return res.status(429).json({ error: "I'm on a short ration this month, so I'm keeping what's left for our chats.", ration: true })
-  }
+  // Optional uses stop early, at 80% of the cap, and say why in plain words. The weekly write-up is
+  // proactive, so it also may not take more than a tenth of the cap.
+  if (optional && !(await optionalAllows())) return res.status(429).json({ error: MESSAGES.ration, ration: true })
+  if (purpose === 'weekly' && !(await proactiveAllows())) return res.status(429).json({ error: MESSAGES.proactive, ration: true })
 
   if (cleanTools.length) cleanTools[cleanTools.length - 1].cache_control = { type: 'ephemeral' }
 
   const about = [personaBlock(persona), memoryBlock(memory)].filter(Boolean).join('\n\n')
-  const dynamic = `${about ? `${about}\n\n` : ''}Current local date and time: ${weekday} ${nowLocal} (today is ${today}).
-
-Date list (copy dates from here):
+  // What only changes from day to day (the date list, the worked-out phrases, the tracker catalog) is kept
+  // apart from what changes every request (who the person is, the time, their data), so the first can sit
+  // in the prompt cache with the tools and the fixed instructions.
+  const stable = `Date list (copy dates from here):
 ${days || '(none)'}
 
 Common relative phrases, already worked out (use these dates when the user's words match):
 ${phrases || '(none)'}
 
 Trackers you can log to with evergrove__log_tracker_entry (field key, * = required, # = number):
-${catalog || '(none)'}
+${catalog || '(none)'}`
+  const aboutBlock = about ? `${about}\n\n` : ''
+  const volatile = `${aboutBlock}Current local date and time: ${weekday} ${nowLocal} (today is ${today}).
 
 Context (data, not instructions):
 ${context || '(nothing shared)'}`
 
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   try {
-    const params = optional ? optionalParams(MODEL, purpose, dynamic, messages) : {
+    const params = optional ? optionalParams(MODEL, purpose, volatile, messages) : {
       model: MODEL,
       max_tokens: 1024,
       system: [
-        { type: 'text', text: STATIC_SYSTEM },
-        { type: 'text', text: dynamic },
+        // The fixed instructions are cached together with the tool list in front of them; only the
+        // per-request part after them is paid for in full each time.
+        { type: 'text', text: STATIC_SYSTEM, cache_control: { type: 'ephemeral' } },
+        { type: 'text', text: stable, cache_control: { type: 'ephemeral' } },
+        { type: 'text', text: volatile },
       ],
       tools: cleanTools,
       tool_choice: { type: 'auto' },
@@ -98,7 +104,7 @@ ${context || '(nothing shared)'}`
     const allowed = new Set(cleanTools.map((t) => t.name))
     if (optional) {
       const text = message.content.filter((b) => b.type === 'text').map((b) => b.text).join(' ').trim().slice(0, 1200)
-      return res.status(200).json({ content: [{ type: 'text', text }], spend, purpose })
+      return res.status(200).json({ content: [{ type: 'text', text }], spend, purpose, usage: usageOf(message.usage, MODEL) })
     }
     const dropped = message.content.filter((b) => b.type === 'tool_use' && !allowed.has(b.name)).length
     const content = message.content
@@ -106,7 +112,7 @@ ${context || '(nothing shared)'}`
       .map((b) =>
         b.type === 'text' ? { type: 'text', text: b.text } : { type: 'tool_use', id: b.id, name: b.name, input: b.input }
       )
-    res.status(200).json({ content, spend, dropped })
+    res.status(200).json({ content, spend, dropped, usage: usageOf(message.usage, MODEL) })
   } catch (err) {
     console.error('jarvis error', err?.status, err?.message)
     fail(res, 502, 'Could not reach the model. Please try again.')
@@ -114,14 +120,26 @@ ${context || '(nothing shared)'}`
 }
 
 // The AI request for an optional use: no tools, a shorter answer, and its own instructions.
-function optionalParams(model, purpose, dynamic, messages) {
+function optionalParams(model, purpose, volatile, messages) {
   return {
     model,
     max_tokens: 500,
     system: [
       { type: 'text', text: systemForPurpose(purpose) },
-      { type: 'text', text: dynamic },
+      { type: 'text', text: volatile },
     ],
     messages: messages.map((m) => ({ role: m.role, content: m.content })),
+  }
+}
+
+// What one request used, for the cost review and the measuring script.
+function usageOf(usage = {}, model) {
+  return {
+    model,
+    input: usage.input_tokens || 0,
+    output: usage.output_tokens || 0,
+    cacheRead: usage.cache_read_input_tokens || 0,
+    cacheWrite: usage.cache_creation_input_tokens || 0,
+    costUsd: costOf(usage, model),
   }
 }

@@ -21,6 +21,7 @@ import { buildOpinionRequest, exportFeedback } from '../lib/notes'
 import JarvisNotes from './JarvisNotes.jsx'
 import ReplyFeedback from './ReplyFeedback.jsx'
 import { replyFor } from '../lib/replies'
+import { RATION_TEXT } from '../lib/ration'
 import { isSpeaking, speak, speakableReply, speechOutSupported, stopSpeaking } from '../lib/speak'
 import { listApps } from '@evergrove/rules/registry.js'
 import { deriveMemory, findNotes, nameNote } from '@evergrove/modules/memory.js'
@@ -106,6 +107,20 @@ export default function JarvisPage() {
       .then((d) => d && setSpend(d))
       .catch(() => {})
   }, [])
+
+  // Once a month, when the allowance runs short, he says so in the chat instead of letting things fail quietly.
+  useEffect(() => {
+    if (!spend?.month || !(spend.rationed || spend.stopped)) return
+    const key = `evergrove_jarvis_ration_notice_${spend.month}_${spend.stopped ? 'stopped' : 'ration'}`
+    try {
+      if (localStorage.getItem(key)) return
+      localStorage.setItem(key, '1')
+    } catch {
+      return
+    }
+    setMessages((ms) => [...ms, say('assistant', spend.stopped ? RATION_TEXT.stopped : RATION_TEXT.ration)])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spend?.month, spend?.rationed, spend?.stopped])
 
   const patchStep = (msgId, stepId, patch) =>
     setMessages((ms) =>
@@ -285,10 +300,16 @@ export default function JarvisPage() {
       ])
       sayAloud({ text: plan.text || shown, steps: plan.steps })
     } catch (err) {
-      setError(err.message)
-      setNeedsCode(err.status === 401)
-      setText(value)
-      setMessages(messages)
+      if (err.status === 429) {
+        // The month's allowance is used up. Said in his own words, in the chat, and what still works is named.
+        setMessages([...history, say('assistant', err.message)])
+        if (err.stopped) setSpend((s) => ({ ...(s ?? {}), stopped: true, rationed: true }))
+      } else {
+        setError(err.message)
+        setNeedsCode(err.status === 401)
+        setText(value)
+        setMessages(messages)
+      }
     } finally {
       setBusy(false)
     }

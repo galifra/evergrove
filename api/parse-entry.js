@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { authorize } from '../server/auth.js'
-import { budgetAllows, recordUsage } from '../server/usage.js'
+import { MESSAGES, budgetAllows, recordUsage } from '../server/usage.js'
 
 // Fixed domain set — kept in sync with src/lib/domains.js. Duplicated here
 // (rather than imported) because this file runs as an isolated serverless
@@ -109,7 +109,7 @@ export default async function handler(req, res) {
   }
 
   if (!(await budgetAllows())) {
-    res.status(429).json({ error: 'Monthly AI budget reached. It resets next month, or raise AI_MONTHLY_CAP_USD.' })
+    res.status(429).json({ error: MESSAGES.stopped, stopped: true })
     return
   }
 
@@ -125,7 +125,7 @@ export default async function handler(req, res) {
       messages: [{ role: 'user', content: text.trim() }],
     })
 
-    await recordUsage(message.usage, MODEL)
+    await recordUsage(message.usage, MODEL, new Date(), 'logging')
 
     const toolUse = message.content.find((b) => b.type === 'tool_use' && b.name === 'apply_tree_updates')
     if (!toolUse) {

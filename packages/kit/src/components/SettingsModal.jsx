@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Download, RefreshCw, Upload, X } from 'lucide-react'
 import { useApp } from '../AppContext'
 import { getAccessCode, setAccessCode } from '@evergrove/core/lib/storage.js'
 import { pushSupported, enablePushReminders, disablePushReminders, showBriefingPreview } from '../lib/push'
 import { composeBriefing } from '@evergrove/rules/briefing.js'
+import AiBudget from './AiBudget.jsx'
 import { describeVerification, verifyLog } from '@evergrove/rules/verify.js'
 import { listApps } from '@evergrove/rules/registry.js'
 import { AccessCodePrompt } from '@evergrove/ui/components/ui.jsx'
@@ -24,18 +25,9 @@ export default function SettingsModal({ onClose }) {
   const [reminderError, setReminderError] = useState('')
   const [reminderBusy, setReminderBusy] = useState(false)
   const [pass, setPass] = useState(settings.syncPassphrase)
-  const [spend, setSpend] = useState(null)
-  const [history, setHistory] = useState(null)
   const [notice, setNotice] = useState('')
   const [health, setHealth] = useState('')
   const fileRef = useRef(null)
-
-  useEffect(() => {
-    fetch('/api/usage', { headers: { 'x-app-code': getAccessCode() } })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => d && setSpend(d))
-      .catch(() => {})
-  }, [])
 
   const sensitiveApps = useMemo(() => listApps(events).filter((a) => a.sensitive && a.id !== 'vault'), [events])
 
@@ -211,39 +203,9 @@ export default function SettingsModal({ onClose }) {
           </div>
 
           <div className={section}>
-            <div className="flex items-center justify-between">
-              <span className="text-white/80">AI budget</span>
-              <span className="text-xs text-white/50">
-                {spend ? `$${spend.spentUsd.toFixed(3)} of $${spend.capUsd.toFixed(2)} this month` : '...'}
-              </span>
-            </div>
-            <p className="text-xs text-white/55 mt-1">A hard monthly cap. When it's reached the AI stops until next month; everything else keeps working.</p>
-            <details
-              className="mt-2 text-xs text-white/60"
-              onToggle={(e) => {
-                if (!e.currentTarget.open || history) return
-                fetch('/api/usage?history=1', { headers: { 'x-app-code': getAccessCode() } })
-                  .then((r) => (r.ok ? r.json() : null))
-                  .then((d) => d && setHistory(d))
-                  .catch(() => {})
-              }}
-            >
-              <summary className="cursor-pointer hover:text-white/80">Monthly cost review</summary>
-              {!history && <p className="mt-1">Loading...</p>}
-              {history && (
-                <ul className="mt-1 space-y-0.5">
-                  {history.months.map((m) => (
-                    <li key={m.month} className="flex justify-between gap-3">
-                      <span>{m.month}</span>
-                      <span>
-                        ${m.spentUsd.toFixed(3)} · {m.requests} request{m.requests === 1 ? '' : 's'}
-                        {m.avgPerRequestUsd !== null ? ` · $${m.avgPerRequestUsd.toFixed(4)} each` : ''}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </details>
+            <span className="text-white/80">AI budget</span>
+            <p className="text-xs text-white/55 mt-1 mb-2">A hard monthly cap shared by everything here. When it is reached the AI stops until next month; everything else keeps working.</p>
+            <AiBudget />
           </div>
 
           <div className={section}>
