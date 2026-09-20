@@ -1,10 +1,10 @@
 import { openStore } from '@evergrove/core/store.js'
 import { createLog } from '@evergrove/core/log.js'
 import { createSync, httpTransport } from '@evergrove/core/sync.js'
-import { validateEvent } from '@evergrove/core/events.js'
+import { setDeviceId, validateEvent } from '@evergrove/core/events.js'
 import { createAppRegistry, runMaintenance } from '@evergrove/rules/registry.js'
 import { legacyToEvents } from '@evergrove/rules/migrate.js'
-import { getAccessCode } from '@evergrove/core/lib/storage.js'
+import { getAccessCode, getDeviceId } from '@evergrove/core/lib/storage.js'
 import { loadLegacyTree } from './settings'
 
 // One runtime per page: the store, the log, the app registry and sync. Nothing
@@ -18,6 +18,7 @@ export function getRuntime() {
 }
 
 async function createRuntime() {
+  setDeviceId(getDeviceId())
   const store = await openStore()
   const log = createLog(store)
   await log.load()

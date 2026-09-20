@@ -10,7 +10,7 @@ import Link from '@evergrove/kit/components/Link.jsx'
 const SCREENS = {
   evergrove: lazy(() => import('./screens/EvergrovePage.jsx')),
   apps: lazy(() => import('./screens/AppsPage.jsx')),
-  log: lazy(() => import('./screens/TimelinePage.jsx')),
+  log: lazy(() => import('./screens/LogPage.jsx')),
   tasks: lazy(() => import('./screens/TasksPage.jsx')),
   calendar: lazy(() => import('./screens/CalendarPage.jsx')),
   money: lazy(() => import('./screens/MoneyPage.jsx')),

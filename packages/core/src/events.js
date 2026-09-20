@@ -18,6 +18,13 @@ export function tick(now = new Date()) {
   return new Date(ms)
 }
 
+// A short id for this browser, stamped on new events so the log can show which device wrote
+// what. Older events have none. The runtime sets it at start; tests leave it unset.
+let currentDevice = null
+export function setDeviceId(id) {
+  currentDevice = typeof id === 'string' && id ? id.slice(0, 16) : null
+}
+
 export function createEvent({
   id,
   type,
@@ -28,9 +35,11 @@ export function createEvent({
   actor = 'user',
   correlationId = null,
   supersedes = null,
+  device,
   now,
 }) {
   const nowIso = (now ?? tick()).toISOString()
+  const dev = device ?? currentDevice
   return {
     id: id ?? newId(),
     v: SCHEMA_VERSION,
@@ -42,6 +51,7 @@ export function createEvent({
     actor,
     correlationId,
     supersedes,
+    ...(dev ? { device: dev } : {}),
     data,
   }
 }
@@ -59,6 +69,7 @@ export function validateEvent(e) {
   if (e.supersedes !== null && e.supersedes !== undefined && typeof e.supersedes !== 'string') {
     return 'bad supersedes'
   }
+  if (e.device !== undefined && (typeof e.device !== 'string' || e.device.length > 24)) return 'bad device'
   if (!e.data || typeof e.data !== 'object' || Array.isArray(e.data)) return 'data must be an object'
   if (JSON.stringify(e.data).length > MAX_DATA_BYTES) return 'data too large'
   return null

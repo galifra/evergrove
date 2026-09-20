@@ -29,3 +29,13 @@ A running log of what was measured while building, so the checked boxes in `docs
 
 - The browser's own "Install app" prompt (needs a real window). The manifests pass a strict validity test (names, scope, ids, icon sizes, files exist), and every app is on your acceptance walkthrough (step 3).
 - A Vercel preview address (this repository is not connected to Vercel; see `docs/v2/CUTOVER.md`).
+
+## Phase 3: the log viewer (`/log`)
+
+- 22 tests on the viewer's logic: summaries, filters (app, type, area, who wrote it, date range inclusive at both ends), search, newest-first ordering, correction chains, growth explanations, stats, exports.
+- Private contents: money, health, mind, people, Compass and vault entries show only "<App> entry (private)" and cannot be found by searching their contents until "Show private contents" is on. Checked both in tests and in the browser (14 private rows masked; searching a private word found nothing until revealed, then found it). The setting is never remembered.
+- Corrections are shown, not hidden: an undone entry is struck through and marked "undone", its reversal is marked "undo", and "Undo this undo" restores the original. The reverse action asks first, adds a correcting entry and deletes nothing (checked live: 49 to 50 entries, 1 correction).
+- New events carry a short device id (checked live: "device 2f500ba1"); older ones read "earlier". It is an extra field that an older copy of the app ignores, and there is a test for that.
+- Exports: JSON and CSV of exactly what is filtered; private contents are replaced unless shown; a cell that starts with `=`, `+`, `-` or `@` is neutralised so a spreadsheet cannot run it.
+- Scale: 20,000 events are filtered, searched and summarised in a test well inside its 5-second budget; the screen only draws 100 rows at a time.
+- Not exercised in the browser: the file downloads themselves (the content is tested).

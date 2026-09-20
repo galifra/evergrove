@@ -108,18 +108,18 @@ Evergrove becomes the **mother app**. Every smaller app gets its own address und
 
 ## Phase 3 - The shared log, viewable (`/log`)
 
-- [ ] P3.1 Build the log page shell inside Evergrove, read-only by default.
-- [ ] P3.2 Show the events as a fast list (smooth with 10,000 events), newest first, with the time, app, type, area and a one-line summary.
-- [ ] P3.3 Add filters: app, event type, area, date range, who acted (you, Jarvis, the system).
-- [ ] P3.4 Add text search across event contents.
-- [ ] P3.5 Add an event detail drawer showing the full record and how it was folded into the tree ("why did this grow").
-- [ ] P3.6 Show correction chains: an event with its reversal or replacement linked together.
-- [ ] P3.7 Stamp new events with a short device id, so the log can show which device wrote each one (older events show "earlier").
-- [ ] P3.8 Add "Reverse this event", which appends a correcting event after a confirm and never deletes anything.
-- [ ] P3.9 Hide the contents of private apps (money, health, mind, Compass, vault) behind "Show private", off by default, so it is safe to open near other people.
-- [ ] P3.10 Add export of the filtered view as JSON or CSV.
-- [ ] P3.11 Add an integrity strip at the top: event count, date range, "Check my data" result.
-- [ ] TP3 Filters and search return exactly the right events (fixture with 5,000 events); reversal appends and removes nothing; private contents never render until revealed; exports round-trip; the page stays responsive with 20,000 events.
+- [x] P3.1 Build the log page shell inside Evergrove, read-only by default.
+- [x] P3.2 Show the events as a fast list (smooth with 10,000 events), newest first, with the time, app, type, area and a one-line summary.
+- [x] P3.3 Add filters: app, event type, area, date range, who acted (you, Jarvis, the system).
+- [x] P3.4 Add text search across event contents.
+- [x] P3.5 Add an event detail drawer showing the full record and how it was folded into the tree ("why did this grow").
+- [x] P3.6 Show correction chains: an event with its reversal or replacement linked together.
+- [x] P3.7 Stamp new events with a short device id, so the log can show which device wrote each one (older events show "earlier").
+- [x] P3.8 Add "Reverse this event", which appends a correcting event after a confirm and never deletes anything.
+- [x] P3.9 Hide the contents of private apps (money, health, mind, Compass, vault) behind "Show private", off by default, so it is safe to open near other people.
+- [x] P3.10 Add export of the filtered view as JSON or CSV.
+- [x] P3.11 Add an integrity strip at the top: event count, date range, "Check my data" result.
+- [x] TP3 Filters and search return exactly the right events (fixture with 5,000 events); reversal appends and removes nothing; private contents never render until revealed; exports round-trip; the page stays responsive with 20,000 events.
 
 ## Phase 4 - Jarvis as its own app (`/jarvis`)
 
