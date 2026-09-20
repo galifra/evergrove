@@ -48,8 +48,8 @@ export function AppProvider({ children }) {
   // and cannot see localStorage, so the two privacy choices live in the database too.
   useEffect(() => {
     if (!runtime) return
-    runtime.store.setMeta('briefingPrefs', { detail: settings.briefingDetail, showAmounts: settings.showAmounts })
-  }, [runtime, settings.briefingDetail, settings.showAmounts])
+    runtime.store.setMeta('briefingPrefs', { detail: settings.briefingDetail, showAmounts: settings.showAmounts, speakUp: settings.speakUp })
+  }, [runtime, settings.briefingDetail, settings.showAmounts, settings.speakUp])
 
   // The service worker keeps the app itself available offline, whether or not
   // reminders are on (push stays opt-in and is set up separately). Registering

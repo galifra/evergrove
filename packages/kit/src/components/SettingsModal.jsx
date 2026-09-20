@@ -66,7 +66,7 @@ export default function SettingsModal({ onClose }) {
   async function previewBriefing() {
     setReminderError('')
     try {
-      await showBriefingPreview(composeBriefing(events, new Date(), { detail: settings.briefingDetail, showAmounts: settings.showAmounts }))
+      await showBriefingPreview(composeBriefing(events, new Date(), { detail: settings.briefingDetail, showAmounts: settings.showAmounts, speakUp: settings.speakUp }))
     } catch (err) {
       setReminderError(err.message)
     }

@@ -4,13 +4,15 @@ import { deriveCalendar, expandCalendar } from '@evergrove/modules/calendar.js'
 import { deriveTasks } from '@evergrove/modules/tasks.js'
 import { deriveMoney, formatCents } from '@evergrove/modules/money.js'
 import { derivePeople } from '@evergrove/modules/people.js'
+import { briefingNote } from './observations.js'
+import { weeklyReadyLine } from './weekly.js'
 
 // The evening briefing: what tomorrow holds, in a few short lines. Built on the
 // device from the device's own data, both for the push notification (by the
 // service worker) and for Jarvis's "brief me" message. Pure, so it is tested
 // without a browser.
 
-export const DEFAULT_BRIEFING_PREFS = { detail: 'full', showAmounts: false }
+export const DEFAULT_BRIEFING_PREFS = { detail: 'full', showAmounts: false, speakUp: 'necessary' }
 
 const MAX_LINES = 5
 const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`
@@ -79,5 +81,14 @@ export function composeBriefing(events, now = new Date(), prefs = DEFAULT_BRIEFI
   }
   if (!loggedToday) lines.push("You haven't logged anything today.")
 
-  return { title, lines, body: lines.join('\n'), counts, total, loggedToday, tomorrow }
+  // Jarvis's note: one line, generic if it is about something private, and nothing at all if he is set to never speak up.
+  let note = null
+  if (p.speakUp !== 'never') {
+    note = briefingNote(events, now, { speakUp: p.speakUp })
+    if (note) lines.push(`Jarvis's note: ${note.text}`)
+    const weekly = weeklyReadyLine(now)
+    if (weekly) lines.push(weekly)
+  }
+
+  return { title, lines, body: lines.join('\n'), counts, total, loggedToday, tomorrow, note }
 }
