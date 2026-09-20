@@ -40,7 +40,7 @@ export default function AiBudget() {
           <span className="text-white/80">{usd(now.spentUsd)} of {usd(cap, 2)} this month</span>
           <span className="text-xs text-white/50">{now.requests} request{now.requests === 1 ? '' : 's'}</span>
         </div>
-        <div className="relative mt-1.5">
+        <div className="relative mt-1.5" role="progressbar" aria-label="AI budget used this month" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(Math.min(1, share) * 100)} aria-valuetext={`${usd(now.spentUsd)} of ${usd(cap, 2)}`}>
           <ProgressBar value={Math.min(1, share)} color={state === 'ok' ? '#38bdf8' : state === 'ration' ? '#fbbf24' : '#fb7185'} over={state === 'stopped'} />
           <span aria-hidden="true" className="absolute top-0 bottom-0 w-px bg-white/40" style={{ left: `${rationAt * 100}%` }} />
         </div>

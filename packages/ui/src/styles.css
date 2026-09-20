@@ -20,7 +20,8 @@ body,
 
 body {
   font-family: var(--font-body);
-  background: radial-gradient(circle at 50% 0%, #14241a 0%, #0b140f 55%, #060a08 100%);
+  background-color: #0b140f; /* what the gradient falls back to, and what contrast checkers measure against */
+  background-image: radial-gradient(circle at 50% 0%, #14241a 0%, #0b140f 55%, #060a08 100%);
   color: #eaf3ec;
   -webkit-font-smoothing: antialiased;
 }

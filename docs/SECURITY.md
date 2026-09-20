@@ -85,6 +85,19 @@ vulnerabilities at the time of writing.
 - **Your own device is trusted.** Malware or a browser extension with access to
   the page could read what you can.
 
+## Version 2: one address for every app
+
+Putting every app on one address (so `/money` and `/jarvis` are the same origin) means one script problem would reach every app's data and the access code in the browser. There is no way to fence apps from each other on one origin, so the defence is to make a script problem impossible to start and hard to use. Reviewed for version 2:
+
+- **No way to run text as code.** A test scans all source for `dangerouslySetInnerHTML`, `innerHTML =`, `insertAdjacentHTML`, `document.write`, `eval(`, `new Function`, script addresses, `srcDoc` and `window.open`, and fails if any appears (and a check proves it would catch one). Notes, replies, titles and imported files are always rendered as text.
+- **A strict content policy, held by a test.** Scripts only from this address, no inline scripts (also tested per generated page), connections only to this address, no plugins, no framing, forms and base only to this address; the only outside hosts are the two font hosts.
+- **Links only go inward.** A link target that is not a path on this address (a script address, another site, `//host`, a backslash, a control character) becomes the home page; tested.
+- **The access-code gate is on every server route**, and comes before any model call, store read or write; a test lists the routes so a new one cannot be added without it. The scheduled job uses the cron secret instead. The health check proves the gate on a live address without changing anything.
+- **The service worker never caches an API answer** and is always served fresh.
+- **What Jarvis learns and keeps.** A memory note is data, never an instruction: it reaches the AI as a marked, cleaned, capped block, and a hostile note triggers no action and cannot approve itself (tests). Private notes and private apps are only sent when shared. A rating of a reply keeps the words only if no private app was touched; otherwise only the action names. The optional AI uses (weekly write-up, opinions) are built without private names, amounts or notes.
+- **Spend cannot be talked around.** The cap, the 80% ration line and the 10% share for the weekly write-up are enforced on the server from real token usage; the client's copy of the rules only decides what to show.
+- **Remaining, chosen limits**: everything above assumes the page itself is not compromised, and the chat history and settings sit in the browser's local storage in plain text (encryption at rest is parked until after version 2). Two devices opened at the same moment can each show a new note before their logs meet.
+
 ## If something leaks
 
 | What | Do this |
@@ -99,8 +112,9 @@ vulnerabilities at the time of writing.
 
 1. `npm test`, `npm run lint`, `npm run build` all clean.
 2. `npm audit --omit=dev` reports nothing.
-3. Search for injection sinks: `innerHTML`, `dangerouslySetInnerHTML`, `eval(`, `new Function`, `document.write`.
-4. Every API route starts with `authorize()` (or the cron secret check).
+3. Injection sinks: `tests/security.test.js` scans for them (`npm test`).
+4. Every API route starts with `authorize()` (or the cron secret check): the same test lists the routes.
 5. Nothing new is sent to the AI without going through `contextSources`, and the "private" flag is set on any new app that holds sensitive data.
-6. Any new action has a tier, a schema, a test that it emits valid events, and routing phrases in `src/jarvis/evalCases.js`.
+6. Any new action has a tier, a schema, a test that it emits valid events, and routing phrases in `apps/jarvis/src/lib/evalCases.js`.
 7. `npm run eval` misroute rate is at or under 10%, and the injection cases still produce no actions.
+8. `npm run health -- --url <address>` on a preview before going live and on the live address after.

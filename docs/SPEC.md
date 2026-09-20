@@ -108,3 +108,15 @@ Version 2 keeps everything above and changes the shape of the site, not the data
 - `CUTOVER.md`, `ACCEPTANCE.md`, `PAPER-TEST.md`: how it goes live, how you check it, and the scenarios walked before any code.
 
 Decisions: free address kept forever, one address for all apps (Jarvis at `/jarvis` as its own installable app), AI cap unchanged at $2, Jarvis speaks up unprompted only when necessary, encryption at rest parked. The stored format is unchanged; new event types are ignored by version 1 code.
+
+### 9.1 What version 2 adds to the model
+
+New event types (all optional for version 1, which ignores them): `memory.noted`, `memory.revised`, `memory.forgotten` (Jarvis's notes; forgetting is an event, nothing is deleted from the log), `note.shown` (a note was displayed: kind, key, day), `feedback.given` (a rating of a note or a reply, or an unmute), `weekly.polished` (the AI's wording of a week, kept so it is asked for once). Events may carry an optional `device` field. Memory is an internal module (not an app in the grid): its actions `remember`, `forget` and `revise` all ask first, except that a typed "remember that ..." is the user's own command.
+
+**Memory selection** is a local rule, not an AI call: private notes are left out unless "Memory" is shared, preferences/routines/goals rank above facts, words shared with the message and recency raise a note, and at most 12 notes / about 1,600 characters are sent, as a marked block of data that the server cleans and caps.
+
+**Observations** (`packages/rules/src/observations.js`) are sixteen pure functions of the log, each with an id, a priority, a privacy class, a cooldown and three wordings; `chooseNotes` applies the limits (a per-day count by the "Jarvis speaks up" setting, cooldowns from `note.shown`, quiet hours 22:00-07:00, muting from `feedback.given`, paused areas). The weekly review (`weekly.js`) is a pure function of the last full week. The evening briefing adds one generic line and, on Sundays, "your weekly review is ready".
+
+**AI purposes.** `/api/jarvis` takes `purpose`: `chat` (tools, the default), or the optional `weekly` (polish the review's wording) and `opinion` (an honest opinion on request), which have no tools and their own instructions. The server refuses optional purposes at 80% of the monthly cap, the weekly one beyond 10% of the cap, and everything at 100%; spend is recorded per purpose and in total. Chat requests cache the tool list, the fixed instructions and the once-a-day material together, and send only who you are, the time and your data uncached.
+
+**Routes and layout.** One address; a path per app (`/tasks`, `/money`, ..., `/jarvis`, `/jarvis/memory`, `/jarvis/weekly`, `/jarvis/settings`, `/jarvis/brief`, `/t/<tracker>`), each with its own generated page and manifest from one route table; old `#/...` links redirect. Packages import only downward (core, modules, rules, ui, kit, apps) and a test enforces it.

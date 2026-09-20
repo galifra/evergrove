@@ -43,14 +43,14 @@ function Note({ note, revealed, act, busy }) {
           )}
           <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-white/50">
             {!masked && <Select
-              aria-label="Category"
+              aria-label={`Kind of note: ${note.text}`}
               value={note.category}
               onChange={(e) => act('memory__revise', { note: note.text, category: e.target.value })}
               options={CATEGORIES.map((c) => ({ value: c, label: LABEL[c] }))}
               className="!w-auto !py-0.5 !text-[11px]"
             />}
             <label className="inline-flex items-center gap-1 cursor-pointer">
-              <input type="checkbox" className="accent-sky-400" checked={note.private} disabled={masked} onChange={(e) => act('memory__revise', { note: note.text, private: e.target.checked })} />
+              <input type="checkbox" className="accent-sky-400" aria-label={masked ? 'Private note' : `Private: ${note.text}`} checked={note.private} disabled={masked} onChange={(e) => act('memory__revise', { note: note.text, private: e.target.checked })} />
               Private
             </label>
             <span>{new Date(note.notedAt).toLocaleDateString()}</span>
@@ -59,9 +59,9 @@ function Note({ note, revealed, act, busy }) {
         </div>
         {!editing && (
           <div className="flex gap-1.5 shrink-0">
-            {!masked && <Button variant="ghost" onClick={() => setEditing(true)} aria-label="Edit note"><Pencil size={13} /></Button>}
+            {!masked && <Button variant="ghost" onClick={() => setEditing(true)} aria-label={`Edit: ${note.text}`}><Pencil size={13} /></Button>}
             {!confirm ? (
-              <Button variant="danger" onClick={() => setConfirm(true)} aria-label="Forget note"><Trash2 size={13} /></Button>
+              <Button variant="danger" onClick={() => setConfirm(true)} aria-label={masked ? 'Forget a private note' : `Forget: ${note.text}`}><Trash2 size={13} /></Button>
             ) : (
               <span className="flex gap-1.5 items-center text-xs">
                 <Button variant="danger" onClick={() => act('memory__forget', { note: note.text })} disabled={busy}>Forget it</Button>

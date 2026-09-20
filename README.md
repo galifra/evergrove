@@ -13,8 +13,13 @@ AI spend.
 
 - **Evergrove (the tree).** Reads the shared event log and grows. The tree never
   shrinks; mistakes are fixed with correction events, never by editing history.
-- **Jarvis (chat).** Type or speak. Exact, simple commands ("undo", "brief me",
-  "what's today") are handled on the device for free. Everything else goes to a
+- **Jarvis (`/jarvis`), a butler and a friend.** Type or speak. He greets you by name,
+  remembers what you tell him (a visible, editable list of short notes, never saved
+  without your say), speaks up unprompted only when something needs you (at most two
+  notes a day, never at night, each one rateable, "not useful" silences a kind for a
+  month), gives a weekly review built on the device, and gives an honest opinion when
+  you ask. Exact, simple commands ("undo", "brief me", "what's today", "remember that",
+  "weekly review") are handled on the device for free. Everything else goes to a
   small Claude model that can only use the actions the apps declare, each with a
   permission tier (runs automatically, asks first, or suggestion only) that is
   enforced in code, not in the prompt.
@@ -37,16 +42,23 @@ pure function of the log. Because of that: undo is a reversing event, two
 devices merge by taking the union of events (adding the same event twice does
 nothing), and "Check my data" can rebuild everything from scratch and compare.
 
+One address serves everything: each app has its own path (`/tasks`, `/money`, `/jarvis`, ...),
+its own installable page and manifest, generated from one route table. The code is split into
+packages that may only import downward (a test enforces it):
+
 ```
-src/core        event log (IndexedDB), registry + command channel, crypto, sync, verify
-src/evergrove   growth rules, tree derivation, insights, Today, briefing, tracker views
-src/modules     one file per app: state derived from the log, and its actions
-src/jarvis      request building, local intents, routing eval cases
-src/pages       one page per app; src/components shared UI
-src/sw          service worker: push briefing, offline app shell
-api             serverless routes: jarvis, usage, sync, save-subscription, send-reminder
-server          auth, key-value store, spend meter, time helpers
-docs            SPEC.md (design), BACKLOG.md (the plan and what is done), SECURITY.md
+packages/core     event log (IndexedDB), registry + command channel, crypto, sync
+packages/modules  one file per app: state derived from the log, and its actions (incl. Jarvis's memory)
+packages/rules    growth rules, tree, Today, briefing, observations and the weekly review, log viewer, routes
+packages/ui       shared components and styles
+packages/kit      the shell: runtime, router, settings, service worker, the AI budget panel
+apps/evergrove    the tree and every app screen
+apps/jarvis       Jarvis: chat, notes, memory, weekly review, settings
+site, public      generated pages, manifests and icons for every path (`npm run gen`)
+api               serverless routes: jarvis, usage, sync, parse-entry, save-subscription, send-reminder
+server            auth, key-value store, spend meter and ration rules, prompts, time helpers
+scripts           generators, the health check, and the real-model checks
+docs              SPEC.md (design), SECURITY.md, BACKLOG.md (v1), BACKLOG-V2.md, v2/ (specs, results, cutover)
 ```
 
 ## Run it locally
@@ -66,7 +78,12 @@ an in-memory store, which is fine for development.
 | `npm test` | Unit and integration tests (fast, free, no network) |
 | `npm run lint` | oxlint |
 | `npm run build` | Production build, including the service worker |
-| `npm run eval` | The Jarvis routing eval against the real model. Costs about 60 cents; run it deliberately |
+| `npm run health` | The whole health check in one command: tests, lint, generated files, build, audit. With `-- --url <address>` it also requests every path of a running site and checks headers and the access-code gate (read-only) |
+| `npm run eval` | The Jarvis routing eval against the real model. Costs about half a dollar; run it deliberately |
+| `npm run tone` | 25 situations through the real model, written to `docs/v2/TONE-SAMPLE.md` for you to read (about 10 cents) |
+| `npm run feedback` | His opinions and weekly write-up on made-up lives, written to `docs/v2/FEEDBACK-SAMPLE.md` (about 6 cents) |
+| `npm run measure` | Measures the real cost per request type into `docs/v2/COST-MEASURED.md` (about 6 cents) |
+| `npm run gen` | Regenerates the per-path pages, manifests and icons from the route table (`npm run build` refuses to run if they are stale) |
 
 ## Environment variables
 
@@ -89,6 +106,9 @@ In production the server refuses to run without `APP_ACCESS_CODE` and
 2. Add the environment variables above in the project settings.
 3. Connect an Upstash Redis store to the project.
 4. Deploy. In the app, open Settings and enter the access code once per device.
+
+Going live with version 2 (and rolling back) is written out in `docs/v2/CUTOVER.md`,
+with `docs/v2/ACCEPTANCE.md` as the walkthrough to run afterwards.
 
 The scheduler in `vercel.json` calls `/api/send-reminder` twice a day (so
 daylight saving never drops a reminder). The server only sends a content-free

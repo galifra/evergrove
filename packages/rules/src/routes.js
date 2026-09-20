@@ -112,7 +112,9 @@ export function canonicalPath(link) {
 
 // Internal links written before version 2 (`/app/money`) still work.
 export function normalizeLink(link) {
-  if (typeof link !== 'string') return '/'
+  // Only a path on this same address is ever a link target: never a script address, another site, or `//host`.
+  const inward = typeof link === 'string' && link.startsWith('/') && !link.startsWith('//') && ![...link].some((c) => c === '\\' || c.charCodeAt(0) < 32)
+  if (!inward) return '/'
   const m = link.match(/^\/app\/([^/?#]+)/)
   return m ? trackerOrModulePath(decodeURIComponent(m[1])) : link === '/timeline' ? '/log' : link
 }

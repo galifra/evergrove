@@ -135,6 +135,7 @@ describe('the address a link really goes to', () => {
 
   it('leaves anything that is not an app alone', () => {
     expect(canonicalPath('/api/usage')).toBe('/api/usage')
-    expect(canonicalPath('https://example.com')).toBe('https://example.com')
+    // ...and nothing that is not a path on this address is ever a link target
+    expect(canonicalPath('https://example.com')).toBe('/')
   })
 })

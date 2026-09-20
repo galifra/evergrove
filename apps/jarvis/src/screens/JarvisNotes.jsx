@@ -70,9 +70,9 @@ function Note({ note, rating, rate }) {
           <span>{rating === 'not_useful' ? "Got it. I won't bring this kind up for 30 days." : rating === 'up' ? 'Thanks. Noted.' : 'Thanks. I will take that on board.'}</span>
         ) : (
           <>
-            <button type="button" aria-label="Helpful" onClick={() => rate(note, 'up')} className="p-1 rounded hover:bg-white/10"><ThumbsUp size={13} /></button>
-            <button type="button" aria-label="Not helpful" onClick={() => rate(note, 'down')} className="p-1 rounded hover:bg-white/10"><ThumbsDown size={13} /></button>
-            <button type="button" onClick={() => rate(note, 'not_useful')} className="underline hover:text-white/80">Not useful</button>
+            <button type="button" aria-label={`Helpful: ${note.text.slice(0, 50)}`} onClick={() => rate(note, 'up')} className="p-1 rounded hover:bg-white/10"><ThumbsUp size={13} /></button>
+            <button type="button" aria-label={`Not helpful: ${note.text.slice(0, 50)}`} onClick={() => rate(note, 'down')} className="p-1 rounded hover:bg-white/10"><ThumbsDown size={13} /></button>
+            <button type="button" aria-label={`Not useful, quiet this kind for 30 days: ${note.text.slice(0, 50)}`} onClick={() => rate(note, 'not_useful')} className="underline hover:text-white/80">Not useful</button>
           </>
         )}
       </div>
@@ -109,7 +109,7 @@ export default function JarvisNotes() {
 
   if (!show.length) return null
   return (
-    <ul aria-label="Notes from Jarvis" className="mt-2 mb-3 space-y-2">
+    <ul aria-label="Notes from Jarvis" aria-live="polite" className="mt-2 mb-3 space-y-2">
       {show.map((n) => <Note key={n.key} note={n} rating={ratings.get(n.key)} rate={rate} />)}
     </ul>
   )
