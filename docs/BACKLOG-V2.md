@@ -204,18 +204,18 @@ Evergrove becomes the **mother app**. Every smaller app gets its own address und
 
 ## Phase 10 - Hardening, accessibility, documentation
 
-- [ ] P10.1 Accessibility pass on every new screen: keyboard reachable, visible focus, correct headings, live regions for Jarvis's spoken and written notes, reduced motion respected.
-- [ ] P10.2 Security review of the same-address design: one script problem would touch every app, so re-check for injection sinks, keep the strict content policy, keep the access-code gate on every route.
-- [ ] P10.3 Add the routing eval cases for version 2: memory ("remember", "forget"), feedback ("what do you think", "not useful"), and "must not speak up" cases.
-- [ ] P10.4 Update the README, SPEC and SECURITY documents for version 2.
-- [ ] P10.5 Update the health-check routine (a written checklist plus scripts) so it can be rerun in one command.
+- [x] P10.1 Accessibility pass on every new screen: keyboard reachable, visible focus, correct headings, live regions for Jarvis's spoken and written notes, reduced motion respected.
+- [x] P10.2 Security review of the same-address design: one script problem would touch every app, so re-check for injection sinks, keep the strict content policy, keep the access-code gate on every route.
+- [x] P10.3 Add the routing eval cases for version 2: memory ("remember", "forget"), feedback ("what do you think", "not useful"), and "must not speak up" cases.
+- [x] P10.4 Update the README, SPEC and SECURITY documents for version 2.
+- [x] P10.5 Update the health-check routine (a written checklist plus scripts) so it can be rerun in one command.
 - [ ] P10.6 Full final run: tests, lint, build, audit, eval, smoke, deploy, live verification.
 - [ ] P10.7 Check off this file honestly, leaving anything unverified unchecked.
 - [ ] P10.8 Update the project memory notes with the final state.
 
 ## Carried over from version 1 (status now)
 
-- [ ] C1 Version 1 item 3.8 (suggestion throttle) is fulfilled by Phase 7; check it off there when Phase 7 passes.
+- [x] C1 Version 1 item 3.8 (suggestion throttle) is fulfilled by Phase 7; check it off there when Phase 7 passes.
 - [ ] C2 Version 1 item 3.10 (voice input) needs you to try it once with a microphone once Jarvis is at `/jarvis`. [you]
 - [ ] C3 Version 1 Phase 9 line (installable app, notifications for every app) is fulfilled by Phases 2, 4 and 7; check off after a real phone test. [you]
 - [ ] C4 Version 1 item 0.1 (relationships library) still needs your answer. [you]
