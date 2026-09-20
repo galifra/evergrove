@@ -210,8 +210,8 @@ Evergrove becomes the **mother app**. Every smaller app gets its own address und
 - [x] P10.4 Update the README, SPEC and SECURITY documents for version 2.
 - [x] P10.5 Update the health-check routine (a written checklist plus scripts) so it can be rerun in one command.
 - [ ] P10.6 Full final run: tests, lint, build, audit, eval, smoke, deploy, live verification.
-- [ ] P10.7 Check off this file honestly, leaving anything unverified unchecked.
-- [ ] P10.8 Update the project memory notes with the final state.
+- [x] P10.7 Check off this file honestly, leaving anything unverified unchecked.
+- [x] P10.8 Update the project memory notes with the final state.
 
 ## Carried over from version 1 (status now)
 
