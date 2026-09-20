@@ -14,6 +14,7 @@ const lower = (v) => String(v ?? '').toLowerCase()
 const practiced = (s, area) => s.some((x) => x.name === 'evergrove__practice_skill' && (!area || x.args.area === area))
 const logged = (s, ...ids) => s.some((x) => ids.some((id) => isTracker(x, id)))
 const nothing = (s) => s.length === 0
+const noPurchase = (s) => !has(s, 'money__log_purchase')
 const noMoney = (s) => !s.some((x) => x.name.startsWith('money__'))
 const near = (v, lo, hi) => Number(v) >= lo && Number(v) <= hi
 
@@ -38,10 +39,12 @@ export const CASES = [
   ['meditated for 10 minutes', (s) => logged(s, 'mind') || practiced(s, 'inner'), 'single'],
   ['worked on my painting for an hour', (s) => logged(s, 'creativity') || practiced(s, 'creativity'), 'single'],
   ['applied for an engineer job at Acme', (s) => s.some((x) => isTracker(x, 'career') && lower(x.args.values?.company).includes('acme')) || logged(s, 'career'), 'new'],
-  ['made $60 walking dogs today', (s) => s.some((x) => isTracker(x, 'hustles') && Number(x.args.values?.income) === 60) || logged(s, 'hustles'), 'new'],
+  ['made $60 walking dogs today', (s) => noPurchase(s) && (s.some((x) => isTracker(x, 'hustles') && Number(x.args.values?.income) === 60) || logged(s, 'hustles')), 'new'],
+  ['I got paid $1500 today', (s) => noPurchase(s), 'new'],
+  ['got a $40 refund from amazon', (s) => noPurchase(s), 'new'],
   ['booked flights to Lisbon', (s) => logged(s, 'travel'), 'single'],
   ['cleaned out the garage', (s) => logged(s, 'home') || practiced(s) || has(s, 'tasks__complete_task'), 'single'],
-  ['wrote a gratitude note to my sister', (s) => logged(s, 'mind') || practiced(s, 'social') || practiced(s, 'inner'), 'single'],
+  ['wrote a gratitude note to my sister', (s) => logged(s, 'mind') || practiced(s, 'social') || practiced(s, 'inner') || has(s, 'people__log_contact'), 'single'],
   ['I practiced public speaking, a solid session', (s) => practiced(s) || logged(s, 'career', 'learning'), 'single'],
   ['add a skill for woodworking under craft', (s) => find(s, 'evergrove__add_skill')?.args.area === 'craft', 'single'],
 
@@ -70,7 +73,7 @@ export const CASES = [
   ['put lunch with Alex on my calendar next Tuesday at noon', (s) => find(s, 'calendar__add_event')?.args.start === '2026-09-22T12:00', 'single'],
   ['a checkup a week from tomorrow at 10am', (s) => find(s, 'calendar__add_event')?.args.start === '2026-09-26T10:00', 'single'],
   ['tomorrow I have church at 9am and lunch at 1pm', (s) => all(s, 'calendar__add_event').map((x) => x.args.start).sort().join() === '2026-09-19T09:00,2026-09-19T13:00', 'multi'],
-  ['dentist on Monday at 9:30am', (s) => find(s, 'calendar__add_event')?.args.start === '2026-09-21T09:30', 'single'],
+  ['add my dermatologist appointment on Monday at 9:30am', (s) => find(s, 'calendar__add_event')?.args.start === '2026-09-21T09:30', 'single'],
   ['family dinner Sunday at 5pm', (s) => find(s, 'calendar__add_event')?.args.start === '2026-09-20T17:00', 'single'],
   ['the pest control guy comes the day after tomorrow at 8am', (s) => find(s, 'calendar__add_event')?.args.start === '2026-09-20T08:00', 'single'],
   ['team standup every Monday at 9am', (s) => { const a = find(s, 'calendar__add_event')?.args; return a?.start === '2026-09-21T09:00' && a.repeat === 'weekly' }, 'new'],

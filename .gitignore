@@ -29,3 +29,4 @@ dist-ssr
 .env*
 
 .eval-last.json
+.claude/

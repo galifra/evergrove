@@ -47,12 +47,15 @@ describe.skipIf(!process.env.JARVIS_EVAL)('Jarvis routing eval (real model)', ()
     await run('calendar__add_event', { title: 'Dentist', start: '2026-09-28T10:00' })
     await run('goals__create_goal', { title: 'Write a book', area: 'craft', milestones: ['Outline'] })
 
+    // JARVIS_EVAL_ONLY="week from tomorrow|walking dogs" runs just the phrases matching that pattern (cheap spot check).
+    const only = process.env.JARVIS_EVAL_ONLY ? new RegExp(process.env.JARVIS_EVAL_ONLY, 'i') : null
+    const cases = only ? CASES.filter((c) => only.test(c[0])) : CASES
     const failures = []
     const byTag = Object.fromEntries(TAGS.map((t) => [t, { passed: 0, total: 0 }]))
     const latencies = []
     let lastSpend = 0
     let firstSpend = null
-    for (const [say, check, tag] of CASES) {
+    for (const [say, check, tag] of cases) {
       const payload = buildRequest({ history: [{ role: 'user', text: say }], registry: reg, events: log.getEvents(), now: NOW })
       const t0 = Date.now()
       const r = await call(payload)
@@ -75,25 +78,25 @@ describe.skipIf(!process.env.JARVIS_EVAL)('Jarvis routing eval (real model)', ()
       if (ok) byTag[tag].passed += 1
       else failures.push({ say, tag, code: r.code, calls: steps.map((s) => `${s.name} ${JSON.stringify(s.args)}`), text })
     }
-    const passed = CASES.length - failures.length
+    const passed = cases.length - failures.length
     const sorted = [...latencies].sort((a, b) => a - b)
     const cost = firstSpend === null ? 0 : lastSpend - firstSpend
     const report = {
       passed,
-      total: CASES.length,
-      misrouteRate: +(1 - passed / CASES.length).toFixed(3),
+      total: cases.length,
+      misrouteRate: +(1 - passed / cases.length).toFixed(3),
       byTag,
       latencyMs: { p50: pct(sorted, 50), p95: pct(sorted, 95), max: sorted[sorted.length - 1] },
       costUsd: +cost.toFixed(4),
-      costPerRequestUsd: +(cost / CASES.length).toFixed(5),
+      costPerRequestUsd: +(cost / cases.length).toFixed(5),
       spendSoFarUsd: lastSpend,
       failures,
     }
-    console.log(`\nJARVIS EVAL: ${passed}/${CASES.length} passed (${((passed / CASES.length) * 100).toFixed(0)}%)`)
+    console.log(`\nJARVIS EVAL: ${passed}/${cases.length} passed (${((passed / cases.length) * 100).toFixed(0)}%)`)
     console.log('By tag:', JSON.stringify(byTag))
     console.log(`Latency p50 ${report.latencyMs.p50}ms, p95 ${report.latencyMs.p95}ms. Cost $${report.costUsd} (${report.costPerRequestUsd}/request). Spend so far $${lastSpend}`)
     for (const f of failures) console.log('FAIL:', JSON.stringify(f))
     writeFileSync('.eval-last.json', JSON.stringify(report, null, 1))
-    expect(passed / CASES.length).toBeGreaterThanOrEqual(0.9)
+    expect(passed / cases.length).toBeGreaterThanOrEqual(only ? 0 : 0.9)
   })
 })

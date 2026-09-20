@@ -307,7 +307,7 @@ export const moneyModule = {
     {
       name: 'log_purchase',
       tier: 'auto',
-      description: 'Log something you bought. Amount is in dollars.',
+      description: 'Log something the user bought or paid for (money going out). Amount is in dollars. Never use this for money coming in (income, refunds); amounts are always positive.',
       input: {
         type: 'object',
         properties: {

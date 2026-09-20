@@ -1,6 +1,7 @@
 import { localDate } from '../core/events'
 import { deriveEvergrove } from '../evergrove/derive'
 import { getAccessCode } from '../lib/storage'
+import { validateArgs } from '../core/schema'
 
 const MAX_HISTORY = 10
 
@@ -56,6 +57,24 @@ export function upcomingDays(now = new Date(), ahead = 21, back = 7) {
   return out.join('\n')
 }
 
+// Ready-made answers for the relative phrases people use most, worked out
+// here in code so the model copies a date instead of adding numbers.
+export function relativePhrases(now = new Date()) {
+  const at = (n) => localDate(new Date(now.getFullYear(), now.getMonth(), now.getDate() + n))
+  const lastOfMonth = localDate(new Date(now.getFullYear(), now.getMonth() + 1, 0))
+  const firstOfNext = localDate(new Date(now.getFullYear(), now.getMonth() + 1, 1))
+  return [
+    `the day after tomorrow = ${at(2)} (+2)`,
+    `in three days = ${at(3)} (+3)`,
+    `in a week / a week from today / same day next week = ${at(7)} (+7)`,
+    `a week from tomorrow = ${at(8)} (+8)`,
+    `in two weeks = ${at(14)} (+14)`,
+    `in three weeks = ${at(21)} (+21)`,
+    `end of the month = ${lastOfMonth}`,
+    `the first of next month = ${firstOfNext}`,
+  ].join('\n')
+}
+
 export function buildRequest({ history, registry, events, shareSensitive = [], now = new Date() }) {
   const evState = deriveEvergrove(events)
   const tools = registry.tools().map((t) => ({ name: t.name, description: t.description, input_schema: t.input }))
@@ -69,6 +88,7 @@ export function buildRequest({ history, registry, events, shareSensitive = [], n
     context: buildContext(registry, events, { shareSensitive }, now),
     today: localDate(now),
     days: upcomingDays(now),
+    phrases: relativePhrases(now),
     nowLocal: `${localDate(now)}T${pad(now.getHours())}:${pad(now.getMinutes())}`,
     weekday: now.toLocaleDateString('en-US', { weekday: 'long' }),
   }
@@ -97,6 +117,24 @@ export function planFromContent(content, registry) {
     })
   }
   return { text, steps }
+}
+
+// Decides whether the cheap model's answer is unusable and worth one retry on a
+// stronger model: a tool it invented, arguments that break the tool's schema,
+// or no answer at all. A clarifying question is NOT a failure: it is the right
+// answer to an unclear request, and a bigger model would not know more.
+export function needsEscalation(reply, registry) {
+  const content = reply?.content ?? []
+  if (reply?.dropped > 0) return 'unknown-tool'
+  const hasText = content.some((b) => b.type === 'text' && b.text.trim())
+  const calls = content.filter((b) => b.type === 'tool_use')
+  if (!hasText && !calls.length) return 'empty'
+  for (const block of calls) {
+    const found = registry.resolve(block.name)
+    if (!found) return 'unknown-tool'
+    if (validateArgs(found.action.input ?? { type: 'object', properties: {} }, block.input ?? {}, 'args').error) return 'invalid-arguments'
+  }
+  return null
 }
 
 export async function askJarvis(payload, fetchImpl = fetch) {

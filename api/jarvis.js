@@ -1,8 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { authorize } from '../server/auth.js'
 import { budgetAllows, recordUsage } from '../server/usage.js'
+import { modelFor } from '../server/models.js'
 
-const MODEL = process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5-20251001'
 const TOOL_NAME = /^[a-zA-Z0-9_-]{1,64}$/
 
 const STATIC_SYSTEM = `You are Jarvis, the personal assistant at the center of the user's life system. The user talks to you; you turn what they say into tool calls on their apps. You do not perform actions yourself: the app runs the tools you call and shows the result.
@@ -15,7 +15,7 @@ How to work:
 - Dates and times: never compute weekdays yourself. For any weekday word ("Tuesday", "next Tuesday", "Friday"), "tomorrow" or "yesterday", copy the date from the provided date list (it covers the past week and the next three); a weekday word means the first such day after today unless the user says "last" or "yesterday". Each row shows its day offset from today. For offsets ("in 10 days", "a week from tomorrow" = +1 plus 7 = +8), add the numbers and use the row with that offset. Times are local wall-clock: YYYY-MM-DDTHH:mm, or YYYY-MM-DD for all-day.
 - Things the user needs to do without a set time ("I need to edit the sermon") are tasks (tasks__add_task), not calendar events. A calendar event has a specific time or is a true all-day occasion.
 - Never guess a start time. If an event has no stated time ("after that", "later"), do not add it to the calendar: add the ones that do have times, then ask one short question listing the events that still need a time.
-- Money amounts are in dollars as numbers.
+- Money amounts are in dollars as numbers. Money coming IN (pay, income, gigs, refunds, reimbursements) is never a purchase: do not use money__log_purchase for it, and never enter a negative amount. Earnings from side work go in the side hustles tracker (its income field); anything else earned has no place to be logged yet, so say so in one short sentence.
 - For a skill or activity with no dedicated tracker, use evergrove__practice_skill. For an existing tracker in the catalog, use evergrove__log_tracker_entry with that tracker's field keys. If the user wants to track or log something new (even if they call it an app), use evergrove__create_tracker: that is the default for anything that is just entries with a few fields. Only when a tracker truly cannot do it (its own screens, calculations, charts or integrations), use evergrove__request_app instead.
 - Chores and upkeep that come round on a schedule ("water the plants every week", "change the air filter every 3 months") are repeating tasks: tasks__add_task with repeatEveryDays. A habit is for a routine the user is building and wants a streak for.
 - Private apps (money, health, mind and similar) may be missing from the context, but you can still call their tools; each tool looks the data up on the user's device. Do not refuse just because you cannot see a balance, bill or entry. Only ask when the user's request itself is unclear.
@@ -32,7 +32,8 @@ export default async function handler(req, res) {
   if (!(await authorize(req, res))) return
   if (!process.env.ANTHROPIC_API_KEY) return fail(res, 500, 'Server is missing ANTHROPIC_API_KEY.')
 
-  const { messages, tools, catalog = '', context = '', today = '', nowLocal = '', weekday = '', days = '' } = req.body || {}
+  const { messages, tools, catalog = '', context = '', today = '', nowLocal = '', weekday = '', days = '', phrases = '', escalate = false } = req.body || {}
+  const MODEL = modelFor({ escalate })
 
   if (!Array.isArray(messages) || !messages.length || messages.length > 24) return fail(res, 400, 'Bad messages.')
   for (const m of messages) {
@@ -57,7 +58,7 @@ export default async function handler(req, res) {
     }
     cleanTools.push({ name: t.name, description: t.description, input_schema: t.input_schema })
   }
-  if (String(context).length > 4000 || String(catalog).length > 4000 || String(days).length > 1200) {
+  if (String(context).length > 4000 || String(catalog).length > 4000 || String(days).length > 1200 || String(phrases).length > 800) {
     return fail(res, 400, 'Context too large.')
   }
 
@@ -72,6 +73,9 @@ export default async function handler(req, res) {
 Date list (copy dates from here):
 ${days || '(none)'}
 
+Common relative phrases, already worked out (use these dates when the user's words match):
+${phrases || '(none)'}
+
 Trackers you can log to with evergrove__log_tracker_entry (field key, * = required, # = number):
 ${catalog || '(none)'}
 
@@ -83,6 +87,7 @@ ${context || '(nothing shared)'}`
     const message = await anthropic.messages.create({
       model: MODEL,
       max_tokens: 1024,
+      temperature: 0, // routing should be repeatable: the same words should always do the same thing
       system: [
         { type: 'text', text: STATIC_SYSTEM },
         { type: 'text', text: dynamic },
@@ -93,12 +98,13 @@ ${context || '(nothing shared)'}`
     })
     const spend = await recordUsage(message.usage, MODEL)
     const allowed = new Set(cleanTools.map((t) => t.name))
+    const dropped = message.content.filter((b) => b.type === 'tool_use' && !allowed.has(b.name)).length
     const content = message.content
       .filter((b) => b.type === 'text' || (b.type === 'tool_use' && allowed.has(b.name)))
       .map((b) =>
         b.type === 'text' ? { type: 'text', text: b.text } : { type: 'tool_use', id: b.id, name: b.name, input: b.input }
       )
-    res.status(200).json({ content, spend })
+    res.status(200).json({ content, spend, dropped })
   } catch (err) {
     console.error('jarvis error', err?.status, err?.message)
     fail(res, 502, 'Could not reach the model. Please try again.')

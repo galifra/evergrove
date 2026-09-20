@@ -6,7 +6,7 @@ import { composeBriefing } from '../evergrove/briefing'
 import { deriveToday } from '../evergrove/today'
 import { HELP_TEXT, matchLocalIntent } from '../jarvis/localIntents'
 import { newId } from '../core/events'
-import { approveStep, askJarvis, buildRequest, contextSources, planFromContent, runAutoSteps } from '../jarvis/jarvis'
+import { approveStep, askJarvis, buildRequest, contextSources, needsEscalation, planFromContent, runAutoSteps } from '../jarvis/jarvis'
 import { getAccessCode } from '../lib/storage'
 import { speechSupported, startListening } from '../lib/speech'
 import { describeLocal } from '../modules/calendar'
@@ -134,7 +134,20 @@ export default function JarvisPage() {
         sources: contextSources(runtime.registry, events, { shareSensitive: settings.shareSensitive }),
         sent: JSON.stringify({ messages: payload.messages, context: payload.context, today: payload.today, nowLocal: payload.nowLocal }, null, 2),
       })
-      const reply = await askJarvis(payload)
+      let reply = await askJarvis(payload)
+      let escalated = false
+      if (needsEscalation(reply, runtime.registry)) {
+        // The small model's answer was unusable: ask a stronger one once. Any failure keeps the first answer.
+        try {
+          const second = await askJarvis({ ...payload, escalate: true })
+          if (!needsEscalation(second, runtime.registry)) {
+            reply = second
+            escalated = true
+          }
+        } catch {
+          /* keep the first answer */
+        }
+      }
       if (reply.spend) setSpend(reply.spend)
       const plan = planFromContent(reply.content, runtime.registry)
       const correlationId = newId()
@@ -150,6 +163,7 @@ export default function JarvisPage() {
           // history for the next turn includes what actually ran, so follow-ups make sense
           memo: [modelText, done.length ? `(Done: ${done.join(' ')})` : ''].filter(Boolean).join(' '),
           correlationId,
+          escalated,
           steps: plan.steps,
         },
       ])
@@ -258,6 +272,7 @@ export default function JarvisPage() {
               <span className="mt-1 grid place-items-center w-7 h-7 rounded-full bg-white/10 shrink-0"><Bot size={14} /></span>
               <div className="max-w-[90%] space-y-2">
                 {m.text && <div className="rounded-2xl rounded-bl-md bg-white/[0.06] border border-white/10 px-4 py-2 text-sm whitespace-pre-line">{m.text}</div>}
+                {m.escalated && <div className="text-[11px] text-white/45">Double-checked with a stronger model.</div>}
                 {m.steps?.map((s) => (
                   <div key={s.id} className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm">
                     <div className="flex items-center justify-between gap-3">

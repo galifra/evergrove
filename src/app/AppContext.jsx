@@ -51,12 +51,15 @@ export function AppProvider({ children }) {
     runtime.store.setMeta('briefingPrefs', { detail: settings.briefingDetail, showAmounts: settings.showAmounts })
   }, [runtime, settings.briefingDetail, settings.showAmounts])
 
-  // Re-registering checks for a newer service worker, so the briefing code updates.
+  // The service worker keeps the app itself available offline, whether or not
+  // reminders are on (push stays opt-in and is set up separately). Registering
+  // again on each start also checks for a newer version. Skipped in dev so
+  // hot reload is never served from a cache.
   useEffect(() => {
-    if (runtime && settings.reminderEnabled && 'serviceWorker' in navigator) {
+    if (runtime && import.meta.env.PROD && 'serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(() => {})
     }
-  }, [runtime, settings.reminderEnabled])
+  }, [runtime])
 
   const evState = useMemo(() => deriveEvergrove(events), [events])
   const insights = useMemo(() => deriveInsights(evState), [evState])
