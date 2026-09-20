@@ -2,7 +2,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { authorize } from '../server/auth.js'
 import { budgetAllows, recordUsage } from '../server/usage.js'
 import { modelFor } from '../server/models.js'
-import { STATIC_SYSTEM, personaBlock } from '../server/prompt.js'
+import { STATIC_SYSTEM, memoryBlock, personaBlock } from '../server/prompt.js'
 
 const TOOL_NAME = /^[a-zA-Z0-9_-]{1,64}$/
 
@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   if (!(await authorize(req, res))) return
   if (!process.env.ANTHROPIC_API_KEY) return fail(res, 500, 'Server is missing ANTHROPIC_API_KEY.')
 
-  const { messages, tools, catalog = '', context = '', today = '', nowLocal = '', weekday = '', days = '', phrases = '', persona = null, escalate = false } = req.body || {}
+  const { messages, tools, catalog = '', context = '', today = '', nowLocal = '', weekday = '', days = '', phrases = '', persona = null, memory = '', escalate = false } = req.body || {}
   const MODEL = modelFor({ escalate })
 
   if (!Array.isArray(messages) || !messages.length || messages.length > 24) return fail(res, 400, 'Bad messages.')
@@ -41,7 +41,7 @@ export default async function handler(req, res) {
     }
     cleanTools.push({ name: t.name, description: t.description, input_schema: t.input_schema })
   }
-  if (String(context).length > 4000 || String(catalog).length > 4000 || String(days).length > 1200 || String(phrases).length > 800) {
+  if (String(context).length > 4000 || String(catalog).length > 4000 || String(days).length > 1200 || String(phrases).length > 800 || String(memory).length > 2400) {
     return fail(res, 400, 'Context too large.')
   }
 
@@ -51,7 +51,7 @@ export default async function handler(req, res) {
 
   if (cleanTools.length) cleanTools[cleanTools.length - 1].cache_control = { type: 'ephemeral' }
 
-  const about = personaBlock(persona)
+  const about = [personaBlock(persona), memoryBlock(memory)].filter(Boolean).join('\n\n')
   const dynamic = `${about ? `${about}\n\n` : ''}Current local date and time: ${weekday} ${nowLocal} (today is ${today}).
 
 Date list (copy dates from here):

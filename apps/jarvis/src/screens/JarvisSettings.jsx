@@ -1,11 +1,30 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useApp } from '@evergrove/kit/AppContext.jsx'
-import { Card, Field, PageHeader, Select, TextInput } from '@evergrove/ui/components/ui.jsx'
+import { useAction } from '@evergrove/kit/components/useAction.js'
+import { Button, Card, ErrorNote, Field, PageHeader, Select, TextInput } from '@evergrove/ui/components/ui.jsx'
+import { deriveMemory, nameNote } from '@evergrove/modules/memory.js'
 import { listVoices, speak, speechOutSupported, stopSpeaking } from '../lib/speak'
 
 // How Jarvis speaks to you. Everything here is stored on this device.
 export default function JarvisSettings() {
-  const { settings, updateSettings } = useApp()
+  const { settings, updateSettings, events } = useApp()
+  const { act, error: nameError, busy } = useAction()
+  const memory = useMemo(() => deriveMemory(events), [events])
+  const [nameDraft, setNameDraft] = useState(null)
+  const nameValue = nameDraft ?? memory.name
+
+  async function saveName() {
+    const name = nameValue.trim().slice(0, 40)
+    if (!name || name === memory.name) return setNameDraft(null)
+    const existing = memory.notes.filter((n) => n.role === 'name').pop()
+    const ok = existing
+      ? await act('memory__revise', { note: existing.text, text: nameNote(name) })
+      : await act('memory__remember', { text: nameNote(name), role: 'name', category: 'fact', private: false, via: 'command' })
+    if (ok) {
+      updateSettings({ nameAsked: true })
+      setNameDraft(null)
+    }
+  }
   const [voices, setVoices] = useState(listVoices)
   const canSpeak = speechOutSupported()
 
@@ -24,6 +43,11 @@ export default function JarvisSettings() {
 
       <Card title="Manner">
         <div className="grid gap-3 sm:grid-cols-2 max-w-xl">
+          <div className="sm:col-span-2 flex flex-wrap items-end gap-2">
+            <div className="flex-1 min-w-[10rem]"><Field label="Your name"><TextInput value={nameValue} maxLength={40} placeholder="What should he call you?" onChange={(e) => setNameDraft(e.target.value)} /></Field></div>
+            <Button onClick={saveName} disabled={busy || !nameValue.trim() || nameValue.trim() === memory.name}>Save name</Button>
+          </div>
+          <div className="sm:col-span-2"><ErrorNote>{nameError}</ErrorNote></div>
           <Field label="Style">
             <Select
               value={settings.jarvisStyle}
@@ -37,7 +61,7 @@ export default function JarvisSettings() {
             </Field>
           )}
         </div>
-        <p className="mt-2 text-xs text-white/55">Only the style and this word are sent to the assistant. He is always honest and short either way.</p>
+        <p className="mt-2 text-xs text-white/55">Only your name, the style and this word are sent to the assistant. He is always honest and short either way.</p>
       </Card>
 
       <Card title="Speaking aloud">

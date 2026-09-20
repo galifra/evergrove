@@ -17,7 +17,9 @@ export function buildViewContext(events) {
   const names = new Map(apps.map((a) => [a.id, a.name]))
   names.set('jarvis', 'Jarvis')
   names.set('evergrove', 'Evergrove')
+  names.set('memory', 'Memory')
   const priv = new Set(apps.filter((a) => a.sensitive).map((a) => a.id))
+  priv.add('memory') // notes about you are personal: hidden in the viewer until you ask to see them
   const evState = deriveEvergrove(events)
   const growth = new Map(evState.entries.map((e) => [e.id, e.updates]))
   const trackers = new Map(evState.trackers.map((t) => [t.id, t]))

@@ -2,10 +2,12 @@ import { useRoute } from '@evergrove/kit/router.js'
 import Link from '@evergrove/kit/components/Link.jsx'
 import JarvisPage from './JarvisPage.jsx'
 import JarvisSettings from './JarvisSettings.jsx'
+import MemoryScreen from './MemoryScreen.jsx'
 
 // Jarvis's screens. The chat is the home; the rest are one tap away.
 const TABS = [
   ['', 'Chat', '/jarvis'],
+  ['memory', 'Memory', '/jarvis/memory'],
   ['settings', 'Settings', '/jarvis/settings'],
 ]
 
@@ -27,7 +29,7 @@ export default function JarvisApp() {
           </Link>
         ))}
       </nav>
-      {active === 'settings' ? <JarvisSettings /> : <JarvisPage />}
+      {active === 'settings' ? <JarvisSettings /> : active === 'memory' ? <MemoryScreen /> : <JarvisPage />}
     </div>
   )
 }

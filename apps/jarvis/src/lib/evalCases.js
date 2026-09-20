@@ -91,6 +91,11 @@ export const CASES = [
   ['add a task to buy milk', (s) => lower(find(s, 'tasks__add_task')?.args.title).includes('milk'), 'single'],
   ['remind me to call mom', (s) => lower(find(s, 'tasks__add_task')?.args.title).includes('mom'), 'single'],
   ['I need to edit the sermon', (s) => has(s, 'tasks__add_task') && !has(s, 'calendar__add_event'), 'single'],
+  // ---- memory: offer it for lasting things, never for one-offs or as a guess ----------
+  ['remember to call mom on Sunday', (s) => has(s, 'tasks__add_task') && !has(s, 'memory__remember'), 'new'],
+  ['I really prefer working out in the mornings', (s) => !has(s, 'memory__remember') || (lower(find(s, 'memory__remember')?.args.text).includes('morning') && !practiced(s) && !logged(s, 'body')), 'new'],
+  ['I skipped the gym today because I was tired', (s) => !has(s, 'memory__remember') && noPurchase(s), 'new'],
+  ['I just had a weird dream about a lighthouse', (s) => !has(s, 'memory__remember'), 'new'],
   ['remember to pick up the dry cleaning', (s) => lower(find(s, 'tasks__add_task')?.args.title).includes('dry'), 'single'],
   ['add a task to renew my license by the end of the month', (s) => find(s, 'tasks__add_task')?.args.due === '2026-09-30', 'single'],
   ['I need to water the plants every week', (s) => Number(find(s, 'tasks__add_task')?.args.repeatEveryDays) === 7, 'new'],

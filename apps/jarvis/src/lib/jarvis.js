@@ -2,6 +2,7 @@ import { localDate } from '@evergrove/core/events.js'
 import { deriveEvergrove } from '@evergrove/rules/derive.js'
 import { getAccessCode } from '@evergrove/core/lib/storage.js'
 import { validateArgs } from '@evergrove/core/schema.js'
+import { deriveMemory, memoryLines, selectMemories } from '@evergrove/modules/memory.js'
 
 const MAX_HISTORY = 10
 
@@ -75,6 +76,12 @@ export function relativePhrases(now = new Date()) {
   ].join('\n')
 }
 
+// The notes he is told for this message (a local rule, no AI). Private notes only if shared.
+export function memoriesFor(events, history, shareSensitive = [], now = new Date()) {
+  const lastUser = [...(history ?? [])].reverse().find((m) => m.role === 'user')
+  return selectMemories(deriveMemory(events, now).notes, lastUser?.text ?? lastUser?.content ?? '', { shared: shareSensitive, now })
+}
+
 export function buildRequest({ history, registry, events, shareSensitive = [], persona = null, now = new Date() }) {
   const evState = deriveEvergrove(events)
   const tools = registry.tools().map((t) => ({ name: t.name, description: t.description, input_schema: t.input }))
@@ -89,7 +96,8 @@ export function buildRequest({ history, registry, events, shareSensitive = [], p
     today: localDate(now),
     days: upcomingDays(now),
     phrases: relativePhrases(now),
-    persona: persona ?? undefined,
+    persona: { ...(persona ?? {}), name: persona?.name || deriveMemory(events, now).name || undefined },
+    memory: memoryLines(memoriesFor(events, history, shareSensitive, now)) || undefined,
     nowLocal: `${localDate(now)}T${pad(now.getHours())}:${pad(now.getMinutes())}`,
     weekday: now.toLocaleDateString('en-US', { weekday: 'long' }),
   }

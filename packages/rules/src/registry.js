@@ -6,14 +6,18 @@ import { moneyModule } from '@evergrove/modules/money.js'
 import { goalsModule } from '@evergrove/modules/goals.js'
 import { peopleModule } from '@evergrove/modules/people.js'
 import { vaultModule } from '@evergrove/modules/vault.js'
+import { memoryModule } from '@evergrove/modules/memory.js'
 import { deriveEvergrove } from './derive'
 
 export const BESPOKE_MODULES = [tasksModule, calendarModule, moneyModule, goalsModule, peopleModule, vaultModule]
 
+// Memory is Jarvis's own data, not an app you open, so it has no page and is not listed in the Apps grid.
+export const INTERNAL_MODULES = [memoryModule]
+
 export function createAppRegistry(log) {
   const registry = createRegistry({ log })
   registry.register(evergroveModule)
-  for (const m of BESPOKE_MODULES) registry.register(m)
+  for (const m of [...BESPOKE_MODULES, ...INTERNAL_MODULES]) registry.register(m)
   return registry
 }
 

@@ -7,7 +7,7 @@ import { composeBriefing } from '@evergrove/rules/briefing.js'
 import { deriveToday } from '@evergrove/rules/today.js'
 import { HELP_TEXT, matchLocalIntent } from '../lib/localIntents'
 import { newId } from '@evergrove/core/events.js'
-import { approveStep, askJarvis, buildRequest, contextSources, needsEscalation, planFromContent, runAutoSteps } from '../lib/jarvis'
+import { approveStep, askJarvis, buildRequest, contextSources, memoriesFor, needsEscalation, planFromContent, runAutoSteps } from '../lib/jarvis'
 import { getAccessCode } from '@evergrove/core/lib/storage.js'
 import { speechSupported, startListening } from '@evergrove/kit/lib/speech.js'
 import { describeLocal } from '@evergrove/modules/calendar.js'
@@ -18,6 +18,7 @@ import { greeting, stepLink } from '../lib/home'
 import { replyFor } from '../lib/replies'
 import { isSpeaking, speak, speakableReply, speechOutSupported, stopSpeaking } from '../lib/speak'
 import { listApps } from '@evergrove/rules/registry.js'
+import { deriveMemory, findNotes, nameNote } from '@evergrove/modules/memory.js'
 
 const CHAT_KEY = 'evergrove_jarvis_chat_v1'
 
@@ -63,9 +64,12 @@ export default function JarvisPage() {
   const [listening, setListening] = useState(false)
   const [voiceError, setVoiceError] = useState('')
   const stopVoice = useRef(null)
+  const [nameDraft, setNameDraft] = useState('')
+  const lastMemory = useRef(null) // the note saved most recently in this chat, for "forget that"
   const [spend, setSpend] = useState(null)
   const [speaking, setSpeaking] = useState(false)
   const bottom = useRef(null)
+  const myName = deriveMemory(events).name
   const persona = { style: settings.jarvisStyle, title: settings.jarvisTitle }
 
   // Spoken replies (off by default). Private details are only read aloud when that app is shared.
@@ -105,6 +109,37 @@ export default function JarvisPage() {
     setMessages((ms) => [...ms, { id: newId(), role: 'user', text: value }])
     if (intent.type === 'briefing') return postBriefing()
     if (intent.type === 'help') return setMessages((ms) => [...ms, say('assistant', HELP_TEXT)])
+    if (intent.type === 'remember') {
+      const r = await runtime.registry.invoke('memory__remember', { text: intent.text.slice(0, 240), via: 'command' }, { approved: true, actor: 'user' })
+      if (r.status === 'done') lastMemory.current = deriveMemory(runtime.log.getEvents()).notes.find((n) => n.text === intent.text.trim().replace(/\s+/g, ' '))?.text ?? null
+      return setMessages((ms) => [...ms, say('assistant', r.status === 'done' ? r.summary : r.error, { link: r.status === 'done' ? { path: '/jarvis/memory', label: 'what I remember' } : undefined })])
+    }
+    if (intent.type === 'callme') {
+      const r = await runtime.registry.invoke('memory__remember', { text: nameNote(intent.name), role: 'name', category: 'fact', private: false, via: 'command' }, { approved: true, actor: 'user' })
+      return setMessages((ms) => [...ms, say('assistant', r.status === 'done' ? `${intent.name} it is.` : r.error)])
+    }
+    if (intent.type === 'memories') {
+      const { notes } = deriveMemory(runtime.log.getEvents())
+      const open = notes.filter((n) => !n.private)
+      const body = notes.length
+        ? `I have ${notes.length} note${notes.length === 1 ? '' : 's'}${notes.length > open.length ? ` (${notes.length - open.length} private)` : ''}.${open.length ? `\n${open.slice(-6).map((n) => '- ' + n.text).join('\n')}` : ''}`
+        : "I haven't noted anything yet. Say \"remember that ...\" and I will."
+      return setMessages((ms) => [...ms, say('assistant', body, { link: { path: '/jarvis/memory', label: 'all my notes' } })])
+    }
+    if (intent.type === 'forget') {
+      const { notes } = deriveMemory(runtime.log.getEvents())
+      const matches = intent.last ? notes.filter((n) => n.text === lastMemory.current) : findNotes(notes, intent.query)
+      if (matches.length === 0) {
+        const body = intent.last ? "I haven't saved anything in this chat. Tell me what to forget, or open my notes." : 'I have no note about that.'
+        return setMessages((ms) => [...ms, say('assistant', body, { link: { path: '/jarvis/memory', label: 'my notes' } })])
+      }
+      if (matches.length > 1) {
+        const shown = matches.slice(0, 5).map((n) => '- ' + (n.private ? '(private note)' : n.text)).join('\n')
+        return setMessages((ms) => [...ms, say('assistant', `Which one?\n${shown}\nSay more of its words.`)])
+      }
+      const step = { id: newId(), name: 'memory__forget', args: { note: matches[0].text }, tier: 'ask', moduleName: 'Memory', description: 'Forget a note', status: 'needs-approval' }
+      return setMessages((ms) => [...ms, say('assistant', `Forget this note? "${matches[0].private ? 'a private note' : matches[0].text}"`, { steps: [step], correlationId: newId() })])
+    }
     if (intent.type === 'today') {
       const items = deriveToday(runtime.log.getEvents())
       const body = items.length ? `Today:\n${items.slice(0, 8).map((i) => '- ' + i.text).join('\n')}` : 'Nothing pressing today. Enjoy it.'
@@ -149,7 +184,8 @@ export default function JarvisPage() {
         tools: payload.tools.length,
         shared: settings.shareSensitive,
         sources: contextSources(runtime.registry, events, { shareSensitive: settings.shareSensitive }),
-        sent: JSON.stringify({ messages: payload.messages, context: payload.context, today: payload.today, nowLocal: payload.nowLocal }, null, 2),
+        memories: memoriesFor(events, forModel, settings.shareSensitive),
+        sent: JSON.stringify({ messages: payload.messages, context: payload.context, persona: payload.persona, memory: payload.memory, today: payload.today, nowLocal: payload.nowLocal }, null, 2),
       })
       let reply = await askJarvis(payload)
       let escalated = false
@@ -280,7 +316,24 @@ export default function JarvisPage() {
       />
 
       <section aria-label="Home" className="mb-4">
-        <p className="font-display text-xl text-white/90">{greeting(new Date())}</p>
+        <p className="font-display text-xl text-white/90">{greeting(new Date(), myName)}</p>
+        {!myName && !settings.nameAsked && (
+          <form
+            className="mt-2 flex flex-wrap items-center gap-2 text-sm"
+            onSubmit={async (e) => {
+              e.preventDefault()
+              const name = nameDraft.trim().slice(0, 40)
+              if (!name) return
+              const r = await runtime.registry.invoke('memory__remember', { text: nameNote(name), role: 'name', category: 'fact', private: false, via: 'command' }, { approved: true, actor: 'user' })
+              if (r.status === 'done') updateSettings({ nameAsked: true })
+            }}
+          >
+            <label htmlFor="jarvis-name" className="text-white/70">What should I call you?</label>
+            <input id="jarvis-name" value={nameDraft} maxLength={40} onChange={(e) => setNameDraft(e.target.value)} className="px-3 py-1 rounded-lg bg-white/5 border border-white/10" />
+            <Button type="submit" disabled={!nameDraft.trim()}>Save</Button>
+            <button type="button" className="text-xs underline text-white/50 hover:text-white/70" onClick={() => updateSettings({ nameAsked: true })}>Not now</button>
+          </form>
+        )}
         <div className="-mt-2"><TodayCard /></div>
       </section>
 
@@ -300,6 +353,11 @@ export default function JarvisPage() {
               <span className="mt-1 grid place-items-center w-7 h-7 rounded-full bg-white/10 shrink-0"><Bot size={14} /></span>
               <div className="max-w-[90%] space-y-2">
                 {m.text && <div className="rounded-2xl rounded-bl-md bg-white/[0.06] border border-white/10 px-4 py-2 text-sm whitespace-pre-line">{m.text}</div>}
+                {m.link && (
+                  <div className="text-xs">
+                    <Link to={m.link.path} className="underline text-sky-200 hover:text-sky-100">Open {m.link.label}</Link>
+                  </div>
+                )}
                 {m.escalated && <div className="text-[11px] text-white/45">Double-checked with a stronger model.</div>}
                 {m.steps?.map((s) => (
                   <div key={s.id} className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm">
@@ -358,6 +416,15 @@ export default function JarvisPage() {
           <div className="mt-2 space-y-2 rounded-lg bg-white/[0.03] border border-white/10 p-3">
             <p>Your message plus {Math.max(0, seen.turns - 1)} earlier chat turn{seen.turns === 2 ? '' : 's'}, the list of {seen.tools} actions it can use, and today's date.</p>
             <p>Private areas shared: {seen.shared.length ? seen.shared.join(', ') : 'none'}. The vault is never shared.</p>
+            <div>
+              <p className="text-white/50">What I remembered about you that was included:</p>
+              {seen.memories.length === 0 ? (
+                <p className="mt-1 text-white/60">(no notes)</p>
+              ) : (
+                <ul className="mt-1 list-disc pl-5 text-white/60">{seen.memories.map((n) => <li key={n.id}>{n.text}{n.private ? ' (private, shared by you)' : ''}</li>)}</ul>
+              )}
+              <button type="button" className="mt-1 underline hover:text-white/80" onClick={() => go('/jarvis/memory')}>Correct it</button>
+            </div>
             <div>
               <p className="text-white/50">Summary of your apps that was included:</p>
               {seen.sources.used.length === 0 && <p className="mt-1 text-white/60">(nothing)</p>}
