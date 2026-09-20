@@ -123,16 +123,16 @@ Evergrove becomes the **mother app**. Every smaller app gets its own address und
 
 ## Phase 4 - Jarvis as its own app (`/jarvis`)
 
-- [ ] P4.1 Create the Jarvis entry with its own shell, icon, colour and manifest (`scope /jarvis/`).
-- [ ] P4.2 Move the chat page into it, unchanged in behavior, with local commands, undo, and clear.
-- [ ] P4.3 Move the "what the AI saw" panel with it, including copy and stop-sharing.
-- [ ] P4.4 Move voice input with it.
-- [ ] P4.5 Build the Jarvis home: an opening line, then the Today list, then the chat box.
-- [ ] P4.6 Add "Open in <app>" links on every Jarvis answer that touched an app.
-- [ ] P4.7 Move the evening briefing screen to `/jarvis/brief` and make the notification click open it.
-- [ ] P4.8 Remove the Jarvis page from Evergrove and replace it with a link.
-- [ ] P4.9 Keep the spend meter visible inside Jarvis.
-- [ ] P4.10 Confirm the two-way live link with a test: a task added through Jarvis appears in `/tasks` at once, and a workout logged in `/body` changes Jarvis's next answer.
+- [x] P4.1 Create the Jarvis entry with its own shell, icon, colour and manifest (`scope /jarvis/`).
+- [x] P4.2 Move the chat page into it, unchanged in behavior, with local commands, undo, and clear.
+- [x] P4.3 Move the "what the AI saw" panel with it, including copy and stop-sharing.
+- [x] P4.4 Move voice input with it.
+- [x] P4.5 Build the Jarvis home: an opening line, then the Today list, then the chat box.
+- [x] P4.6 Add "Open in <app>" links on every Jarvis answer that touched an app.
+- [x] P4.7 Move the evening briefing screen to `/jarvis/brief` and make the notification click open it.
+- [x] P4.8 Remove the Jarvis page from Evergrove and replace it with a link.
+- [x] P4.9 Keep the spend meter visible inside Jarvis.
+- [x] P4.10 Confirm the two-way live link with a test: a task added through Jarvis appears in `/tasks` at once, and a workout logged in `/body` changes Jarvis's next answer.
 - [ ] P4.11 Make Jarvis installable and check the install prompt on the computer.
 - [ ] TP4 The routing eval still scores at least 95% from the new location; every action, tier and undo behaves as before; the private-data tests still pass with Jarvis in its own bundle; Jarvis works offline for local commands.
 

@@ -12,6 +12,9 @@ import { getAccessCode } from '@evergrove/core/lib/storage.js'
 import { speechSupported, startListening } from '@evergrove/kit/lib/speech.js'
 import { describeLocal } from '@evergrove/modules/calendar.js'
 import { AccessCodePrompt, Button, Empty, PageHeader } from '@evergrove/ui/components/ui.jsx'
+import TodayCard from '@evergrove/kit/components/TodayCard.jsx'
+import Link from '@evergrove/kit/components/Link.jsx'
+import { greeting, stepLink } from '../lib/home'
 
 const CHAT_KEY = 'evergrove_jarvis_chat_v1'
 
@@ -239,8 +242,9 @@ export default function JarvisPage() {
   return (
     <div className="flex flex-col" style={{ minHeight: 'calc(100vh - 8rem)' }}>
       <PageHeader
-        icon="trees"
+        icon="bot"
         title="Jarvis"
+
         subtitle="Say what you did or what you need. I'll use the right apps and ask before anything that matters."
         right={
           <div className="text-right text-xs text-white/55 shrink-0">
@@ -256,6 +260,11 @@ export default function JarvisPage() {
           </div>
         }
       />
+
+      <section aria-label="Home" className="mb-4">
+        <p className="font-display text-xl text-white/90">{greeting(new Date())}</p>
+        <div className="-mt-2"><TodayCard /></div>
+      </section>
 
       <div className="flex-1 space-y-3 pb-4" role="log" aria-live="polite" aria-relevant="additions" aria-label="Conversation">
         {messages.length === 0 && (
@@ -286,6 +295,11 @@ export default function JarvisPage() {
                       </span>
                     </div>
                     {s.result && <div className="mt-1 text-white/80">{s.result}</div>}
+                    {stepLink(s) && (
+                      <div className="mt-1 text-xs">
+                        <Link to={stepLink(s).path} className="underline text-sky-200 hover:text-sky-100">Open {stepLink(s).label}</Link>
+                      </div>
+                    )}
                     {s.status === 'needs-approval' && (
                       <div className="mt-2 flex gap-2">
                         <Button onClick={() => approve(m, s)}><Check size={13} className="inline mr-1" />Do it</Button>

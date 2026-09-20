@@ -33,7 +33,7 @@ export function scriptSrc(route) {
 }
 
 export function renderHtml(route) {
-  const title = isHome(route) ? 'Evergrove' : `${route.name} · ${route.id === 'jarvis' ? 'Jarvis' : 'Evergrove'}`
+  const title = isHome(route) ? 'Evergrove' : route.id === 'jarvis' ? 'Jarvis' : `${route.name} · Evergrove`
   return `<!doctype html>
 <html lang="en">
   <head>

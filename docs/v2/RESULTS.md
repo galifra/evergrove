@@ -39,3 +39,11 @@ A running log of what was measured while building, so the checked boxes in `docs
 - Exports: JSON and CSV of exactly what is filtered; private contents are replaced unless shown; a cell that starts with `=`, `+`, `-` or `@` is neutralised so a spreadsheet cannot run it.
 - Scale: 20,000 events are filtered, searched and summarised in a test well inside its 5-second budget; the screen only draws 100 rows at a time.
 - Not exercised in the browser: the file downloads themselves (the content is tested).
+
+## Phase 4: Jarvis as his own app
+
+- Jarvis has his own page-load and script (`apps/jarvis`), his own icon (sky blue "J"), manifest (`scope /jarvis/`) and title. The mother app no longer contains any Jarvis code (the import-boundary test has no exceptions left).
+- The home now opens with a greeting for the time of day and the Today list (shared with the tree, including dismissals), then the chat. Every answer that touched an app has an "Open <app>" link. The AI spend meter stays in his header.
+- Live link with the apps, tested with two windows on one log (the same mechanism two tabs use): a task added through Jarvis is on the Tasks app and the Today list within a moment; a workout logged in the Body app changes what Jarvis knows on his next answer; an undo in one is an undo in the other; a change made while the other window was closed is there when it opens.
+- Checked live: `/jarvis/` shows the greeting and the real Today list.
+- Still open: the browser's install prompt for Jarvis (needs a real window), and the routing eval score from the new location (run once at the end, after the last prompt change).
