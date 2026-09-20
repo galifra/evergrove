@@ -2,7 +2,7 @@ import { localDate } from '../core/events'
 import { deriveEvergrove } from './derive'
 import { deriveInsights } from './insights'
 import { deriveTasks } from '../modules/tasks'
-import { deriveCalendar } from '../modules/calendar'
+import { deriveCalendar, expandCalendar } from '../modules/calendar'
 import { deriveMoney, formatCents } from '../modules/money'
 import { derivePeople } from '../modules/people'
 
@@ -22,10 +22,10 @@ export function deriveToday(events, now = new Date()) {
   for (const b of money.bills) {
     if (b.paid) continue
     if (b.overdue) {
-      items.push({ id: `bill:${b.id}:${b.period}`, priority: 1, kind: 'bill', route: '/app/money', text: `${b.name} (${formatCents(b.amountCents)}) is overdue since ${dayLabel(b.dueOn)}.` })
+      items.push({ id: `bill:${b.id}:${b.period}`, priority: 1, kind: 'bill', route: '/app/money', text: `${b.name}${b.amountCents ? ` (${formatCents(b.amountCents)})` : ''} is overdue since ${dayLabel(b.dueOn)}.` })
     } else if (b.daysUntil <= 3) {
       const when = b.daysUntil === 0 ? 'today' : b.daysUntil === 1 ? 'tomorrow' : `in ${b.daysUntil} days`
-      items.push({ id: `bill:${b.id}:${b.period}`, priority: 2, kind: 'bill', route: '/app/money', text: `${b.name} (${formatCents(b.amountCents)}) is due ${when}.` })
+      items.push({ id: `bill:${b.id}:${b.period}`, priority: 2, kind: 'bill', route: '/app/money', text: `${b.name}${b.amountCents ? ` (${formatCents(b.amountCents)})` : ''} is due ${when}.` })
     }
   }
 
@@ -37,7 +37,7 @@ export function deriveToday(events, now = new Date()) {
   }
 
   const cal = deriveCalendar(events)
-  const todays = cal.events.filter((e) => e.start.slice(0, 10) === today)
+  const todays = expandCalendar(cal, today, today)
   for (const e of todays) {
     const when = e.allDay ? 'today' : e.start.slice(11)
     items.push({ id: `event:${e.id}:${today}`, priority: 3, kind: 'event', route: '/app/calendar', text: `${e.title} at ${when}.`.replace('at today', 'today') })

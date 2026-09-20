@@ -4,8 +4,19 @@ import { useApp } from '../app/AppContext'
 import { AREAS } from '../core/events'
 import { DOMAIN_MAP } from '../lib/domains'
 import { deriveTasks } from '../modules/tasks'
+import { deriveGoals } from '../modules/goals'
 import { Button, Card, Empty, ErrorNote, Field, PageHeader, Select, TextInput, ProgressBar } from '../components/ui'
 import { useAction } from '../components/useAction'
+
+const REPEATS = [
+  { value: '0', label: 'Never' },
+  { value: '1', label: 'Every day' },
+  { value: '7', label: 'Every week' },
+  { value: '14', label: 'Every 2 weeks' },
+  { value: '30', label: 'Every month' },
+  { value: '90', label: 'Every 3 months' },
+  { value: '365', label: 'Every year' },
+]
 
 export default function TasksPage() {
   const { events, reverseEvent } = useApp()
@@ -15,16 +26,26 @@ export default function TasksPage() {
   const [title, setTitle] = useState('')
   const [due, setDue] = useState('')
   const [effort, setEffort] = useState('1')
+  const [repeat, setRepeat] = useState('0')
+  const [goal, setGoal] = useState('')
+  const goals = useMemo(() => deriveGoals(events).active, [events])
   const [hName, setHName] = useState('')
   const [hArea, setHArea] = useState('health')
   const [cadence, setCadence] = useState('daily')
   const [target, setTarget] = useState('3')
 
+  const goalTitle = (id) => goals.find((g) => g.id === id)?.title
+
   async function addTask(e) {
     e.preventDefault()
-    if (await task.act('tasks__add_task', { title, due: due || undefined, effort: Number(effort) })) {
+    const args = { title, due: due || undefined, effort: Number(effort) }
+    if (Number(repeat) > 0) args.repeatEveryDays = Number(repeat)
+    if (goal) args.goal = goal
+    if (await task.act('tasks__add_task', args)) {
       setTitle('')
       setDue('')
+      setRepeat('0')
+      setGoal('')
     }
   }
 
@@ -84,6 +105,8 @@ export default function TasksPage() {
           <div className="sm:col-span-2"><Field label="New task"><TextInput value={title} onChange={(e) => setTitle(e.target.value)} placeholder="File taxes" /></Field></div>
           <Field label="Due"><TextInput type="date" value={due} onChange={(e) => setDue(e.target.value)} /></Field>
           <Field label="Size"><Select value={effort} onChange={(e) => setEffort(e.target.value)} options={[{ value: '1', label: 'Quick' }, { value: '2', label: 'Medium' }, { value: '3', label: 'Big' }]} /></Field>
+          <Field label="Repeats"><Select value={repeat} onChange={(e) => setRepeat(e.target.value)} options={REPEATS} /></Field>
+          <Field label="Toward goal"><Select value={goal} onChange={(e) => setGoal(e.target.value)} options={[{ value: '', label: 'No goal' }, ...goals.map((g) => ({ value: g.id, label: g.title }))]} /></Field>
           <div className="sm:col-span-4"><Button type="submit" disabled={!title.trim() || task.busy}>Add task</Button><ErrorNote>{task.error}</ErrorNote></div>
         </form>
 
@@ -95,6 +118,8 @@ export default function TasksPage() {
                 <div className="truncate">{t.title}</div>
                 <div className="text-xs text-white/55">
                   {t.due ? `due ${t.due}` : 'no date'} · {['quick', 'medium', 'big'][t.effort - 1]}
+                  {t.repeatEveryDays ? ` · repeats every ${t.repeatEveryDays === 7 ? 'week' : t.repeatEveryDays + ' days'}` : ''}
+                  {t.goalId && goalTitle(t.goalId) ? ` · toward ${goalTitle(t.goalId)}` : ''}
                 </div>
               </div>
               <div className="flex gap-2 shrink-0">

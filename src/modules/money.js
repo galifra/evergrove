@@ -1,6 +1,7 @@
 import { createEvent, effectiveEvents, localDate } from '../core/events'
 import { findOne } from '../core/match'
 import { slugify } from '../lib/treeEngine'
+import { aprToBps, compareStrategies, describePlan, moneyGuidance, planDebtPayoff } from './moneyPlanner'
 
 // Tracking only: nothing here moves or holds real money. Every amount is an
 // integer number of cents; floating point never touches a total.
@@ -27,7 +28,7 @@ export function billDueOn(bill, month) {
   if (bill.cadence === 'monthly') return `${month}-${p2(Math.min(bill.dueDay ?? 1, daysInMonth(y, m)))}`
   if (bill.cadence === 'yearly') {
     const [, bm, bd] = bill.dueDate.split('-')
-    return `${y}-${bm}-${bd}`
+    return `${y}-${bm}-${p2(Math.min(Number(bd), daysInMonth(y, Number(bm))))}`
   }
   return bill.dueDate
 }
@@ -57,6 +58,8 @@ export function deriveMoney(events, now = new Date()) {
   const budgets = new Map()
   const goals = new Map()
   const accounts = new Map()
+  const holdings = new Map()
+  const flagged = new Set()
   const paid = new Map() // billId -> Map(period -> event)
   const closedMonths = new Set()
 
@@ -87,7 +90,26 @@ export function deriveMoney(events, now = new Date()) {
         if (goals.has(d.goalId)) goals.get(d.goalId).savedCents += d.amountCents
         break
       case 'money.account.balance':
-        accounts.set(d.accountId, { id: d.accountId, name: d.name, kind: d.kind, balanceCents: d.balanceCents, date: d.date })
+        accounts.set(d.accountId, {
+          id: d.accountId,
+          name: d.name,
+          kind: d.kind,
+          balanceCents: d.balanceCents,
+          date: d.date,
+          // A later balance update keeps the rate and minimum unless it gives new ones.
+          aprBps: d.aprBps ?? accounts.get(d.accountId)?.aprBps ?? null,
+          minPaymentCents: d.minPaymentCents ?? accounts.get(d.accountId)?.minPaymentCents ?? null,
+        })
+        break
+      case 'money.holding.set':
+        holdings.set(d.holdingId, { id: d.holdingId, name: d.name, kind: d.kind, units: d.units ?? null, valueCents: d.valueCents, date: d.date })
+        break
+      case 'money.holding.removed':
+        holdings.delete(d.holdingId)
+        break
+      case 'money.bill.flagged':
+        if (d.flagged) flagged.add(d.billId)
+        else flagged.delete(d.billId)
         break
       case 'money.month.closed':
         closedMonths.add(d.month)
@@ -134,6 +156,8 @@ export function deriveMoney(events, now = new Date()) {
       const isPaid = periods.has(period)
       return {
         ...b,
+        flagged: flagged.has(b.id),
+        isDeadline: !!b.deadline || ['tax', 'insurance'].includes(String(b.category ?? '').toLowerCase()),
         period,
         dueOn,
         paid: isPaid,
@@ -146,9 +170,19 @@ export function deriveMoney(events, now = new Date()) {
 
   const subscriptionsMonthlyCents = [...bills.values()].filter((b) => !b.archived).reduce((s, b) => s + monthlyEquivalent(b), 0)
   const accountList = [...accounts.values()]
-  const netWorthCents = accountList.reduce((s, a) => s + (a.kind === 'debt' ? -a.balanceCents : a.balanceCents), 0)
+  const holdingList = [...holdings.values()].sort((a, b) => b.valueCents - a.valueCents || a.name.localeCompare(b.name))
+  const investmentsCents = holdingList.reduce((s, h) => s + h.valueCents, 0)
+  const netWorthCents = accountList.reduce((s, a) => s + (a.kind === 'debt' ? -a.balanceCents : a.balanceCents), 0) + investmentsCents
 
-  return {
+  const cancelCandidates = [...bills.values()]
+    .filter((b) => !b.archived && flagged.has(b.id))
+    .map((b) => ({ id: b.id, name: b.name, monthlyCents: monthlyEquivalent(b), yearlyCents: monthlyEquivalent(b) * 12 }))
+  const cancelSavings = {
+    monthlyCents: cancelCandidates.reduce((s, c) => s + c.monthlyCents, 0),
+    yearlyCents: cancelCandidates.reduce((s, c) => s + c.yearlyCents, 0),
+  }
+
+  const state = {
     purchases: purchases.sort((a, b) => b.date.localeCompare(a.date) || b.eventId.localeCompare(a.eventId)),
     thisMonth,
     month,
@@ -157,13 +191,22 @@ export function deriveMoney(events, now = new Date()) {
     bills: billRows,
     goals: [...goals.values()],
     accounts: accountList,
+    holdings: holdingList,
+    investmentsCents,
     netWorthCents,
     subscriptionsMonthlyCents,
+    cancelCandidates,
+    cancelSavings,
+    deadlines: billRows.filter((b) => b.isDeadline),
     recurring: detectRecurring(purchases, [...bills.values()]),
     closedMonths,
     today,
   }
+  state.guidance = moneyGuidance(state, { formatCents })
+  return state
 }
+
+export const debtsOf = (state) => state.accounts.filter((a) => a.kind === 'debt')
 
 // Same merchant in 3+ different months at a steady price looks like a
 // subscription you may have forgotten about.
@@ -423,16 +466,151 @@ export const moneyModule = {
           name: { type: 'string', maxLength: 60 },
           kind: { type: 'string', enum: ['asset', 'debt'] },
           balance: { type: 'number', minimum: 0, maximum: 1_000_000_000 },
+          apr: { type: 'number', minimum: 0, maximum: 100, description: 'Yearly interest rate in percent, for a debt (24.99 means 24.99%)' },
+          minPayment: { type: 'number', minimum: 0.01, maximum: 10_000_000, description: 'Minimum monthly payment in dollars, for a debt' },
         },
         required: ['name', 'kind', 'balance'],
       },
       run(args, { now }) {
+        if ((args.apr !== undefined || args.minPayment !== undefined) && args.kind !== 'debt') {
+          return { error: 'An interest rate and minimum payment only apply to a debt.' }
+        }
         return {
           summary: `${args.name} balance: ${formatCents(toCents(args.balance))} (${args.kind}).`,
           events: [
             {
               type: 'money.account.balance',
-              data: { accountId: slugify(args.name), name: args.name, kind: args.kind, balanceCents: toCents(args.balance), date: localDate(now) },
+              data: {
+                accountId: slugify(args.name),
+                name: args.name,
+                kind: args.kind,
+                balanceCents: toCents(args.balance),
+                aprBps: args.apr === undefined ? undefined : aprToBps(args.apr),
+                minPaymentCents: args.minPayment === undefined ? undefined : toCents(args.minPayment),
+                date: localDate(now),
+              },
+            },
+          ],
+        }
+      },
+    },
+    {
+      name: 'plan_debt_payoff',
+      tier: 'auto',
+      description:
+        'Work out how long it takes to pay off the recorded debts and how much interest that costs, with an optional extra monthly payment. Read-only: nothing is paid or changed. Needs each debt to have an interest rate and minimum payment.',
+      input: {
+        type: 'object',
+        properties: {
+          extra: { type: 'number', minimum: 0, maximum: 10_000_000, description: 'Extra dollars per month on top of the minimums' },
+          strategy: { type: 'string', enum: ['avalanche', 'snowball'], description: 'avalanche = highest rate first, snowball = smallest balance first' },
+        },
+      },
+      run(args, { moduleState, now }) {
+        const debts = debtsOf(moduleState())
+        const opts = { extraCents: args.extra ? toCents(args.extra) : 0, startMonth: monthOf(localDate(now)) }
+        if (args.strategy) return { summary: describePlan(planDebtPayoff(debts, { ...opts, strategy: args.strategy }), formatCents), events: [] }
+        const both = compareStrategies(debts, opts)
+        const text = [describePlan(both.avalanche, formatCents)]
+        if (!both.avalanche.empty && !both.avalanche.neverPaidOff && both.interestDifferenceCents !== 0) {
+          text.push(`Snowball would take ${both.snowball.months} months and cost ${formatCents(Math.abs(both.interestDifferenceCents))} ${both.interestDifferenceCents > 0 ? 'more' : 'less'} interest.`)
+        }
+        return { summary: text.join(' '), events: [] }
+      },
+    },
+    {
+      name: 'set_holding',
+      tier: 'auto',
+      description:
+        'Record or update the value of an investment holding you own (typed in by hand, e.g. "index fund", "bitcoin"). Tracking only: no prices are fetched and nothing is bought or sold.',
+      input: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', maxLength: 60 },
+          kind: { type: 'string', enum: ['stock', 'fund', 'crypto', 'retirement', 'other'] },
+          value: { type: 'number', minimum: 0, maximum: 1_000_000_000, description: 'Current total value in dollars' },
+          units: { type: 'number', minimum: 0, maximum: 1_000_000_000_000, description: 'Shares or coins held, if you want to record them' },
+        },
+        required: ['name', 'kind', 'value'],
+      },
+      run(args, { now }) {
+        return {
+          summary: `${args.name} (${args.kind}) valued at ${formatCents(toCents(args.value))}.`,
+          events: [
+            {
+              type: 'money.holding.set',
+              data: { holdingId: slugify(args.name), name: args.name, kind: args.kind, valueCents: toCents(args.value), units: args.units, date: localDate(now) },
+            },
+          ],
+        }
+      },
+    },
+    {
+      name: 'remove_holding',
+      tier: 'ask',
+      description: 'Stop tracking an investment holding.',
+      input: { type: 'object', properties: { holding: { type: 'string', maxLength: 60 } }, required: ['holding'] },
+      run(args, { moduleState }) {
+        const r = findOne(moduleState().holdings, args.holding, { label: (h) => h.name, noun: 'holding' })
+        if (r.error) return { error: r.error }
+        return { summary: `Stopped tracking ${r.item.name}.`, events: [{ type: 'money.holding.removed', data: { holdingId: r.item.id } }] }
+      },
+    },
+    {
+      name: 'flag_cancel_candidate',
+      tier: 'auto',
+      description: 'Mark a bill or subscription as something the user is thinking of cancelling (or clear the mark). Shows how much cancelling would save. It does not cancel anything.',
+      input: {
+        type: 'object',
+        properties: { bill: { type: 'string', maxLength: 60 }, flagged: { type: 'boolean', description: 'true to mark (default), false to clear' } },
+        required: ['bill'],
+      },
+      run(args, { moduleState }) {
+        const r = findOne(moduleState().bills, args.bill, { label: (b) => b.name, noun: 'bill' })
+        if (r.error) return { error: r.error }
+        const flag = args.flagged ?? true
+        if (flag === r.item.flagged) return { summary: `"${r.item.name}" is already ${flag ? 'marked' : 'unmarked'}.`, events: [] }
+        const monthly = monthlyEquivalent(r.item)
+        return {
+          summary: flag
+            ? `Marked "${r.item.name}" as a cancel candidate. Cancelling would save about ${formatCents(monthly)} a month (${formatCents(monthly * 12)} a year).`
+            : `"${r.item.name}" is no longer a cancel candidate.`,
+          events: [{ type: 'money.bill.flagged', data: { billId: r.item.id, flagged: flag } }],
+        }
+      },
+    },
+    {
+      name: 'add_deadline',
+      tier: 'auto',
+      description:
+        'Track an insurance renewal, tax deadline or similar date that must not be missed. Repeats every year unless one-time. Shows on the calendar and in Today, and can be ticked off when done.',
+      input: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', maxLength: 60 },
+          date: DATE,
+          kind: { type: 'string', enum: ['tax', 'insurance', 'license', 'other'] },
+          yearly: { type: 'boolean', description: 'true (default) if it comes round every year' },
+          amount: { type: 'number', minimum: 0.01, maximum: 10_000_000, description: 'Amount due in dollars, if known' },
+        },
+        required: ['name', 'date', 'kind'],
+      },
+      run(args) {
+        const yearly = args.yearly ?? true
+        return {
+          summary: `Tracking ${args.kind} deadline "${args.name}" on ${args.date}${yearly ? ', every year' : ''}.`,
+          events: [
+            {
+              type: 'money.bill.defined',
+              data: {
+                billId: slugify(args.name),
+                name: args.name,
+                amountCents: args.amount ? toCents(args.amount) : 0,
+                cadence: yearly ? 'yearly' : 'once',
+                dueDate: args.date,
+                category: args.kind,
+                deadline: true,
+              },
             },
           ],
         }

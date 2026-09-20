@@ -27,6 +27,7 @@ export function deriveTasks(events, now = new Date()) {
   const today = localDate(now)
   const tasks = new Map()
   const habits = new Map()
+  const completions = []
 
   for (const e of effectiveEvents(events)) {
     const d = e.data
@@ -38,17 +39,29 @@ export function deriveTasks(events, now = new Date()) {
           due: d.due ?? null,
           effort: d.effort ?? 1,
           goalId: d.goalId ?? null,
+          repeatEveryDays: d.repeatEveryDays ?? null,
           createdAt: e.occurredAt,
           doneOn: null,
           completionEventId: null,
+          timesDone: 0,
+          lastDone: null,
           deleted: false,
         })
         break
       case 'task.completed': {
         const t = tasks.get(d.taskId)
         if (t) {
-          t.doneOn = d.date ?? localDate(e.occurredAt)
-          t.completionEventId = e.id
+          const date = d.date ?? localDate(e.occurredAt)
+          completions.push({ id: t.id, title: t.title, date, eventId: e.id })
+          t.timesDone += 1
+          t.lastDone = date
+          if (t.repeatEveryDays) {
+            // A repeating task never closes: it comes back N days after it was done.
+            t.due = addDays(date, t.repeatEveryDays)
+          } else {
+            t.doneOn = date
+            t.completionEventId = e.id
+          }
         }
         break
       }
@@ -86,7 +99,9 @@ export function deriveTasks(events, now = new Date()) {
   const open = all
     .filter((t) => !t.doneOn)
     .sort((a, b) => (a.due ?? '9999') .localeCompare(b.due ?? '9999') || a.createdAt.localeCompare(b.createdAt))
-  const doneToday = all.filter((t) => t.doneOn === today)
+  const doneToday = completions
+    .filter((c) => c.date === today)
+    .map((c) => ({ id: c.id, title: c.title, completionEventId: c.eventId }))
 
   const habitList = [...habits.values()]
     .filter((h) => !h.archived)
@@ -174,14 +189,36 @@ export const tasksModule = {
           title: { type: 'string', maxLength: 120 },
           due: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}$', description: 'Due date YYYY-MM-DD' },
           effort: { type: 'integer', minimum: 1, maximum: 3, description: '1 quick, 2 medium, 3 big' },
+          repeatEveryDays: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 730,
+            description: 'Makes it a repeating task that comes back this many days after each completion (7 = weekly, 30 = about monthly, 365 = yearly). Good for chores and maintenance.',
+          },
+          goal: { type: 'string', maxLength: 80, description: 'Title of an existing goal this task works toward' },
         },
         required: ['title'],
       },
-      run(args) {
+      run(args, { state, now }) {
         const taskId = uid('task')
+        let goal = null
+        if (args.goal) {
+          const r = findOne(state('goals').active, args.goal, { noun: 'goal' })
+          if (r.error) return { error: r.error }
+          goal = r.item
+        }
+        const due = args.due ?? (args.repeatEveryDays ? addDays(localDate(now), args.repeatEveryDays) : undefined)
         return {
-          summary: `Added task "${args.title}"${args.due ? ` due ${args.due}` : ''}.`,
-          events: [{ type: 'task.created', data: { taskId, title: args.title, due: args.due, effort: args.effort ?? 1 } }],
+          summary:
+            `Added ${args.repeatEveryDays ? `repeating task (every ${args.repeatEveryDays} day${args.repeatEveryDays === 1 ? '' : 's'}) ` : 'task '}"${args.title}"` +
+            `${due ? ` due ${due}` : ''}${goal ? `, toward "${goal.title}"` : ''}.`,
+          events: [
+            {
+              type: 'task.created',
+              area: goal?.area,
+              data: { taskId, title: args.title, due, effort: args.effort ?? 1, goalId: goal?.id, repeatEveryDays: args.repeatEveryDays },
+            },
+          ],
         }
       },
     },
@@ -194,8 +231,13 @@ export const tasksModule = {
         const { open } = moduleState()
         const r = findOne(open, args.task, { noun: 'open task' })
         if (r.error) return { error: r.error }
+        if (r.item.repeatEveryDays && r.item.lastDone === localDate(now)) {
+          return { summary: `"${r.item.title}" is already done today. It comes back on ${r.item.due}.`, events: [] }
+        }
         return {
-          summary: `Completed "${r.item.title}".`,
+          summary: r.item.repeatEveryDays
+            ? `Completed "${r.item.title}". It comes back on ${addDays(localDate(now), r.item.repeatEveryDays)}.`
+            : `Completed "${r.item.title}".`,
           events: [{ type: 'task.completed', data: { taskId: r.item.id, title: r.item.title, date: localDate(now) } }],
         }
       },

@@ -1,6 +1,6 @@
 import { localDate } from '../core/events'
 import { deriveEvergrove } from './derive'
-import { deriveCalendar } from '../modules/calendar'
+import { deriveCalendar, expandCalendar } from '../modules/calendar'
 import { deriveTasks } from '../modules/tasks'
 import { deriveMoney, formatCents } from '../modules/money'
 import { derivePeople } from '../modules/people'
@@ -34,7 +34,7 @@ export function composeBriefing(events, now = new Date(), prefs = DEFAULT_BRIEFI
   const today = localDate(now)
   const tomorrow = localDate(tomorrowDate)
 
-  const calendar = deriveCalendar(events).events.filter((e) => e.start.slice(0, 10) === tomorrow)
+  const calendar = expandCalendar(deriveCalendar(events), tomorrow, tomorrow)
   const tasks = deriveTasks(events, now).open
   const dueTasks = tasks.filter((t) => t.due === tomorrow)
   const overdueTasks = tasks.filter((t) => t.due && t.due < tomorrow && t.due !== tomorrow)
@@ -67,7 +67,7 @@ export function composeBriefing(events, now = new Date(), prefs = DEFAULT_BRIEFI
     const detail = []
     for (const e of calendar) detail.push(e.allDay ? `${e.title} (all day)` : `${clock(e.start.slice(11))} ${e.title}`)
     for (const t of dueTasks) detail.push(`Due: ${t.title}`)
-    for (const b of dueBills) detail.push(`${b.name}${p.showAmounts ? ` ${formatCents(b.amountCents)}` : ''} is due`)
+    for (const b of dueBills) detail.push(`${b.name}${p.showAmounts && b.amountCents ? ` ${formatCents(b.amountCents)}` : ''} is due`)
     for (const x of birthdays) detail.push(`${x.name}'s birthday`)
     if (!detail.length) detail.push('Nothing scheduled.')
     if (detail.length > MAX_LINES) {
