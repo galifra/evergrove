@@ -1,0 +1,38 @@
+{
+  "name": "Goals · Evergrove",
+  "short_name": "Goals",
+  "description": "Goals, milestones and linked tasks.",
+  "id": "/goals/",
+  "start_url": "/goals/",
+  "scope": "/goals/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0d1912",
+  "theme_color": "#292e3c",
+  "icons": [
+    {
+      "src": "/icons/goals-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/goals-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/goals-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/goals.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

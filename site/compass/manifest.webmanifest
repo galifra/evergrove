@@ -1,0 +1,38 @@
+{
+  "name": "Compass · Evergrove",
+  "short_name": "Compass",
+  "description": "Values, long-term goals, decisions and reviews.",
+  "id": "/compass/",
+  "start_url": "/compass/",
+  "scope": "/compass/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0d1912",
+  "theme_color": "#222e3b",
+  "icons": [
+    {
+      "src": "/icons/compass-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/compass-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/compass-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/compass.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

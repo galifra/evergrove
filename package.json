@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/gen-entries.mjs --check",
     "build": "vite build",
+    "gen": "node scripts/gen-entries.mjs",
     "lint": "oxlint",
     "test": "vitest run",
     "eval": "node scripts/eval.mjs",

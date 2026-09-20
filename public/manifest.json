@@ -2,20 +2,47 @@
   "name": "Evergrove",
   "short_name": "Evergrove",
   "description": "A living skill tree that grows with everything you do, with Jarvis to run it.",
-  "start_url": "/#/",
+  "id": "/",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#0d1912",
   "theme_color": "#0d1912",
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
-    { "src": "/tree-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/tree-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
   ],
   "shortcuts": [
-    { "name": "Talk to Jarvis", "url": "/#/jarvis" },
-    { "name": "Apps", "url": "/#/apps" }
+    {
+      "name": "Talk to Jarvis",
+      "url": "/jarvis/"
+    },
+    {
+      "name": "Apps",
+      "url": "/apps/"
+    }
   ]
 }

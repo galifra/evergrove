@@ -1,0 +1,38 @@
+{
+  "name": "Records · Evergrove",
+  "short_name": "Records",
+  "description": "A log of things done: bills, errands, filings, warranties.",
+  "id": "/records/",
+  "start_url": "/records/",
+  "scope": "/records/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0d1912",
+  "theme_color": "#383715",
+  "icons": [
+    {
+      "src": "/icons/records-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/records-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/records-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/records.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

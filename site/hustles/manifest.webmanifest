@@ -1,0 +1,38 @@
+{
+  "name": "Side hustles · Evergrove",
+  "short_name": "Side",
+  "description": "Ideas, experiments and income opportunities.",
+  "id": "/hustles/",
+  "start_url": "/hustles/",
+  "scope": "/hustles/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0d1912",
+  "theme_color": "#292e3c",
+  "icons": [
+    {
+      "src": "/icons/hustles-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/hustles-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/hustles-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/hustles.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

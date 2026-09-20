@@ -1,0 +1,38 @@
+{
+  "name": "Creativity · Evergrove",
+  "short_name": "Creativity",
+  "description": "Projects, practice and ideas.",
+  "id": "/creativity/",
+  "start_url": "/creativity/",
+  "scope": "/creativity/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0d1912",
+  "theme_color": "#382f1a",
+  "icons": [
+    {
+      "src": "/icons/creativity-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/creativity-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/creativity-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/creativity.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

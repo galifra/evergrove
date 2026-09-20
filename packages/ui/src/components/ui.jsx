@@ -2,14 +2,14 @@ import { useState } from 'react'
 import { setAccessCode } from '@evergrove/core/lib/storage.js'
 import {
   Archive, Briefcase, Brain, Calendar, CheckSquare, Compass, Dumbbell, GraduationCap, HeartPulse, House, Lock,
-  Palette, Plane, Rocket, Sparkles, Target, Trees, Users, Wallet, LayoutGrid,
+  Palette, Plane, Rocket, Sparkles, Target, Trees, Users, Wallet, LayoutGrid, Bot, ScrollText,
 } from 'lucide-react'
 
 const ICONS = {
   archive: Archive, briefcase: Briefcase, brain: Brain, calendar: Calendar, 'check-square': CheckSquare,
   compass: Compass, dumbbell: Dumbbell, 'graduation-cap': GraduationCap, 'heart-pulse': HeartPulse,
   home: House, lock: Lock, palette: Palette, plane: Plane, rocket: Rocket, sparkles: Sparkles, target: Target,
-  trees: Trees, users: Users, wallet: Wallet,
+  trees: Trees, users: Users, wallet: Wallet, bot: Bot, 'scroll-text': ScrollText, 'layout-grid': LayoutGrid,
 }
 
 export function AppIcon({ name, size = 18, className = '' }) {

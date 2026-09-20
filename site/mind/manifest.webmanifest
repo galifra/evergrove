@@ -1,0 +1,38 @@
+{
+  "name": "Mind · Evergrove",
+  "short_name": "Mind",
+  "description": "Journaling, meditation, gratitude, therapy.",
+  "id": "/mind/",
+  "start_url": "/mind/",
+  "scope": "/mind/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0d1912",
+  "theme_color": "#1c323c",
+  "icons": [
+    {
+      "src": "/icons/mind-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/mind-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/mind-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/mind.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

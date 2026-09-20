@@ -1,0 +1,38 @@
+{
+  "name": "People · Evergrove",
+  "short_name": "People",
+  "description": "Birthdays, likes, gift ideas, last contact.",
+  "id": "/people/",
+  "start_url": "/people/",
+  "scope": "/people/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0d1912",
+  "theme_color": "#372930",
+  "icons": [
+    {
+      "src": "/icons/people-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/people-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/people-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/people.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

@@ -1,4 +1,7 @@
-@import "tailwindcss";
+/* Tailwind scans the shared packages and both apps, wherever the page that loads this file lives. */
+@import "tailwindcss" source(none);
+@source "../../../packages";
+@source "../../../apps";
 
 @theme {
   --font-display: "Fraunces", "Georgia", serif;

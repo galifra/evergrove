@@ -1,0 +1,38 @@
+{
+  "name": "Apps · Evergrove",
+  "short_name": "Apps",
+  "description": "Every app, and ideas ready to build.",
+  "id": "/apps/",
+  "start_url": "/apps/",
+  "scope": "/apps/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0d1912",
+  "theme_color": "#143a2a",
+  "icons": [
+    {
+      "src": "/icons/apps-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/apps-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/apps-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/apps.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

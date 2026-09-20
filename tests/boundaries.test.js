@@ -13,10 +13,7 @@ const rank = (layer) => (LAYERS.includes(layer) ? LAYERS.indexOf(layer) : LAYERS
 
 // Temporary exceptions, each removed by the phase that fixes it. The test below
 // fails if this list is not empty once version 2 is finished.
-const TEMPORARY = [
-  // Removed in Phase 4, when Jarvis becomes its own entry and Evergrove stops embedding his page.
-  'apps/evergrove/src/App.jsx imports ../../jarvis/src/screens/JarvisPage.jsx',
-]
+const TEMPORARY = []
 
 function walk(dir, out = []) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -91,8 +88,8 @@ describe('import boundaries', () => {
     expect([...new Set(missing)]).toEqual([])
   })
 
-  it('keeps the temporary exceptions to the one known, tracked one (Phase 4 must empty it)', () => {
-    expect(TEMPORARY.filter((t) => !t.startsWith('//'))).toHaveLength(1)
+  it('has no temporary exceptions left', () => {
+    expect(TEMPORARY).toEqual([])
   })
 
   it('the checker itself catches a violation (a fake upward import)', () => {

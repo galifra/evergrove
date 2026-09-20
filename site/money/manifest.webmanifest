@@ -1,0 +1,38 @@
+{
+  "name": "Money · Evergrove",
+  "short_name": "Money",
+  "description": "Purchases, bills, budgets, debts. Tracking only.",
+  "id": "/money/",
+  "start_url": "/money/",
+  "scope": "/money/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0d1912",
+  "theme_color": "#113820",
+  "icons": [
+    {
+      "src": "/icons/money-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/money-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/money-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/money.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

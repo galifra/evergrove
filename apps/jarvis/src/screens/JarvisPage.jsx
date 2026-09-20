@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Bot, Check, Loader2, Mic, Send, Square, Undo2, X } from 'lucide-react'
 import { useApp } from '@evergrove/kit/AppContext.jsx'
 import { go, useRoute } from '@evergrove/kit/router.js'
+import { appPath } from '@evergrove/rules/routes.js'
 import { composeBriefing } from '@evergrove/rules/briefing.js'
 import { deriveToday } from '@evergrove/rules/today.js'
 import { HELP_TEXT, matchLocalIntent } from '../lib/localIntents'
@@ -213,17 +214,17 @@ export default function JarvisPage() {
 
   // Tapping the evening notification lands here.
   useEffect(() => {
-    if (route.param === 'brief' && runtime && !briefed.current) {
+    if (route?.sub === 'brief' && runtime && !briefed.current) {
       briefed.current = true
       if (Date.now() - lastLandingAt > 3000) {
         lastLandingAt = Date.now()
         postBriefing()
       }
-      window.location.hash = '#/jarvis'
+      go('/jarvis', { replace: true })
     }
     // postBriefing only reads from runtime; it is safe to run once per landing
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [route.param, runtime])
+  }, [route?.sub, runtime])
 
   async function approve(msg, step) {
     await approveStep(step, runtime.registry, msg.correlationId)
@@ -334,7 +335,7 @@ export default function JarvisPage() {
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="text-white/70">{u.name}{u.sensitive ? ' (private, shared by you)' : ''}</span>
                       <span className="flex gap-2">
-                        <button type="button" className="underline hover:text-white/80" onClick={() => go(u.id === 'evergrove' ? '/' : `/app/${u.id}`)}>Correct it</button>
+                        <button type="button" className="underline hover:text-white/80" onClick={() => go(u.id === 'evergrove' ? '/' : appPath(u.id))}>Correct it</button>
                         {u.sensitive && (
                           <button
                             type="button"

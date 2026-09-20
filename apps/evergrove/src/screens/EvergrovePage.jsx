@@ -25,7 +25,7 @@ export default function EvergrovePage() {
       <TreeCanvas state={viewState} onSelectDomain={setActiveDomain} />
       <DomainLegend state={viewState} domains={DOMAINS} onSelectDomain={setActiveDomain} />
 
-      <button onClick={() => go('/timeline')} className="mt-3 text-xs text-white/55 hover:text-white/80 underline">
+      <button onClick={() => go('/log')} className="mt-3 text-xs text-white/55 hover:text-white/80 underline">
         See everything that has grown your tree
       </button>
 

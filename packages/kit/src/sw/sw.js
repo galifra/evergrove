@@ -3,11 +3,15 @@
 // ever sends a content-free "it's time" ping, so nothing about your calendar,
 // tasks or bills leaves your device to make a notification.
 import { composeBriefing } from '@evergrove/rules/briefing.js'
+import { entryPath, routeForPath } from '@evergrove/rules/routes.js'
 
 const DB_NAME = 'evergrove-log'
 // Stamped in at build time so every deploy gets a fresh cache and old ones are dropped.
 const BUILD = typeof __BUILD_ID__ !== 'undefined' ? __BUILD_ID__ : 'dev'
 const CACHE = `evergrove-shell-${BUILD}`
+// Every page, script, style, manifest and icon of this build (listed at build time),
+// so any app opens offline even if it was never visited.
+const PRECACHE = typeof __PRECACHE__ !== 'undefined' ? __PRECACHE__ : []
 const FALLBACK = { title: 'Evergrove', body: 'Your briefing for tomorrow is ready. Open Evergrove to see it.' }
 
 // Open the app's existing database without ever creating it: a brand-new empty
@@ -51,8 +55,14 @@ async function buildNotification(payload) {
   }
 }
 
-self.addEventListener('install', () => {
-  self.skipWaiting()
+self.addEventListener('install', (event) => {
+  // One missing file must not stop the rest from being kept.
+  event.waitUntil(
+    (async () => {
+      const cache = await caches.open(CACHE)
+      await Promise.allSettled(PRECACHE.map((url) => cache.add(new Request(new URL(url, self.location.origin), { cache: 'reload' }))))
+    })().then(() => self.skipWaiting())
+  )
 })
 
 self.addEventListener('activate', (event) => {
@@ -77,7 +87,11 @@ async function networkFirst(request) {
     if (fresh.ok) cache.put(request, fresh.clone())
     return fresh
   } catch {
-    const hit = (await cache.match(request)) ?? (request.mode === 'navigate' ? await cache.match('/') : undefined)
+    if (request.mode !== 'navigate') return (await cache.match(request)) ?? Response.error()
+    // Offline: the page as last seen, else the page that serves this address, else the home page.
+    const url = new URL(request.url)
+    const route = routeForPath(url.pathname)
+    const hit = (await cache.match(request)) ?? (route ? await cache.match(entryPath(route)) : undefined) ?? (await cache.match('/'))
     return hit ?? Response.error()
   }
 }
@@ -99,7 +113,7 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.startsWith('/api/') || url.pathname === '/sw.js') return
   if (request.mode === 'navigate') event.respondWith(networkFirst(request))
   else if (url.pathname.startsWith('/assets/')) event.respondWith(cacheFirst(request))
-  else if (/\.(png|svg|json|ico)$/.test(url.pathname)) event.respondWith(networkFirst(request))
+  else if (/\.(png|svg|json|webmanifest|ico)$/.test(url.pathname)) event.respondWith(networkFirst(request))
 })
 
 self.addEventListener('push', (event) => {
@@ -116,7 +130,7 @@ self.addEventListener('push', (event) => {
         icon: '/icon-192.png',
         badge: '/tree-icon.svg',
         tag: 'evergrove-daily',
-        data: { url: '/#/jarvis/brief' },
+        data: { url: '/jarvis/brief' },
       })
     )
   )
@@ -124,7 +138,7 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
-  const url = event.notification.data?.url ?? '/#/'
+  const url = event.notification.data?.url ?? '/'
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(async (clients) => {
       for (const client of clients) {

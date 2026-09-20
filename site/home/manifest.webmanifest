@@ -1,0 +1,38 @@
+{
+  "name": "Home · Evergrove",
+  "short_name": "Home",
+  "description": "Chores, maintenance, pets, caregiving and household paperwork.",
+  "id": "/home/",
+  "start_url": "/home/",
+  "scope": "/home/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0d1912",
+  "theme_color": "#383715",
+  "icons": [
+    {
+      "src": "/icons/home-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/home-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/home-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/home.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

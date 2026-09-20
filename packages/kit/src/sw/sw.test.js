@@ -26,6 +26,11 @@ function makeCaches() {
         async put(req, res) {
           m.set(keyOf(req), res)
         },
+        async add(req) {
+          const res = await globalThis.fetch(req)
+          if (!res.ok) throw new TypeError('bad response')
+          m.set(keyOf(req), res)
+        },
       }
     },
     async keys() {
@@ -40,6 +45,7 @@ function makeCaches() {
 const clientsApi = { claim: vi.fn(), matchAll: vi.fn(async () => []), openWindow: vi.fn(async () => {}) }
 
 beforeAll(async () => {
+  globalThis.__PRECACHE__ = ['/', '/money/', '/jarvis/', '/t/', '/assets/app-abc.js', '/missing.png']
   globalThis.self = {
     addEventListener: (type, fn) => (handlers[type] = fn),
     skipWaiting: vi.fn(),
@@ -129,18 +135,18 @@ describe('tapping the notification', () => {
     const client = { focus: vi.fn(async () => {}), navigate: vi.fn(async () => {}) }
     clientsApi.matchAll.mockResolvedValueOnce([client])
     let pending
-    handlers.notificationclick({ notification: closeable('/#/jarvis/brief'), waitUntil: (p) => (pending = p) })
+    handlers.notificationclick({ notification: closeable('/jarvis/brief'), waitUntil: (p) => (pending = p) })
     await pending
     expect(client.focus).toHaveBeenCalled()
-    expect(client.navigate).toHaveBeenCalledWith('/#/jarvis/brief')
+    expect(client.navigate).toHaveBeenCalledWith('/jarvis/brief')
     expect(clientsApi.openWindow).not.toHaveBeenCalled()
   })
 
   it('opens a new window when the app is closed', async () => {
     let pending
-    handlers.notificationclick({ notification: closeable('/#/jarvis/brief'), waitUntil: (p) => (pending = p) })
+    handlers.notificationclick({ notification: closeable('/jarvis/brief'), waitUntil: (p) => (pending = p) })
     await pending
-    expect(clientsApi.openWindow).toHaveBeenCalledWith('/#/jarvis/brief')
+    expect(clientsApi.openWindow).toHaveBeenCalledWith('/jarvis/brief')
   })
 })
 
@@ -188,6 +194,29 @@ describe('working offline', () => {
     online = false
     const r = await ask(request('/some/deep/route', { mode: 'navigate' }))
     expect(await r.response.text()).toBe('body of /')
+  })
+
+  it('keeps every listed page and file ready when it installs, even if one is missing', async () => {
+    globalThis.fetch = vi.fn(async (req) => new Response('page ' + new URL(req.url).pathname, { status: new URL(req.url).pathname === '/missing.png' ? 404 : 200 }))
+    let pending
+    handlers.install({ waitUntil: (p) => (pending = p) })
+    await pending
+    const kept = [...[...globalThis.caches.stores.values()][0].keys()].sort()
+    expect(kept).toEqual(['/', '/assets/app-abc.js', '/jarvis/', '/money/', '/t/'])
+    expect(globalThis.self.skipWaiting).toHaveBeenCalled()
+  })
+
+  it('opens an app it never visited, offline, from what install kept', async () => {
+    globalThis.fetch = vi.fn(async (req) => new Response('page ' + new URL(req.url).pathname, { status: 200 }))
+    let pending
+    handlers.install({ waitUntil: (p) => (pending = p) })
+    await pending
+    online = false
+    globalThis.fetch = vi.fn(async () => { throw new TypeError('offline') })
+    expect(await (await ask(request('/money', { mode: 'navigate' }))).response.text()).toBe('page /money/')
+    expect(await (await ask(request('/jarvis/memory', { mode: 'navigate' }))).response.text()).toBe('page /jarvis/')
+    expect(await (await ask(request('/t/houseplants', { mode: 'navigate' }))).response.text()).toBe('page /t/')
+    expect(await (await ask(request('/not/an/app', { mode: 'navigate' }))).response.text()).toBe('page /')
   })
 
   it('built files are served from cache without touching the network again', async () => {

@@ -1,11 +1,15 @@
+import fs from 'node:fs'
+import path from 'node:path'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { build, defineConfig, loadEnv } from 'vite'
+import { ENTRIES } from './packages/rules/src/routes.js'
 
-// Vercel serves /api/*.js as serverless functions automatically in prod and
-// via `vercel dev` locally. Plain `vite dev` doesn't know about that folder
-// at all, so this small middleware plugin emulates it for local dev —
-// /api/<name> is routed to the matching api/<name>.js handler.
+const ROOT = import.meta.dirname
+
+// Vercel serves /api/*.js as serverless functions in production. Plain `vite dev`
+// doesn't know about that folder, so this small plugin emulates it for local
+// dev: /api/<name> is routed to the matching api/<name>.js handler.
 function apiDevMiddleware() {
   return {
     name: 'api-dev-middleware',
@@ -31,7 +35,7 @@ function apiDevMiddleware() {
             res.end(JSON.stringify(obj))
           }
 
-          const mod = await server.ssrLoadModule(`/api/${match[1]}.js`)
+          const mod = await server.ssrLoadModule(path.join(ROOT, 'api', `${match[1]}.js`))
           await mod.default(req, res)
         } catch (err) {
           console.error('[api-dev-middleware]', err)
@@ -44,17 +48,36 @@ function apiDevMiddleware() {
   }
 }
 
-// https://vite.dev/config/
+// Screens inside Jarvis (/jarvis/memory) and custom trackers (/t/<id>) have no
+// file of their own: the same page serves them. Production does this with
+// rewrites in vercel.json; this plugin does the same for dev and preview.
+function entryRewrites() {
+  const rewrite = (req, _res, next) => {
+    const url = req.url ?? ''
+    const [pathname, query = ''] = url.split('?')
+    const q = query ? `?${query}` : ''
+    if (/^\/jarvis\/[^.]+$/.test(pathname)) req.url = `/jarvis/index.html${q}`
+    else if (/^\/t\/[^/.]+\/?$/.test(pathname)) req.url = `/t/index.html${q}`
+    next()
+  }
+  return {
+    name: 'entry-rewrites',
+    configureServer: (server) => server.middlewares.use(rewrite),
+    configurePreviewServer: (server) => server.middlewares.use(rewrite),
+  }
+}
+
 // The service worker imports app code (it builds the evening briefing on the
 // device), so it has to be bundled into one classic script at /sw.js. Vite does
-// not do that on its own: this plugin builds it after the main build, and serves
-// a freshly bundled copy in dev.
-async function bundleServiceWorker(write) {
+// not do that on its own: this plugin builds it after the main build, listing
+// every built file so any app can open offline, and serves a fresh copy in dev.
+async function bundleServiceWorker(write, precache = []) {
   const result = await build({
     configFile: false,
     publicDir: false,
     logLevel: 'warn',
-    define: { __BUILD_ID__: JSON.stringify(Date.now().toString(36)) },
+    root: ROOT,
+    define: { __BUILD_ID__: JSON.stringify(Date.now().toString(36)), __PRECACHE__: JSON.stringify(precache) },
     build: {
       write,
       outDir: 'dist',
@@ -67,12 +90,30 @@ async function bundleServiceWorker(write) {
   return out.output?.[0]?.code
 }
 
+// URLs the worker keeps ready: every page, script, style, manifest and icon that was built.
+function precacheList(dist) {
+  const out = []
+  const walk = (dir) => {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, e.name)
+      if (e.isDirectory()) walk(full)
+      else {
+        const rel = path.relative(dist, full).split(path.sep).join('/')
+        if (rel === 'sw.js' || rel === '404.html') continue
+        out.push(rel === 'index.html' ? '/' : rel.endsWith('/index.html') ? `/${rel.slice(0, -'index.html'.length)}` : `/${rel}`)
+      }
+    }
+  }
+  walk(dist)
+  return out.sort()
+}
+
 function serviceWorkerBuild() {
   return {
     name: 'service-worker-build',
     async closeBundle() {
       if (this.meta?.watchMode) return
-      await bundleServiceWorker(true)
+      await bundleServiceWorker(true, precacheList(path.join(ROOT, 'dist')))
     },
     configureServer(server) {
       server.middlewares.use('/sw.js', async (req, res) => {
@@ -91,15 +132,31 @@ function serviceWorkerBuild() {
   }
 }
 
+// One entry page per app, all sharing chunks (see docs/v2/ARCHITECTURE.md).
+const input = Object.fromEntries([
+  ...ENTRIES.map((r) => [r.id, path.join(ROOT, 'site', r.path === '/' ? '' : r.path.slice(1), 'index.html')]),
+  ['not-found', path.join(ROOT, 'site', '404.html')],
+])
+
+// https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   // Make .env values available to the api-dev-middleware's server-side code
   // (Vite only exposes VITE_-prefixed vars to client code by default). This
-  // only matters for local `vite dev` — deployed Vercel functions get their
-  // env vars injected directly, not through this file.
-  const env = loadEnv(mode, process.cwd(), '')
+  // only matters for local `vite dev`; deployed functions get their env vars
+  // injected directly, not through this file.
+  const env = loadEnv(mode, ROOT, '')
   Object.assign(process.env, env)
 
   return {
-    plugins: [react(), tailwindcss(), apiDevMiddleware(), serviceWorkerBuild()],
+    root: path.join(ROOT, 'site'),
+    publicDir: path.join(ROOT, 'public'),
+    appType: 'mpa',
+    plugins: [react(), tailwindcss(), apiDevMiddleware(), entryRewrites(), serviceWorkerBuild()],
+    server: { fs: { allow: [ROOT] } },
+    build: {
+      outDir: path.join(ROOT, 'dist'),
+      emptyOutDir: true,
+      rollupOptions: { input },
+    },
   }
 })

@@ -23,25 +23,25 @@ export function deriveToday(events, now = new Date()) {
   for (const b of money.bills) {
     if (b.paid) continue
     if (b.overdue) {
-      items.push({ id: `bill:${b.id}:${b.period}`, priority: 1, kind: 'bill', route: '/app/money', text: `${b.name}${b.amountCents ? ` (${formatCents(b.amountCents)})` : ''} is overdue since ${dayLabel(b.dueOn)}.` })
+      items.push({ id: `bill:${b.id}:${b.period}`, priority: 1, kind: 'bill', route: '/money', text: `${b.name}${b.amountCents ? ` (${formatCents(b.amountCents)})` : ''} is overdue since ${dayLabel(b.dueOn)}.` })
     } else if (b.daysUntil <= 3) {
       const when = b.daysUntil === 0 ? 'today' : b.daysUntil === 1 ? 'tomorrow' : `in ${b.daysUntil} days`
-      items.push({ id: `bill:${b.id}:${b.period}`, priority: 2, kind: 'bill', route: '/app/money', text: `${b.name}${b.amountCents ? ` (${formatCents(b.amountCents)})` : ''} is due ${when}.` })
+      items.push({ id: `bill:${b.id}:${b.period}`, priority: 2, kind: 'bill', route: '/money', text: `${b.name}${b.amountCents ? ` (${formatCents(b.amountCents)})` : ''} is due ${when}.` })
     }
   }
 
   const tasks = deriveTasks(events, now)
   for (const t of tasks.open) {
     if (!t.due) continue
-    if (t.due < today) items.push({ id: `task:${t.id}`, priority: 2, kind: 'task', route: '/app/tasks', text: `"${t.title}" was due ${dayLabel(t.due)}.` })
-    else if (t.due === today) items.push({ id: `task:${t.id}`, priority: 2, kind: 'task', route: '/app/tasks', text: `"${t.title}" is due today.` })
+    if (t.due < today) items.push({ id: `task:${t.id}`, priority: 2, kind: 'task', route: '/tasks', text: `"${t.title}" was due ${dayLabel(t.due)}.` })
+    else if (t.due === today) items.push({ id: `task:${t.id}`, priority: 2, kind: 'task', route: '/tasks', text: `"${t.title}" is due today.` })
   }
 
   const cal = deriveCalendar(events)
   const todays = expandCalendar(cal, today, today)
   for (const e of todays) {
     const when = e.allDay ? 'today' : e.start.slice(11)
-    items.push({ id: `event:${e.id}:${today}`, priority: 3, kind: 'event', route: '/app/calendar', text: `${e.title} at ${when}.`.replace('at today', 'today') })
+    items.push({ id: `event:${e.id}:${today}`, priority: 3, kind: 'event', route: '/calendar', text: `${e.title} at ${when}.`.replace('at today', 'today') })
   }
 
   // Gentle mode: a paused area gets no nudges at all.
@@ -55,7 +55,7 @@ export function deriveToday(events, now = new Date()) {
       id: `habits:${today}`,
       priority: 3,
       kind: 'habit',
-      route: '/app/tasks',
+      route: '/tasks',
       text:
         undone.length === 1
           ? `${first.name} isn't checked off yet${first.streak ? ` (${plural(first.streak, 'day')} streak to keep)` : ''}.`
@@ -71,7 +71,7 @@ export function deriveToday(events, now = new Date()) {
         id: `review:${today}`,
         priority: 3,
         kind: 'review',
-        route: '/app/learning',
+        route: '/learning',
         text: `${plural(due.length, 'thing')} to review: ${due.slice(0, 3).map((q) => q.subject).join(', ')}.`,
       })
     }
@@ -81,7 +81,7 @@ export function deriveToday(events, now = new Date()) {
   for (const p of people.upcomingBirthdays) {
     if (p.nextBirthday.inDays > 7) continue
     const when = p.nextBirthday.inDays === 0 ? 'today' : p.nextBirthday.inDays === 1 ? 'tomorrow' : `in ${p.nextBirthday.inDays} days`
-    items.push({ id: `birthday:${p.id}:${p.nextBirthday.date}`, priority: 3, kind: 'birthday', route: '/app/people', text: `${p.name}'s birthday is ${when}.` })
+    items.push({ id: `birthday:${p.id}:${p.nextBirthday.date}`, priority: 3, kind: 'birthday', route: '/people', text: `${p.name}'s birthday is ${when}.` })
   }
 
   for (const i of deriveInsights(evState, now)) {

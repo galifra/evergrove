@@ -11,7 +11,7 @@ export function appSpecMarkdown(req) {
     req.area ? `**Life area it grows:** ${req.area}` : null,
     '',
     '## How it must fit Evergrove',
-    '- A module with its own page at `#/app/<id>`, usable without Jarvis.',
+    '- A module with its own address (`/<id>`) and its own installable page, usable without Jarvis.',
     '- Everything it stores is an append-only event in the shared log (versioned, idempotent); mistakes are fixed with correction events.',
     '- A manifest listing its actions (with a permission tier each: auto, ask first, or suggest only) so Jarvis can use it.',
     '- Growth rules saying what each event is worth on the tree. The tree never shrinks.',

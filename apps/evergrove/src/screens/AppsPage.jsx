@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useApp } from '@evergrove/kit/AppContext.jsx'
 import { appSpecMarkdown } from '@evergrove/rules/appSpec.js'
 import { go } from '@evergrove/kit/router.js'
+import { appPath } from '@evergrove/rules/routes.js'
 import { AREAS } from '@evergrove/core/events.js'
 import { DOMAIN_MAP } from '@evergrove/core/lib/domains.js'
 import { listApps } from '@evergrove/rules/registry.js'
@@ -41,7 +42,7 @@ export default function AppsPage() {
   const Tile = ({ a }) => (
     <button
       type="button"
-      onClick={() => go(`/app/${a.id}`)}
+      onClick={() => go(appPath(a.id))}
       className="text-left rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 p-4 transition-colors"
     >
       <div className="flex items-center gap-2 mb-1.5">
