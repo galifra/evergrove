@@ -101,7 +101,7 @@ export function composeWeekly(events, now = new Date()) {
     title: 'What grew',
     lines: grewAreas.length
       ? [
-          `${listOf(grewAreas.slice(0, 3).map((a) => `${a.name} (${a.xp} xp)`))}${grewAreas.length > 3 ? `, and ${plural(grewAreas.length - 3, 'more area')}` : ''}.`,
+          `${listOf(grewAreas.slice(0, 3).map((a) => `${a.name} (${a.xp} xp)`))}${grewAreas.length > 3 ? `, and ${plural(grewAreas.length - 3, 'more area')}` : ''}${grewAreas.length > 1 ? `, ${totalXp} xp in all` : ''}.`,
           `Most of it came from ${listOf(topSkills.map((s) => s.name))}.`,
           `You grew on ${days.size} of 7 days${tasksDone || habitChecks ? `, finished ${plural(tasksDone, 'task')} and ticked ${plural(habitChecks, 'habit check')}` : ''}.`,
         ]

@@ -143,7 +143,7 @@ Evergrove becomes the **mother app**. Every smaller app gets its own address und
 - [x] P5.3 Add optional style: plain, or butler ("sir/ma'am" style), your choice, off by default.
 - [x] P5.4 Write reply templates for the common answers (done, undone, needs approval, error, clarify), so routine replies cost nothing and sound consistent.
 - [x] P5.5 Add spoken replies with the browser's built-in voice: toggle, voice choice, speed, and a stop button.
-- [ ] P5.6 Add the opening line: greets by time of day and, only if something is necessary, adds one note (Phase 7).
+- [x] P5.6 Add the opening line: greets by time of day and, only if something is necessary, adds one note (Phase 7).
 - [x] P5.7 Add a personality check set of 25 phrases with a written rubric (warm, honest, short, no emoji, no advice claims, no guilt), scored by reading, not by machine.
 - [ ] TP5 Templates never produce a blank reply; spoken replies never read out private data unless you have shared it; the personality set is reviewed by you once and adjusted.
 
@@ -162,21 +162,21 @@ Evergrove becomes the **mother app**. Every smaller app gets its own address und
 
 ## Phase 7 - Honest feedback, and speaking up when necessary
 
-- [ ] P7.1 Build the observation engine: each observation is a pure function of your data with an id, priority, cooldown, privacy class and wordings.
-- [ ] P7.2 Add the time-sensitive observations: bill due soon, bill overdue, deadline within 3 days, event clash, review queue overflowing, a task overdue more than 3 days.
-- [ ] P7.3 Add the pattern observations: streak about to break, area silent for 14 days, a habit dropping compared with last week, a goal with no progress for 10 days, an area getting far more attention than all others, budget over its limit for the second week.
-- [ ] P7.4 Add the positive observations: a real win (level up, a first, a long streak, a goal milestone), so feedback is not only about what is wrong.
-- [ ] P7.5 Add three wordings per observation, so he does not repeat himself, all in the personality guide voice.
-- [ ] P7.6 Add the goal coach: when a goal stalls, he offers to split it into smaller tasks and does so with one approval (uses existing actions and tiers).
-- [ ] P7.7 Add the limits: at most 2 unprompted items a day inside the apps and 1 in a notification; a 7-day cooldown per observation; nothing during your quiet hours; nothing for paused areas.
-- [ ] P7.8 Add the setting "Jarvis speaks up": only when necessary (default), more often, or never.
-- [ ] P7.9 Add thumbs up and down on every unprompted note and every reply; "not useful" silences that kind for 30 days (stored as `feedback.given` events so it syncs).
-- [ ] P7.10 Show one note on the Jarvis home and, when there is one, add it to the evening briefing as "Jarvis's note". No new scheduled jobs are needed.
-- [ ] P7.11 Build the weekly review at `/jarvis/weekly`: what grew, what stalled, wins, one suggestion, one question; built from templates and delivered with Sunday's briefing.
-- [ ] P7.12 Add an optional single AI call per week to polish the weekly review's wording (off if the cap is past 80%).
-- [ ] P7.13 Add "what do you think?": on request, he gives an honest opinion about an area, a goal or the week, using your insights and memories (an AI call you asked for).
-- [ ] P7.14 Add "export my feedback": `feedback.given` events become new routing and personality test cases.
-- [ ] TP7 A month of synthetic data never exceeds the daily limits; each observation fires exactly when its threshold is crossed and not before; cooldowns and quiet hours hold; paused areas stay silent; "never" really is silent; "not useful" suppresses; private-class observations never go into notification text; wordings are never blank; the weekly review is identical when built twice from the same data.
+- [x] P7.1 Build the observation engine: each observation is a pure function of your data with an id, priority, cooldown, privacy class and wordings.
+- [x] P7.2 Add the time-sensitive observations: bill due soon, bill overdue, deadline within 3 days, event clash, review queue overflowing, a task overdue more than 3 days.
+- [x] P7.3 Add the pattern observations: streak about to break, area silent for 14 days, a habit dropping compared with last week, a goal with no progress for 10 days, an area getting far more attention than all others, budget over its limit for the second week.
+- [x] P7.4 Add the positive observations: a real win (level up, a first, a long streak, a goal milestone), so feedback is not only about what is wrong.
+- [x] P7.5 Add three wordings per observation, so he does not repeat himself, all in the personality guide voice.
+- [x] P7.6 Add the goal coach: when a goal stalls, he offers to split it into smaller tasks and does so with one approval (uses existing actions and tiers).
+- [x] P7.7 Add the limits: at most 2 unprompted items a day inside the apps and 1 in a notification; a 7-day cooldown per observation; nothing during your quiet hours; nothing for paused areas.
+- [x] P7.8 Add the setting "Jarvis speaks up": only when necessary (default), more often, or never.
+- [x] P7.9 Add thumbs up and down on every unprompted note and every reply; "not useful" silences that kind for 30 days (stored as `feedback.given` events so it syncs).
+- [x] P7.10 Show one note on the Jarvis home and, when there is one, add it to the evening briefing as "Jarvis's note". No new scheduled jobs are needed.
+- [x] P7.11 Build the weekly review at `/jarvis/weekly`: what grew, what stalled, wins, one suggestion, one question; built from templates and delivered with Sunday's briefing.
+- [x] P7.12 Add an optional single AI call per week to polish the weekly review's wording (off if the cap is past 80%).
+- [x] P7.13 Add "what do you think?": on request, he gives an honest opinion about an area, a goal or the week, using your insights and memories (an AI call you asked for).
+- [x] P7.14 Add "export my feedback": `feedback.given` events become new routing and personality test cases.
+- [x] TP7 A month of synthetic data never exceeds the daily limits; each observation fires exactly when its threshold is crossed and not before; cooldowns and quiet hours hold; paused areas stay silent; "never" really is silent; "not useful" suppresses; private-class observations never go into notification text; wordings are never blank; the weekly review is identical when built twice from the same data.
 
 ## Phase 8 - Cost control ($2 a month stays)
 

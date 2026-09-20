@@ -1,6 +1,7 @@
 import { createEvent, effectiveEvents, localDate, newId } from '@evergrove/core/events.js'
 import { buildContext, memoriesFor } from './jarvis.js'
 import { memoryLines } from '@evergrove/modules/memory.js'
+import { deriveEvergrove } from '@evergrove/rules/derive.js'
 import { observe } from '@evergrove/rules/observations.js'
 import { composeWeekly } from '@evergrove/rules/weekly.js'
 
@@ -31,7 +32,7 @@ export function touchesPrivate(steps = [], privateIds = new Set()) {
 export function replyFeedbackData(message, said, privateIds = new Set()) {
   const steps = message.steps ?? []
   const tools = steps.map((s) => s.name)
-  const priv = touchesPrivate(steps, privateIds)
+  const priv = !!message.private || touchesPrivate(steps, privateIds)
   return {
     tools,
     private: priv,
@@ -70,7 +71,12 @@ export function opinionContext(registry, events, { shareSensitive = [], now = ne
     .slice(0, 5)
     .map((o) => `- ${o.obsId}: ${JSON.stringify(o.params)}`)
   if (noticing.length) parts.push(`Things I have noticed:\n${noticing.join('\n')}`)
-  parts.push(`This week so far, as a plain review:\n${composeWeekly(events, now).aiText}`)
+  // With nothing logged in the tree an empty week would read as a calm one, so say what is true instead.
+  parts.push(
+    deriveEvergrove(events).entries.length
+      ? `This week so far, as a plain review:\n${composeWeekly(events, now).aiText}`
+      : 'Nothing has been logged in the tree yet, so there is no week, streak or growth history to speak about.'
+  )
   return parts.filter(Boolean).join('\n\n').slice(0, 3900)
 }
 

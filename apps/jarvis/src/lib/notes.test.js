@@ -64,6 +64,11 @@ describe('what is kept with a rating of a reply', () => {
     expect(touchesPrivate([], priv)).toBe(false)
   })
 
+  it('a reply built from private data (a weekly review, a briefing) keeps only its action names', () => {
+    const data = replyFeedbackData({ id: 'm9', text: 'Landlord Rent slipped 19 days past due.', steps: [], private: true }, 'weekly review', priv)
+    expect(data).toEqual({ tools: [], private: true })
+  })
+
   it('caps how much is kept', () => {
     const data = replyFeedbackData(msg([], 'y'.repeat(900)), 'z'.repeat(900), priv)
     expect(data.said).toHaveLength(200)
@@ -163,7 +168,8 @@ describe('the weekly polish request', () => {
 })
 
 describe('export my feedback', () => {
-  const fb = (data, when = NOW) => createEvent({ type: 'feedback.given', app: 'jarvis', actor: 'user', data, occurredAt: when.toISOString(), now: when })
+  let tick = 0 // each rating a second apart, so their order is the order they were given
+  const fb = (data, when = new Date(NOW.getTime() + 1000 * tick++)) => createEvent({ type: 'feedback.given', app: 'jarvis', actor: 'user', data, occurredAt: when.toISOString(), now: when })
 
   it('turns rated replies into cases and tallies note ratings by kind', () => {
     const events = [

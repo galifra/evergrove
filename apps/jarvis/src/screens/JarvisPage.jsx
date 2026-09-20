@@ -122,7 +122,7 @@ export default function JarvisPage() {
     if (intent.type === 'help') return setMessages((ms) => [...ms, say('assistant', HELP_TEXT)])
     if (intent.type === 'weekly') {
       const review = composeWeekly(runtime.log.getEvents(), new Date())
-      return setMessages((ms) => [...ms, say('assistant', review.text, { link: { path: '/jarvis/weekly', label: 'your week' } })])
+      return setMessages((ms) => [...ms, say('assistant', review.text, { link: { path: '/jarvis/weekly', label: 'your week' }, private: true })])
     }
     if (intent.type === 'exportfeedback') {
       const data = exportFeedback(runtime.log.getEvents())
@@ -206,7 +206,7 @@ export default function JarvisPage() {
       if (body.spend) setSpend(body.spend)
       const reply = body.content?.find((b) => b.type === 'text')?.text?.trim()
       const words = reply || "I don't have enough to give you a fair opinion yet."
-      setMessages((ms) => [...ms, say('assistant', words)])
+      setMessages((ms) => [...ms, say('assistant', words, { private: settings.shareSensitive.length > 0 })])
       sayAloud({ text: words, steps: [] })
     } catch (err) {
       if (err.status === 429) setMessages((ms) => [...ms, say('assistant', err.message)])
@@ -324,7 +324,7 @@ export default function JarvisPage() {
     const b = composeBriefing(runtime.log.getEvents(), new Date(), prefs)
     setMessages((ms) => [
       ...ms,
-      { id: newId(), role: 'assistant', text: `${b.title}\n${b.lines.join('\n')}`, memo: `Showed the briefing for ${b.tomorrow}.`, steps: [] },
+      { id: newId(), role: 'assistant', text: `${b.title}\n${b.lines.join('\n')}`, memo: `Showed the briefing for ${b.tomorrow}.`, steps: [], private: true },
     ])
   }
 

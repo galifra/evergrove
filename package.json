@@ -12,7 +12,8 @@
     "test": "vitest run",
     "eval": "node scripts/eval.mjs",
     "preview": "vite preview",
-    "tone": "node scripts/tone.mjs"
+    "tone": "node scripts/tone.mjs",
+    "feedback": "node scripts/feedback.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.125.0",
