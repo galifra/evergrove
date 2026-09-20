@@ -19,6 +19,7 @@ export function newContext() {
     paused: new Set(),
     treeName: null,
     appRequests: new Map(),
+    securityDone: new Set(),
   }
 }
 
@@ -129,6 +130,16 @@ export const RULES = {
       const cents = Math.max(0, Math.round(Number(e.data.amountCents) || 0))
       const xp = clamp(Math.round(cents / 2000), 1, 15)
       return [growth('discipline', 'Saving', xp, 'Added to savings')]
+    },
+  },
+  // Ticking a checklist item earns growth the first time only, so un-ticking
+  // and re-ticking can never be used to farm it.
+  'security.checked': {
+    grow(e, ctx) {
+      const { itemId, checked } = e.data
+      if (!checked || !itemId || ctx.securityDone.has(itemId)) return []
+      ctx.securityDone.add(itemId)
+      return [growth('discipline', 'Digital security', 3, 'Improved digital security')]
     },
   },
   'money.month.closed': {

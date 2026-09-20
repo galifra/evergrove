@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react'
 import { Eye, EyeOff, Lock, Trash2 } from 'lucide-react'
 import { useApp } from '../app/AppContext'
 import { createEvent } from '../core/events'
-import { deriveVault, openItem, sealItem, unlockVault, VAULT_KINDS } from '../modules/vault'
+import { buildEmergencySheet, deriveVault, openItem, sealItem, securityEvent, unlockVault, VAULT_KINDS } from '../modules/vault'
+import { localDate } from '../core/events'
 import { Button, Card, Empty, ErrorNote, Field, PageHeader, Select, TextInput } from '../components/ui'
 
 export default function VaultPage() {
@@ -13,6 +14,40 @@ export default function VaultPage() {
   const [error, setError] = useState('')
   const [revealed, setRevealed] = useState({})
   const [form, setForm] = useState({ title: '', kind: VAULT_KINDS[0], body: '' })
+  const [sheet, setSheet] = useState('')
+  const [note, setNote] = useState('')
+  const [copied, setCopied] = useState(false)
+  const { evState } = useApp()
+
+  async function makeSheet() {
+    setError('')
+    try {
+      const opened = []
+      for (const it of state.items) if (['emergency contact', 'contingency plan'].includes(it.kind)) opened.push({ title: it.title, kind: it.kind, body: await openItem(key, it) })
+      setSheet(buildEmergencySheet({ items: opened, treeName: evState.treeName ?? 'Evergrove', generatedOn: localDate(), passphraseNote: note }))
+    } catch {
+      setError('Could not open the emergency items with this passphrase.')
+    }
+  }
+
+  function downloadSheet() {
+    const url = URL.createObjectURL(new Blob([sheet], { type: 'text/plain' }))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'emergency-sheet.txt'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  async function copySheet() {
+    try {
+      await navigator.clipboard.writeText(sheet)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      setError('Copying was blocked. Use Download instead.')
+    }
+  }
 
   async function unlock(e) {
     e.preventDefault()
@@ -49,6 +84,28 @@ export default function VaultPage() {
       setError('Could not open that item with this passphrase.')
     }
   }
+
+  const tick = (id, checked) => runtime.log.append(securityEvent(id, checked))
+
+  const checklistCard = (
+    <Card title={`Digital security checklist (${state.checklistDone} of ${state.checklist.length})`}>
+      <ul className="divide-y divide-white/5">
+        {state.checklist.map((c) => (
+          <li key={c.id} className="py-2">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input type="checkbox" className="mt-1" checked={c.done} onChange={(e) => tick(c.id, e.target.checked)} />
+              <span className="min-w-0">
+                <span className="block text-sm">{c.title}</span>
+                <span className="block text-xs text-white/55">{c.why}</span>
+                {c.stale && <span className="block text-xs text-amber-300">Last ticked {c.checkedOn}. Worth a fresh look.</span>}
+              </span>
+            </label>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-2 text-xs text-white/55">You tick these yourself; nothing is checked or sent anywhere.</p>
+    </Card>
+  )
 
   return (
     <div className="grid gap-4">
@@ -96,8 +153,29 @@ export default function VaultPage() {
               ))}
             </ul>
           </Card>
+          <Card title="Emergency sheet">
+            <p className="text-sm text-white/70">Gathers your emergency contacts and contingency plans into one page for someone you trust to find. It never includes the vault passphrase.</p>
+            <div className="mt-3 max-w-lg">
+              <Field label="Where is the vault passphrase kept? (e.g. sealed envelope in the safe)">
+                <TextInput value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} />
+              </Field>
+            </div>
+            <div className="mt-3"><Button onClick={makeSheet}>Build the sheet</Button></div>
+            {sheet && (
+              <div className="mt-3">
+                <pre className="whitespace-pre-wrap text-sm rounded-lg bg-black/30 p-3 font-sans max-h-80 overflow-auto">{sheet}</pre>
+                <p className="mt-2 text-xs text-amber-300">This text is not encrypted. Print it or save it somewhere physical, then clear it from here.</p>
+                <div className="mt-2 flex gap-2">
+                  <Button variant="ghost" onClick={copySheet}>{copied ? 'Copied' : 'Copy'}</Button>
+                  <Button variant="ghost" onClick={downloadSheet}>Download</Button>
+                  <Button variant="ghost" onClick={() => setSheet('')}>Clear</Button>
+                </div>
+              </div>
+            )}
+          </Card>
         </>
       )}
+      {checklistCard}
     </div>
   )
 }
