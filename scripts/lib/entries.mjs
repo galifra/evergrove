@@ -20,7 +20,8 @@ export const isHome = (route) => route.id === 'evergrove'
 export const dirOf = (route) => (route.path === '/' ? '' : route.path.slice(1))
 export const htmlFile = (route) => (route.path === '/' ? 'site/index.html' : `site/${dirOf(route)}/index.html`)
 export const manifestUrl = (route) => (isHome(route) ? '/manifest.json' : `${route.path}/manifest.webmanifest`)
-export const manifestFile = (route) => (isHome(route) ? 'public/manifest.json' : `site/${dirOf(route)}/manifest.webmanifest`)
+// Manifests live in public/ so their addresses stay exactly as written (Vite renames files it treats as assets).
+export const manifestFile = (route) => (isHome(route) ? 'public/manifest.json' : `public/${dirOf(route)}/manifest.webmanifest`)
 export const iconUrl = (route, size) => (isHome(route) ? { 180: '/apple-touch-icon.png', 192: '/icon-192.png', 512: '/icon-512.png', maskable: '/icon-maskable-512.png' }[size] : `/icons/${route.id}-${size}.png`)
 export const svgUrl = (route) => (isHome(route) ? '/tree-icon.svg' : `/icons/${route.id}.svg`)
 const scopeOf = (route) => (route.custom ? '/t/' : route.path === '/' ? '/' : `${route.path}/`)

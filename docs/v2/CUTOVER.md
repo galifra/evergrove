@@ -5,7 +5,7 @@ Version 2 is built on the `v2` branch. `master` is production and is not touched
 ## Before
 
 1. `v1-final` tag exists on the last version 1 commit (done).
-2. Note the current production deployment id (Vercel dashboard, Deployments). Rollback needs it.
+2. The last version 1 production deployment is `https://evergrove-3pifn1hdv-focus23.vercel.app` (commit `f679c7e`, tag `v1-final`). Rollback needs it.
 3. You export a backup of your real data (Settings, Export) and keep it outside the project.
 4. Every step of the cutover is rehearsed on a preview address first. A preview has its own address and therefore its own empty database.
 

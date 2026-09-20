@@ -5,6 +5,9 @@ import tailwindcss from '@tailwindcss/vite'
 import { build, defineConfig, loadEnv } from 'vite'
 import { ENTRIES } from './packages/rules/src/routes.js'
 
+// `/money` (no slash) is served by money/index.html, as Vercel does in production.
+const ENTRY_DIRS = new Set(ENTRIES.filter((r) => r.path !== '/').map((r) => r.path))
+
 const ROOT = import.meta.dirname
 
 // Vercel serves /api/*.js as serverless functions in production. Plain `vite dev`
@@ -56,14 +59,20 @@ function entryRewrites() {
     const url = req.url ?? ''
     const [pathname, query = ''] = url.split('?')
     const q = query ? `?${query}` : ''
-    if (/^\/jarvis\/[^.]+$/.test(pathname)) req.url = `/jarvis/index.html${q}`
+    if (ENTRY_DIRS.has(pathname)) req.url = `${pathname}/index.html${q}`
+    else if (/^\/jarvis\/[^.]+$/.test(pathname)) req.url = `/jarvis/index.html${q}`
     else if (/^\/t\/[^/.]+\/?$/.test(pathname)) req.url = `/t/index.html${q}`
     next()
   }
   return {
     name: 'entry-rewrites',
-    configureServer: (server) => server.middlewares.use(rewrite),
-    configurePreviewServer: (server) => server.middlewares.use(rewrite),
+    // (No return value: Vite would call a returned function as a post-hook.)
+    configureServer(server) {
+      server.middlewares.use(rewrite)
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use(rewrite)
+    },
   }
 }
 

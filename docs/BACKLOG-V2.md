@@ -56,54 +56,54 @@ Evergrove becomes the **mother app**. Every smaller app gets its own address und
 
 ## Phase 0 - Specs and safety net (no app code)
 
-- [ ] P0.1 Write the version 2 section of `docs/SPEC.md` recording decisions D1 to D7.
-- [ ] P0.2 Tag the current commit `v1-final` and note the current Vercel production deployment id, so a one-command rollback exists.
+- [x] P0.1 Write the version 2 section of `docs/SPEC.md` recording decisions D1 to D7.
+- [x] P0.2 Tag the current commit `v1-final` and note the current Vercel production deployment id, so a one-command rollback exists.
 - [ ] P0.3 [you] Export a backup of your real data (Settings, Export) and keep the file somewhere private, outside the project.
-- [ ] P0.4 Write the route table: path, app name, module id, icon, colour, PWA scope, page title.
-- [ ] P0.5 Write the library boundary spec: `core` <- `apps (modules)` <- `rules` <- `ui` <- `screens`; nothing imports upward or sideways.
-- [ ] P0.6 Write the Jarvis personality guide: voice (warm, dry, direct, short), how he addresses you, honesty rules (tells you the truth kindly, no flattery), boundaries (no medical or personal financial advice, no guilt, no nagging, respects paused areas), and 12 example replies for real situations (win, slip, overspend, conflict, quiet week, bad mood, asked for opinion, asked to do something risky, a lapse he should let go, a milestone, unclear request, error).
-- [ ] P0.7 Write the memory spec: event types, fields, limits (200 notes, 240 characters each), categories, consent rule (only saved when you say "remember" or say yes when he offers), privacy classes, how it is shown to the AI.
-- [ ] P0.8 Write the feedback spec: the observation catalog (see Phase 7), each with trigger, threshold, priority, cooldown, privacy class, three wordings. Define **"necessary"** exactly: (a) something time-sensitive (bill due or overdue, event clash, deadline within 3 days, review queue overflowing), or (b) a meaningful pattern crossed a threshold (a streak about to break, an area silent for two weeks, a goal stalled for 10 days, a real win). Everything else waits until you ask.
-- [ ] P0.9 Write the cost plan: token budget per feature, the 80% rung, the monthly simulation parameters (Phase 8).
-- [ ] P0.10 Write the cutover and rollback plan (Phase 9), including the exact rollback command.
-- [ ] P0.11 Write your acceptance walkthrough: ten short things you can do in about ten minutes to confirm version 2 works, with what you should see for each.
-- [ ] TP0 Paper test: walk these through the specs end to end and record the outcome of each: open `/money` directly from a bookmark; log a workout in `/body` while `/jarvis` is open in another window; tell Jarvis to add a task and see it in `/tasks`; a bill goes overdue; Jarvis has two things to say but the limit is one; you mark a suggestion "not useful"; you say "remember I run best in the morning"; you say "forget that"; the AI cap reaches 80%; the cap is reached; the old notification link `/#/jarvis/brief` is tapped; a deploy happens while a tab is open.
+- [x] P0.4 Write the route table: path, app name, module id, icon, colour, PWA scope, page title.
+- [x] P0.5 Write the library boundary spec: `core` <- `apps (modules)` <- `rules` <- `ui` <- `screens`; nothing imports upward or sideways.
+- [x] P0.6 Write the Jarvis personality guide: voice (warm, dry, direct, short), how he addresses you, honesty rules (tells you the truth kindly, no flattery), boundaries (no medical or personal financial advice, no guilt, no nagging, respects paused areas), and 12 example replies for real situations (win, slip, overspend, conflict, quiet week, bad mood, asked for opinion, asked to do something risky, a lapse he should let go, a milestone, unclear request, error).
+- [x] P0.7 Write the memory spec: event types, fields, limits (200 notes, 240 characters each), categories, consent rule (only saved when you say "remember" or say yes when he offers), privacy classes, how it is shown to the AI.
+- [x] P0.8 Write the feedback spec: the observation catalog (see Phase 7), each with trigger, threshold, priority, cooldown, privacy class, three wordings. Define **"necessary"** exactly: (a) something time-sensitive (bill due or overdue, event clash, deadline within 3 days, review queue overflowing), or (b) a meaningful pattern crossed a threshold (a streak about to break, an area silent for two weeks, a goal stalled for 10 days, a real win). Everything else waits until you ask.
+- [x] P0.9 Write the cost plan: token budget per feature, the 80% rung, the monthly simulation parameters (Phase 8).
+- [x] P0.10 Write the cutover and rollback plan (Phase 9), including the exact rollback command.
+- [x] P0.11 Write your acceptance walkthrough: ten short things you can do in about ten minutes to confirm version 2 works, with what you should see for each.
+- [x] TP0 Paper test: walk these through the specs end to end and record the outcome of each: open `/money` directly from a bookmark; log a workout in `/body` while `/jarvis` is open in another window; tell Jarvis to add a task and see it in `/tasks`; a bill goes overdue; Jarvis has two things to say but the limit is one; you mark a suggestion "not useful"; you say "remember I run best in the morning"; you say "forget that"; the AI cap reaches 80%; the cap is reached; the old notification link `/#/jarvis/brief` is tapped; a deploy happens while a tab is open.
 
 ## Phase 1 - Shared library, no visible change
 
-- [ ] P1.1 Convert the repo to an npm workspace (root config, `packages/`, `apps/`), keeping `api/` and `server/` where Vercel expects them.
-- [ ] P1.2 Move `src/core` to `packages/core` (events, store, log, registry, schema, match, crypto, sync, verify) with its tests.
-- [ ] P1.3 Move `src/modules` to `packages/apps` (one folder per app: its derive, its actions, its context) with tests.
-- [ ] P1.4 Move `src/evergrove` (rules, derive, insights, trackers, trackerViews, today, briefing, appSpec, migrate) to `packages/rules` with tests.
-- [ ] P1.5 Move shared screens' building blocks (`ui.jsx`, `useAction`, `useDialog`, icons, access-code prompt) to `packages/ui`.
-- [ ] P1.6 Move the app runtime (provider that opens the store, sync, settings, service-worker registration) to `packages/app-kit`.
-- [ ] P1.7 Move the current pages and entry to `apps/evergrove`, still one single-page app for now.
-- [ ] P1.8 Fix every import; make Vitest and lint run across all packages; keep one command (`npm test`) for everything.
-- [ ] P1.9 Add the import-boundary test: fail if any package imports upward or sideways, or if one app imports another.
-- [ ] P1.10 Move the service worker to the shared kit unchanged, and keep its tests.
+- [x] P1.1 Convert the repo to an npm workspace (root config, `packages/`, `apps/`), keeping `api/` and `server/` where Vercel expects them.
+- [x] P1.2 Move `src/core` to `packages/core` (events, store, log, registry, schema, match, crypto, sync, verify) with its tests.
+- [x] P1.3 Move `src/modules` to `packages/apps` (one folder per app: its derive, its actions, its context) with tests.
+- [x] P1.4 Move `src/evergrove` (rules, derive, insights, trackers, trackerViews, today, briefing, appSpec, migrate) to `packages/rules` with tests.
+- [x] P1.5 Move shared screens' building blocks (`ui.jsx`, `useAction`, `useDialog`, icons, access-code prompt) to `packages/ui`.
+- [x] P1.6 Move the app runtime (provider that opens the store, sync, settings, service-worker registration) to `packages/app-kit`.
+- [x] P1.7 Move the current pages and entry to `apps/evergrove`, still one single-page app for now.
+- [x] P1.8 Fix every import; make Vitest and lint run across all packages; keep one command (`npm test`) for everything.
+- [x] P1.9 Add the import-boundary test: fail if any package imports upward or sideways, or if one app imports another.
+- [x] P1.10 Move the service worker to the shared kit unchanged, and keep its tests.
 - [ ] TP1 All 320 existing tests pass unchanged. The built site passes the same 18-app smoke pass as today. Deploy to a Vercel **preview** address and repeat the smoke pass there. Compare the bundle size before and after.
 
 ## Phase 2 - Real paths and one entry per app (Evergrove as the mother)
 
-- [ ] P2.1 Switch the build to multiple entry pages sharing common chunks.
-- [ ] P2.2 Write the entry generator: from the app registry it creates one HTML entry per app with the right title, manifest link, theme colour and app id.
-- [ ] P2.3 Build the shared shell v2: Evergrove home link, an app switcher listing every app and Jarvis, the current app's name, and Settings.
-- [ ] P2.4 Replace hash routing with real paths. Keep a permanent redirect from every old link: `/#/app/<id>` to `/<id>`, `/#/timeline` to `/log`, `/#/jarvis` to `/jarvis`, `/#/jarvis/brief` to `/jarvis/brief`.
-- [ ] P2.5 Give Tasks and Habits its own entry at `/tasks`.
-- [ ] P2.6 Give Calendar its own entry at `/calendar`.
-- [ ] P2.7 Give Money its own entry at `/money`.
-- [ ] P2.8 Give Goals its own entry at `/goals`.
-- [ ] P2.9 Give People its own entry at `/people`.
-- [ ] P2.10 Give the Vault its own entry at `/vault`.
-- [ ] P2.11 Generate the 12 tracker entries: `/body`, `/health`, `/mind`, `/selfcare`, `/learning`, `/creativity`, `/career`, `/hustles`, `/travel`, `/home`, `/records`, `/compass`.
-- [ ] P2.12 Serve trackers made by talking at `/t/<id>` through one rewrite rule.
-- [ ] P2.13 Build the app directory at `/apps` (all apps, app ideas ready to build).
-- [ ] P2.14 Give every app its own manifest (name, short name, `id`, `scope`, `start_url`, standalone display), colour and icons (192 and 512 PNG plus SVG), so each installs separately.
-- [ ] P2.15 Update `vercel.json`: rewrites, manifest cache headers, a friendly 404 page; keep the strict security headers and confirm no inline scripts are needed.
-- [ ] P2.16 Update the service worker: new paths in its page cache, notification click opens `/jarvis/brief`, new build stamp, old caches deleted on activate.
-- [ ] P2.17 Update every deep link (Today items, buddy widget, insights, briefing) to real paths.
-- [ ] P2.18 Set the page title and move keyboard focus to the main heading on each navigation; keep the skip link on every page.
-- [ ] P2.19 Make cross-app navigation feel instant: precache the shared chunks, and record the time to open `/money` from `/` before and after.
+- [x] P2.1 Switch the build to multiple entry pages sharing common chunks.
+- [x] P2.2 Write the entry generator: from the app registry it creates one HTML entry per app with the right title, manifest link, theme colour and app id.
+- [x] P2.3 Build the shared shell v2: Evergrove home link, an app switcher listing every app and Jarvis, the current app's name, and Settings.
+- [x] P2.4 Replace hash routing with real paths. Keep a permanent redirect from every old link: `/#/app/<id>` to `/<id>`, `/#/timeline` to `/log`, `/#/jarvis` to `/jarvis`, `/#/jarvis/brief` to `/jarvis/brief`.
+- [x] P2.5 Give Tasks and Habits its own entry at `/tasks`.
+- [x] P2.6 Give Calendar its own entry at `/calendar`.
+- [x] P2.7 Give Money its own entry at `/money`.
+- [x] P2.8 Give Goals its own entry at `/goals`.
+- [x] P2.9 Give People its own entry at `/people`.
+- [x] P2.10 Give the Vault its own entry at `/vault`.
+- [x] P2.11 Generate the 12 tracker entries: `/body`, `/health`, `/mind`, `/selfcare`, `/learning`, `/creativity`, `/career`, `/hustles`, `/travel`, `/home`, `/records`, `/compass`.
+- [x] P2.12 Serve trackers made by talking at `/t/<id>` through one rewrite rule.
+- [x] P2.13 Build the app directory at `/apps` (all apps, app ideas ready to build).
+- [x] P2.14 Give every app its own manifest (name, short name, `id`, `scope`, `start_url`, standalone display), colour and icons (192 and 512 PNG plus SVG), so each installs separately.
+- [x] P2.15 Update `vercel.json`: rewrites, manifest cache headers, a friendly 404 page; keep the strict security headers and confirm no inline scripts are needed.
+- [x] P2.16 Update the service worker: new paths in its page cache, notification click opens `/jarvis/brief`, new build stamp, old caches deleted on activate.
+- [x] P2.17 Update every deep link (Today items, buddy widget, insights, briefing) to real paths.
+- [x] P2.18 Set the page title and move keyboard focus to the main heading on each navigation; keep the skip link on every page.
+- [x] P2.19 Make cross-app navigation feel instant: precache the shared chunks, and record the time to open `/money` from `/` before and after.
 - [ ] TP2 (a) Every registered app has a route, an entry and a manifest (test fails if one is missing). (b) Every path loads directly and survives a refresh. (c) All old links redirect. (d) Three sample paths open offline with the server down. (e) Manifests pass a validity script and each is installable. (f) A write in `/tasks` shows in `/` and `/money` in another tab without a reload. (g) Each entry's size is recorded, and shared code is not duplicated across entries.
 
 ## Phase 3 - The shared log, viewable (`/log`)

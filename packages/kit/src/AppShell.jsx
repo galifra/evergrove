@@ -89,7 +89,9 @@ function Frame({ children, showBuddy }) {
   // an in-page move so screen readers announce the new screen.
   const label = route ? (route.custom && route.trackerId ? route.trackerId : route.name) : 'Not found'
   useEffect(() => {
-    document.title = route?.id === 'evergrove' ? 'Evergrove' : `${label} · ${route?.id === 'jarvis' ? 'Jarvis' : 'Evergrove'}`
+    const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1)
+    document.title =
+      route?.id === 'evergrove' ? 'Evergrove' : route?.id === 'jarvis' ? (route.sub ? `${cap(route.sub.split('/')[0])} · Jarvis` : 'Jarvis') : `${label} · Evergrove`
     if (first.current) first.current = false
     else document.getElementById('main')?.focus()
   }, [label, route?.id, route?.sub])

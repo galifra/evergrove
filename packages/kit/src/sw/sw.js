@@ -12,6 +12,9 @@ const CACHE = `evergrove-shell-${BUILD}`
 // Every page, script, style, manifest and icon of this build (listed at build time),
 // so any app opens offline even if it was never visited.
 const PRECACHE = typeof __PRECACHE__ !== 'undefined' ? __PRECACHE__ : []
+// Files are stored by their address, and hosts often send Vary: Origin, which would make a file kept
+// ahead of time fail to match the browser's later request for it. Match on the address alone.
+const MATCH = { ignoreVary: true }
 const FALLBACK = { title: 'Evergrove', body: 'Your briefing for tomorrow is ready. Open Evergrove to see it.' }
 
 // Open the app's existing database without ever creating it: a brand-new empty
@@ -87,18 +90,18 @@ async function networkFirst(request) {
     if (fresh.ok) cache.put(request, fresh.clone())
     return fresh
   } catch {
-    if (request.mode !== 'navigate') return (await cache.match(request)) ?? Response.error()
+    if (request.mode !== 'navigate') return (await cache.match(request, MATCH)) ?? Response.error()
     // Offline: the page as last seen, else the page that serves this address, else the home page.
     const url = new URL(request.url)
     const route = routeForPath(url.pathname)
-    const hit = (await cache.match(request)) ?? (route ? await cache.match(entryPath(route)) : undefined) ?? (await cache.match('/'))
+    const hit = (await cache.match(request, MATCH)) ?? (route ? await cache.match(entryPath(route), MATCH) : undefined) ?? (await cache.match('/', MATCH))
     return hit ?? Response.error()
   }
 }
 
 async function cacheFirst(request) {
   const cache = await caches.open(CACHE)
-  const hit = await cache.match(request)
+  const hit = await cache.match(request, MATCH)
   if (hit) return hit
   const fresh = await fetch(request)
   if (fresh.ok) cache.put(request, fresh.clone())

@@ -8,6 +8,7 @@ import { localDate } from '@evergrove/core/events.js'
 // The service worker, exercised with a stand-in for the browser's worker scope.
 
 const handlers = {}
+const matchOptions = []
 const shown = []
 // A small in-memory stand-in for the browser's Cache Storage.
 function makeCaches() {
@@ -19,7 +20,8 @@ function makeCaches() {
       if (!stores.has(name)) stores.set(name, new Map())
       const m = stores.get(name)
       return {
-        async match(req) {
+        async match(req, options) {
+          matchOptions.push(options)
           const hit = m.get(keyOf(req))
           return hit ? hit.clone() : undefined
         },
@@ -217,6 +219,16 @@ describe('working offline', () => {
     expect(await (await ask(request('/jarvis/memory', { mode: 'navigate' }))).response.text()).toBe('page /jarvis/')
     expect(await (await ask(request('/t/houseplants', { mode: 'navigate' }))).response.text()).toBe('page /t/')
     expect(await (await ask(request('/not/an/app', { mode: 'navigate' }))).response.text()).toBe('page /')
+  })
+
+  it('looks files up by address alone, ignoring Vary, so files kept at install match later requests', async () => {
+    await ask(request('/assets/x-1.js'))
+    online = false
+    matchOptions.length = 0
+    await ask(request('/assets/x-1.js'))
+    await ask(request('/money', { mode: 'navigate' }))
+    expect(matchOptions.length).toBeGreaterThan(1)
+    for (const o of matchOptions) expect(o).toEqual({ ignoreVary: true })
   })
 
   it('built files are served from cache without touching the network again', async () => {
