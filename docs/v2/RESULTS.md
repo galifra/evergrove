@@ -105,3 +105,17 @@ A running log of what was measured while building, so the checked boxes in `docs
 - **Plain words instead of failing quietly**: the server's refusals now read "I'm on a short ration this month..." and "I've used this month's AI allowance, so I can only do the quick commands until it resets on the 1st...". In the chat they appear as his own message, not a red error; once a month, when the line is crossed, he says so unprompted; the weekly screen's button is disabled with the reason. The client's text and the server's are held equal by a test.
 - **Cost review with a split by feature** in Jarvis settings and in Evergrove's settings (one shared panel): this month's spend against the cap with the 80% line marked, what it went on (chat, typed entries on the tree, weekly write-up, opinions), and earlier months. Checked in the browser with made-up figures.
 - **Still open**: the full routing eval has not been re-run since the prompt was restructured for caching. It was not run this time (about half a dollar of your API key); it is due once at the end (Phase 9/10), and a score under 95% would need the change reverted or fixed.
+
+## Phase 9: cutover preparation (nothing deployed)
+
+You asked for version 2 to be built and tested before it goes anywhere, so this phase stops at the door: everything that can be prepared and checked without publishing is done, and the rest is left unchecked on purpose.
+
+- **Rollback re-checked**: tag `v1-final` is `f679c7e`, equal to `master`; it is now also in the JARVIS repository. The version 1 production deployment `evergrove-3pifn1hdv-focus23.vercel.app` is listed as Ready. The rollback command is in `docs/v2/CUTOVER.md`.
+- **Data format**: unchanged. Version 2 adds event types and one optional field, which version 1 ignores (tested for the field; version 1's tree code skips unknown types).
+- **One-command health check** (`npm run health`): tests, lint, generated files current, build, dependency audit, in one go; with `--url <address>` it also makes a real request to every path (31 pages and manifests), the no-slash addresses, Jarvis's deep addresses, `/sw.js`, the security headers and the "no code, no entry" answer of each API. Run against a local preview: 54 of 54 checks pass (headers and API skipped, they belong to the host). Its header and API checks were proven on your live version 1 site (read-only): all four APIs answered 401 without a code, the service worker is served fresh, the strict script policy is present; only the "which app is this page" check fails there, as expected, because version 1 has no per-app pages.
+- **Local numbers today**: 558 tests pass (4 skipped are the real-model runs), lint has no errors, the build succeeds, `npm audit` finds 0 vulnerabilities.
+- **Not done, and why**:
+  - The backup export (only your browser can do it).
+  - Deploying a preview address, importing your backup there, the smoke pass on it, the rollback rehearsal, and everything after (production, service-worker update, the 9 PM briefing, the 7-day watch). Each publishes version 2 somewhere, so each waits for your yes.
+  - The routing eval on the final build (about half a dollar of your API use; the prompt was restructured for caching since it last ran).
+- The acceptance walkthrough was rewritten for everything built since it was first drafted (17 steps).

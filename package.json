@@ -14,7 +14,8 @@
     "preview": "vite preview",
     "tone": "node scripts/tone.mjs",
     "feedback": "node scripts/feedback.mjs",
-    "measure": "node scripts/measure.mjs"
+    "measure": "node scripts/measure.mjs",
+    "health": "node scripts/health.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.125.0",
