@@ -47,6 +47,7 @@ export function deriveEvergrove(events) {
     growthDays,
     paused: [...ctx.paused],
     treeName: ctx.treeName,
+    appRequests: [...ctx.appRequests.values()],
     trackers: [...ctx.trackers.values()],
     rulesVersion: RULES_VERSION,
   }

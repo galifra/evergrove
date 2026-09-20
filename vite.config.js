@@ -54,12 +54,12 @@ async function bundleServiceWorker(write) {
     configFile: false,
     publicDir: false,
     logLevel: 'warn',
+    define: { __BUILD_ID__: JSON.stringify(Date.now().toString(36)) },
     build: {
       write,
       outDir: 'dist',
       emptyOutDir: false,
       minify: true,
-      define: { __BUILD_ID__: JSON.stringify(Date.now().toString(36)) },
       lib: { entry: 'src/sw/sw.js', formats: ['iife'], name: 'EvergroveSW', fileName: () => 'sw.js' },
     },
   })

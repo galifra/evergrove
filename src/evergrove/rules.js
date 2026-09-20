@@ -18,6 +18,7 @@ export function newContext() {
     habitDays: new Set(),
     paused: new Set(),
     treeName: null,
+    appRequests: new Map(),
   }
 }
 
@@ -49,6 +50,12 @@ export const RULES = {
     observe(e, ctx) {
       const { taskId, effort, goalId } = e.data
       if (taskId) ctx.tasks.set(taskId, { effort: clamp(Math.round(Number(effort) || 1), 1, 3), goalId })
+    },
+  },
+  'app.requested': {
+    observe(e, ctx) {
+      const d = e.data
+      if (d.requestId && d.name) ctx.appRequests.set(d.requestId, { id: d.requestId, name: d.name, purpose: d.purpose ?? '', tracks: d.tracks ?? '', screens: d.screens ?? '', area: d.area ?? null, eventId: e.id, requestedAt: e.occurredAt })
     },
   },
   // The tree's name lives in the log so every device shows the same one.

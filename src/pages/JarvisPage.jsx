@@ -3,6 +3,8 @@ import { Bot, Check, Loader2, Mic, Send, Square, Undo2, X } from 'lucide-react'
 import { useApp } from '../app/AppContext'
 import { useRoute } from '../app/router'
 import { composeBriefing } from '../evergrove/briefing'
+import { deriveToday } from '../evergrove/today'
+import { HELP_TEXT, matchLocalIntent } from '../jarvis/localIntents'
 import { newId } from '../core/events'
 import { approveStep, askJarvis, buildRequest, planFromContent, runAutoSteps } from '../jarvis/jarvis'
 import { getAccessCode } from '../lib/storage'
@@ -77,11 +79,42 @@ export default function JarvisPage() {
       ms.map((m) => (m.id === msgId ? { ...m, steps: m.steps.map((s) => (s.id === stepId ? { ...s, ...patch } : s)) } : m))
     )
 
+  const say = (role, body, extra = {}) => ({ id: newId(), role, text: body, memo: role === 'assistant' ? body.split('\n')[0] : undefined, steps: [], ...extra })
+
+  // Exact, simple commands are handled right here: instant, free, offline.
+  async function handleLocal(intent, value) {
+    if (intent.type === 'clear') return setMessages([])
+    setMessages((ms) => [...ms, { id: newId(), role: 'user', text: value }])
+    if (intent.type === 'briefing') return postBriefing()
+    if (intent.type === 'help') return setMessages((ms) => [...ms, say('assistant', HELP_TEXT)])
+    if (intent.type === 'today') {
+      const items = deriveToday(runtime.log.getEvents())
+      const body = items.length ? `Today:\n${items.slice(0, 8).map((i) => '- ' + i.text).join('\n')}` : 'Nothing pressing today. Enjoy it.'
+      return setMessages((ms) => [...ms, say('assistant', body)])
+    }
+    // undo: the most recent thing I did that is still done
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const step = messages[i].steps?.find((x) => x.status === 'done' && x.commandId)
+      if (step) {
+        const r = await runtime.registry.undo(step.commandId)
+        if (r.status === 'done') patchStep(messages[i].id, step.id, { status: 'undone', result: r.summary, commandId: null })
+        return setMessages((ms) => [...ms, say('assistant', r.status === 'done' ? r.summary : r.error)])
+      }
+    }
+    return setMessages((ms) => [...ms, say('assistant', "There's nothing recent to undo.")])
+  }
+
   async function send(e) {
     e.preventDefault()
     const value = text.trim()
     if (!value || busy) return
     setText('')
+    setError('')
+    const intent = matchLocalIntent(value)
+    if (intent) {
+      await handleLocal(intent, value)
+      return
+    }
     setError('')
     setNeedsCode(false)
     setBusy(true)

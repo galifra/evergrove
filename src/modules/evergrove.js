@@ -157,6 +157,39 @@ export const evergroveModule = {
       },
     },
     {
+      name: 'request_app',
+      tier: 'auto',
+      description:
+        'Save a spec for a whole new app the user wants that a simple tracker cannot do (its own screens, calculations, charts or integrations). It goes on the Apps page as a ready-to-build request.',
+      input: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', maxLength: 40 },
+          purpose: { type: 'string', maxLength: 300, description: 'What the app is for, in one or two sentences' },
+          tracks: { type: 'string', maxLength: 300, description: 'The information it should keep' },
+          screens: { type: 'string', maxLength: 300, description: 'Screens, charts or calculations it needs' },
+          area: AREA,
+        },
+        required: ['name', 'purpose'],
+      },
+      run(args, { moduleState }) {
+        const existing = moduleState().appRequests ?? []
+        if (existing.some((r) => r.name.toLowerCase() === args.name.toLowerCase())) {
+          return { error: `"${args.name}" is already on your list of app ideas.` }
+        }
+        return {
+          summary: `Saved "${args.name}" as an app idea. Find it on the Apps page, ready to build.`,
+          events: [
+            {
+              type: 'app.requested',
+              area: args.area,
+              data: { requestId: slugify(args.name), name: args.name, purpose: args.purpose, tracks: args.tracks, screens: args.screens, area: args.area },
+            },
+          ],
+        }
+      },
+    },
+    {
       name: 'pause_area',
       tier: 'ask',
       description: 'Pause a life area (gentle mode): no nudges or quiet-area insights. Nothing is lost.',
