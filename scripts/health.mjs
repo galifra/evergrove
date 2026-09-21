@@ -9,13 +9,18 @@
 // before a cutover and on the live address after one. The routing eval and the tone samples cost real
 // money, so they are separate (`npm run eval`, `npm run tone`, `npm run feedback`) and are listed at the
 // end as a reminder rather than run here.
-import { spawnSync } from 'node:child_process'
+import { spawnSync, execFile } from 'node:child_process'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 import { ENTRIES, entryPath } from '../packages/rules/src/routes.js'
 import { manifestUrl } from './lib/entries.mjs'
 
 const args = process.argv.slice(2)
 const urlIndex = args.indexOf('--url')
 const base = urlIndex >= 0 ? String(args[urlIndex + 1] ?? '').replace(/\/+$/, '') : ''
+// A Vercel preview address is behind the owner's login; --via-vercel sends each request through `vercel curl`, which signs in for it.
+const viaVercel = args.includes('--via-vercel')
 const runLocal = args.includes('--local') || !base
 const runLive = !!base
 
@@ -50,9 +55,32 @@ if (runLocal) {
 
 // ---- the live half ---------------------------------------------------------------------------
 
-async function get(path, options = {}) {
+async function get(urlPath, options = {}) {
   const started = Date.now()
-  const res = await fetch(base + path, { redirect: 'manual', ...options })
+  if (!viaVercel) {
+    const res = await fetch(base + urlPath, { redirect: 'manual', ...options })
+    return { res, ms: Date.now() - started }
+  }
+  // The same request through `vercel curl`, wrapped so the rest of the script cannot tell the difference.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'health-'))
+  const hdrFile = path.join(dir, 'h')
+  const bodyFile = path.join(dir, 'b')
+  const curlArgs = ['-s', '-D', hdrFile, '-o', bodyFile, '-w', '%{http_code}']
+  if (options.method && options.method !== 'GET') curlArgs.push('-X', options.method)
+  for (const [k, v] of Object.entries(options.headers ?? {})) curlArgs.push('-H', `${k}: ${v}`)
+  if (options.body) curlArgs.push('-d', options.body)
+  const code = await new Promise((resolve, reject) =>
+    // On Windows the arguments go through a shell, so any that contain a space or a brace are quoted.
+    execFile('npx', ['vercel', 'curl', urlPath, '--deployment', base, '--', ...curlArgs].map((a) => (process.platform === 'win32' && /[\s{}]/.test(a) ? `"${a}"` : a)), { shell: process.platform === 'win32', env: { ...process.env, MSYS_NO_PATHCONV: '1' }, timeout: 60000 }, (err, stdout) => {
+      if (err && !stdout) reject(err)
+      else resolve(Number((stdout.match(/(\d{3})\s*$/) ?? [])[1] ?? 0))
+    })
+  )
+  const headers = new Map()
+  if (fs.existsSync(hdrFile)) for (const line of fs.readFileSync(hdrFile, 'utf8').split(/\r?\n/)) { const i = line.indexOf(':'); if (i > 0) headers.set(line.slice(0, i).trim().toLowerCase(), line.slice(i + 1).trim()) }
+  const body = fs.existsSync(bodyFile) ? fs.readFileSync(bodyFile, 'utf8') : ''
+  fs.rmSync(dir, { recursive: true, force: true })
+  const res = { status: code, headers: { get: (k) => headers.get(k.toLowerCase()) ?? null }, text: async () => body, json: async () => JSON.parse(body) }
   return { res, ms: Date.now() - started }
 }
 
