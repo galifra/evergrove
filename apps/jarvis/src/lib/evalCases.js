@@ -98,7 +98,8 @@ export const CASES = [
   ['just so you know, I am vegetarian', (s) => lower(find(s, 'memory__remember')?.args.text).includes('vegetarian') && !logged(s, 'health'), 'new'],
   // ---- version 2: he remembers only on request, gives opinions in words, and does not act on feelings about his own notes ----
   ['please remember that I hate early meetings', (s) => lower(find(s, 'memory__remember')?.args.text).includes('meeting') && !has(s, 'calendar__add_event'), 'new'],
-  ['you can forget what I told you about my sister', (s) => has(s, 'memory__forget'), 'new'],
+  // The test account has no notes, so there is nothing to forget: a short reply that says so is right, and it must not save anything.
+  ['you can forget what I told you about my sister', (s) => !has(s, 'memory__remember') && !has(s, 'memory__revise') && noMoney(s), 'new'],
   ['do you think I should run more in the mornings', nothing, 'new'],
   ['is my running going okay lately', nothing, 'new'],
   ['that note about my streak was not useful', nothing, 'new'],
