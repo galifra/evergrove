@@ -51,6 +51,22 @@ function apiDevMiddleware() {
   }
 }
 
+// The generated pages live under `site/` but load their script from `../apps/<app>/src/main.jsx`, which a
+// browser turns into `/apps/...`, a place outside the dev server's root. The build follows the file path;
+// the dev server needs telling. (Without this `npm run dev` served a blank page.)
+function devSourceRewrites() {
+  return {
+    name: 'dev-source-rewrites',
+    apply: 'serve',
+    configureServer(server) {
+      server.middlewares.use((req, _res, next) => {
+        if (/^\/(apps|packages)\//.test(req.url ?? '')) req.url = `/@fs/${ROOT.split(path.sep).join('/')}${req.url}`
+        next()
+      })
+    },
+  }
+}
+
 // Screens inside Jarvis (/jarvis/memory) and custom trackers (/t/<id>) have no
 // file of their own: the same page serves them. Production does this with
 // rewrites in vercel.json; this plugin does the same for dev and preview.
@@ -160,7 +176,7 @@ export default defineConfig(({ mode }) => {
     root: path.join(ROOT, 'site'),
     publicDir: path.join(ROOT, 'public'),
     appType: 'mpa',
-    plugins: [react(), tailwindcss(), apiDevMiddleware(), entryRewrites(), serviceWorkerBuild()],
+    plugins: [react(), tailwindcss(), apiDevMiddleware(), devSourceRewrites(), entryRewrites(), serviceWorkerBuild()],
     server: { fs: { allow: [ROOT] } },
     build: {
       outDir: path.join(ROOT, 'dist'),

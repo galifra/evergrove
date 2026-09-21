@@ -136,3 +136,15 @@ describe('speaking and stopping', () => {
     expect(isSpeaking()).toBe(false)
   })
 })
+
+describe('replies worked out on the device are read aloud too, and private ones only generally', () => {
+  it('an ordinary local reply is spoken as written', () => {
+    expect(speakableReply({ text: 'Noted: "I run best in the morning".', steps: [], private: false })).toBe('Noted: "I run best in the morning".')
+  })
+
+  it("today's list, a briefing or a weekly review built from private data is never read out", () => {
+    const line = speakableReply({ text: 'Today:\n- Test Rent ($500.00) is overdue since Tue, Sep 1.', steps: [], private: true })
+    expect(line).toBe('The details are on screen.')
+    expect(line).not.toMatch(/Rent|500|overdue/)
+  })
+})

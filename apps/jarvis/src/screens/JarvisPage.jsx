@@ -87,7 +87,6 @@ export default function JarvisPage() {
   // Spoken replies (off by default). Private details are only read aloud when that app is shared.
   function sayAloud(message) {
     if (!settings.speakReplies || !speechOutSupported()) return
-    const privateIds = new Set(listApps(events).filter((a) => a.sensitive).map((a) => a.id))
     const line = speakableReply(message, { privateIds, shared: settings.shareSensitive })
     if (line) speak(line, { voiceURI: settings.voiceURI, rate: settings.speechRate, onEnd: () => setSpeaking(false) }) && setSpeaking(isSpeaking())
   }
@@ -99,6 +98,17 @@ export default function JarvisPage() {
       // chat history is a convenience; losing it is fine
     }
     bottom.current?.scrollIntoView({ block: 'end' })
+  }, [messages])
+
+  // A reply worked out on the device (today's list, a note saved, a briefing) is read aloud too, once,
+  // when spoken replies are on. What was already in the chat when it opened is never read out.
+  const spokenIds = useRef(new Set(messages.map((m) => m.id)))
+  useEffect(() => {
+    const last = messages[messages.length - 1]
+    if (!last || last.role !== 'assistant' || !last.local || spokenIds.current.has(last.id)) return
+    spokenIds.current.add(last.id)
+    sayAloud({ text: last.text, steps: [], private: last.private })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages])
 
   useEffect(() => {
@@ -127,7 +137,8 @@ export default function JarvisPage() {
       ms.map((m) => (m.id === msgId ? { ...m, steps: m.steps.map((s) => (s.id === stepId ? { ...s, ...patch } : s)) } : m))
     )
 
-  const say = (role, body, extra = {}) => ({ id: newId(), role, text: body, memo: role === 'assistant' ? body.split('\n')[0] : undefined, steps: [], ...extra })
+  // `local` marks a reply worked out on the device, which the effect above reads aloud (when that is on).
+  const say = (role, body, extra = {}) => ({ id: newId(), role, text: body, memo: role === 'assistant' ? body.split('\n')[0] : undefined, steps: [], local: true, ...extra })
 
   // Exact, simple commands are handled right here: instant, free, offline.
   async function handleLocal(intent, value) {
@@ -154,7 +165,7 @@ export default function JarvisPage() {
     if (intent.type === 'remember') {
       const r = await runtime.registry.invoke('memory__remember', { text: intent.text.slice(0, 240), via: 'command' }, { approved: true, actor: 'user' })
       if (r.status === 'done') lastMemory.current = deriveMemory(runtime.log.getEvents()).notes.find((n) => n.text === intent.text.trim().replace(/\s+/g, ' '))?.text ?? null
-      return setMessages((ms) => [...ms, say('assistant', r.status === 'done' ? r.summary : r.error, { link: r.status === 'done' ? { path: '/jarvis/memory', label: 'what I remember' } : undefined })])
+      return setMessages((ms) => [...ms, say('assistant', r.status === 'done' ? r.summary : r.error, { private: /\(private\)/.test(r.summary ?? ''), link: r.status === 'done' ? { path: '/jarvis/memory', label: 'what I remember' } : undefined })])
     }
     if (intent.type === 'callme') {
       const r = await runtime.registry.invoke('memory__remember', { text: nameNote(intent.name), role: 'name', category: 'fact', private: false, via: 'command' }, { approved: true, actor: 'user' })
@@ -185,7 +196,8 @@ export default function JarvisPage() {
     if (intent.type === 'today') {
       const items = deriveToday(runtime.log.getEvents())
       const body = items.length ? `Today:\n${items.slice(0, 8).map((i) => '- ' + i.text).join('\n')}` : 'Nothing pressing today. Enjoy it.'
-      return setMessages((ms) => [...ms, say('assistant', body)])
+      // today's list can name bills and birthdays, so it is only ever read out as "the details are on screen"
+      return setMessages((ms) => [...ms, say('assistant', body, { private: items.some((i) => privateIds.has(String(i.route).replace('/', ''))) })])
     }
     // undo: the most recent thing I did that is still done
     for (let i = messages.length - 1; i >= 0; i--) {
@@ -221,7 +233,7 @@ export default function JarvisPage() {
       if (body.spend) setSpend(body.spend)
       const reply = body.content?.find((b) => b.type === 'text')?.text?.trim()
       const words = reply || "I don't have enough to give you a fair opinion yet."
-      setMessages((ms) => [...ms, say('assistant', words, { private: settings.shareSensitive.length > 0 })])
+      setMessages((ms) => [...ms, say('assistant', words, { private: settings.shareSensitive.length > 0, local: false })])
       sayAloud({ text: words, steps: [] })
     } catch (err) {
       if (err.status === 429) setMessages((ms) => [...ms, say('assistant', err.message)])

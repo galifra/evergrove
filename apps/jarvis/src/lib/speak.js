@@ -37,7 +37,9 @@ export function stepIsPrivate(step, privateIds, shared = []) {
 
 // What to say out loud for a reply. If any action touched a private app that has
 // not been shared, the reply is not read: only that something was done, and where.
-export function speakableReply({ text, steps = [] }, { privateIds = new Set(), shared = [] } = {}) {
+export function speakableReply({ text, steps = [], private: builtFromPrivate = false }, { privateIds = new Set(), shared = [] } = {}) {
+  // A reply worked out on the device from private data (today's list, a briefing) is never read out either.
+  if (builtFromPrivate) return 'The details are on screen.'
   const touchedPrivate = steps.filter((s) => s.status !== 'error' && stepIsPrivate(s, privateIds, shared))
   if (touchedPrivate.length) return `Done. The details are in ${touchedPrivate[0].moduleName ?? 'the app'}.`
   return speakableText(text)
