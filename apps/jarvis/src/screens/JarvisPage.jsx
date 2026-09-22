@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Bot, Check, Loader2, Mic, Send, Square, Undo2, X } from 'lucide-react'
+import { Bot, Check, Headphones, Loader2, Mic, Send, Square, Undo2, X } from 'lucide-react'
 import { useApp } from '@evergrove/kit/AppContext.jsx'
 import { go, useRoute } from '@evergrove/kit/router.js'
 import { appPath } from '@evergrove/rules/routes.js'
@@ -22,7 +22,7 @@ import JarvisNotes from './JarvisNotes.jsx'
 import ReplyFeedback from './ReplyFeedback.jsx'
 import { replyFor } from '../lib/replies'
 import { RATION_TEXT } from '../lib/ration'
-import { isSpeaking, speak, speakableReply, speechOutSupported, stopSpeaking } from '../lib/speak'
+import { speak, speakableReply, speechOutSupported, stopSpeaking } from '../lib/speak'
 import { listApps } from '@evergrove/rules/registry.js'
 import { deriveMemory, findNotes, nameNote } from '@evergrove/modules/memory.js'
 
@@ -70,6 +70,12 @@ export default function JarvisPage() {
   const [listening, setListening] = useState(false)
   const [voiceError, setVoiceError] = useState('')
   const stopVoice = useRef(null)
+  // A real back-and-forth: the mic reopens on its own after Jarvis finishes speaking, so nothing
+  // needs to be tapped between turns. Free (the same browser mic and browser voice), just looped.
+  const [conversing, setConversing] = useState(false)
+  const convoRef = useRef(false)
+  const heardRef = useRef('')
+  const missesRef = useRef(0)
   const [nameDraft, setNameDraft] = useState('')
   const lastMemory = useRef(null) // the note saved most recently in this chat, for "forget that"
   const [spend, setSpend] = useState(null)
@@ -86,9 +92,88 @@ export default function JarvisPage() {
 
   // Spoken replies (off by default). Private details are only read aloud when that app is shared.
   function sayAloud(message) {
-    if (!settings.speakReplies || !speechOutSupported()) return
+    // In a conversation, listening resumes once he's done talking, whether or not he actually
+    // said anything out loud (speaking could be off, or there was nothing to say).
+    if (!settings.speakReplies || !speechOutSupported()) return advanceConversation()
     const line = speakableReply(message, { privateIds, shared: settings.shareSensitive })
-    if (line) speak(line, { voiceURI: settings.voiceURI, rate: settings.speechRate, onEnd: () => setSpeaking(false) }) && setSpeaking(isSpeaking())
+    if (!line) return advanceConversation()
+    const started = speak(line, {
+      voiceURI: settings.voiceURI,
+      rate: settings.speechRate,
+      onEnd: () => {
+        setSpeaking(false)
+        advanceConversation()
+      },
+    })
+    if (started) setSpeaking(true)
+    else advanceConversation()
+  }
+
+  // Waits a beat (so the mic doesn't catch the tail end of his own voice) and starts listening again.
+  function advanceConversation() {
+    if (!convoRef.current) return
+    setTimeout(() => {
+      if (convoRef.current) listenOnce()
+    }, 350)
+  }
+
+  // One turn of listening: what you say becomes the next message, sent the moment you stop talking.
+  function listenOnce() {
+    if (!speechSupported()) return
+    setVoiceError('')
+    heardRef.current = ''
+    setListening(true)
+    try {
+      stopVoice.current = startListening({
+        onText: (text, final) => {
+          if (final) heardRef.current = text
+        },
+        onEnd: () => {
+          setListening(false)
+          const said = heardRef.current.trim()
+          if (said) {
+            missesRef.current = 0
+            sendText(said)
+          } else if (convoRef.current) {
+            // Nothing heard. Try again, but not forever — after two quiet turns in a row, pause and say why.
+            missesRef.current += 1
+            if (missesRef.current >= 2) {
+              endConversation()
+              setMessages((ms) => [...ms, say('assistant', "I paused our conversation — I didn't hear anything for a bit. Tap the headphones to start again.")])
+            } else {
+              advanceConversation()
+            }
+          }
+        },
+        onError: (message) => {
+          setListening(false)
+          setVoiceError(message)
+          endConversation()
+        },
+      })
+    } catch {
+      setListening(false)
+      setVoiceError('Voice input could not start in this browser.')
+      endConversation()
+    }
+  }
+
+  function startConversation() {
+    if (!speechSupported()) return
+    if (!settings.speakReplies) updateSettings({ speakReplies: true })
+    missesRef.current = 0
+    convoRef.current = true
+    setConversing(true)
+    listenOnce()
+  }
+
+  function endConversation() {
+    convoRef.current = false
+    setConversing(false)
+    stopVoice.current?.()
+    stopSpeaking()
+    setSpeaking(false)
+    setListening(false)
   }
 
   useEffect(() => {
@@ -117,6 +202,9 @@ export default function JarvisPage() {
       .then((d) => d && setSpend(d))
       .catch(() => {})
   }, [])
+
+  // Leaving Jarvis (a tab, or the page) ends a live conversation instead of leaving the mic running.
+  useEffect(() => () => endConversation(), [])
 
   // Once a month, when the allowance runs short, he says so in the chat instead of letting things fail quietly.
   useEffect(() => {
@@ -251,6 +339,12 @@ export default function JarvisPage() {
     const value = text.trim()
     if (!value || busy) return
     setText('')
+    await sendText(value)
+  }
+
+  // The one path every message takes, whether typed, dictated once, or spoken in a live conversation.
+  async function sendText(value) {
+    if (!value || busy) return
     setError('')
     const intent = matchLocalIntent(value)
     if (intent) {
@@ -577,7 +671,13 @@ export default function JarvisPage() {
       )}
 
       {voiceError && <p className="text-xs text-rose-300 pb-1">{voiceError}</p>}
-      {speechSupported() && listening && <p className="text-xs text-white/55 pb-1">Listening... your browser's speech service turns your voice into text.</p>}
+      {conversing ? (
+        <p className="text-xs text-sky-200 pb-1" role="status">
+          {speaking ? "Jarvis is talking..." : listening ? 'Listening — just say the next thing.' : 'Thinking...'}
+        </p>
+      ) : (
+        speechSupported() && listening && <p className="text-xs text-white/55 pb-1">Listening... your browser's speech service turns your voice into text.</p>
+      )}
 
       <form onSubmit={send} className="sticky bottom-20 flex gap-2 items-end bg-[#0b140f]/90 backdrop-blur py-2">
         <textarea
@@ -593,7 +693,19 @@ export default function JarvisPage() {
           placeholder="Talk to Jarvis..."
           className="flex-1 resize-none rounded-2xl bg-white/[0.05] border border-white/10 px-4 py-3 text-[15px] placeholder:text-white/30 focus:outline-none focus:border-emerald-400/50"
         />
-        {speechSupported() && (
+        {speechSupported() && speechOutSupported() && (
+          <Button
+            variant={conversing ? 'primary' : 'ghost'}
+            onClick={conversing ? endConversation : startConversation}
+            className="h-11 w-11 grid place-items-center !p-0 rounded-full"
+            aria-label={conversing ? 'End conversation' : 'Start a spoken conversation'}
+            aria-pressed={conversing}
+            title={conversing ? 'End conversation' : 'Have a real back-and-forth: he listens, answers, and listens again'}
+          >
+            <Headphones size={16} />
+          </Button>
+        )}
+        {speechSupported() && !conversing && (
           <Button
             variant={listening ? 'primary' : 'ghost'}
             onClick={toggleVoice}
