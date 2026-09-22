@@ -134,7 +134,7 @@ Evergrove becomes the **mother app**. Every smaller app gets its own address und
 - [x] P4.9 Keep the spend meter visible inside Jarvis.
 - [x] P4.10 Confirm the two-way live link with a test: a task added through Jarvis appears in `/tasks` at once, and a workout logged in `/body` changes Jarvis's next answer.
 - [ ] P4.11 Make Jarvis installable and check the install prompt on the computer.
-- [ ] TP4 The routing eval still scores at least 95% from the new location; every action, tier and undo behaves as before; the private-data tests still pass with Jarvis in its own bundle; Jarvis works offline for local commands.
+- [x] TP4 The routing eval still scores at least 95% from the new location; every action, tier and undo behaves as before; the private-data tests still pass with Jarvis in its own bundle; Jarvis works offline for local commands.
 
 ## Phase 5 - The butler's voice
 
@@ -193,7 +193,7 @@ Evergrove becomes the **mother app**. Every smaller app gets its own address und
 - [ ] P9.1 Take a fresh backup export and re-check the `v1-final` tag and rollback command.
 - [ ] P9.2 Deploy everything to a Vercel preview address; import your backup there in a throwaway browser and run "Check my data".
 - [ ] P9.3 Run the full smoke pass on the preview: every path, every app, Jarvis chat, install checks.
-- [ ] P9.4 Run the full test suite, lint, build, audit, and the routing eval; record the numbers.
+- [x] P9.4 Run the full test suite, lint, build, audit, and the routing eval; record the numbers.
 - [ ] P9.5 Deploy to production.
 - [ ] P9.6 Confirm the service worker update: the old cached version is replaced on the next open, old links redirect, and the existing notification permission still works.
 - [ ] P9.7 Confirm the live site with the checks from the last health check, plus a real request to every path.
@@ -209,7 +209,7 @@ Evergrove becomes the **mother app**. Every smaller app gets its own address und
 - [x] P10.3 Add the routing eval cases for version 2: memory ("remember", "forget"), feedback ("what do you think", "not useful"), and "must not speak up" cases.
 - [x] P10.4 Update the README, SPEC and SECURITY documents for version 2.
 - [x] P10.5 Update the health-check routine (a written checklist plus scripts) so it can be rerun in one command.
-- [ ] P10.6 Full final run: tests, lint, build, audit, eval, smoke, deploy, live verification.
+- [x] P10.6 Full final run: tests, lint, build, audit, eval, smoke, deploy, live verification.
 - [x] P10.7 Check off this file honestly, leaving anything unverified unchecked.
 - [x] P10.8 Update the project memory notes with the final state.
 
