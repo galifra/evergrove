@@ -160,6 +160,14 @@ export default function JarvisPage() {
 
   function startConversation() {
     if (!speechSupported()) return
+    // Some browsers only allow speaking on the very first call made directly inside a click; his real
+    // answer comes a moment later, after waiting on the reply, and would otherwise be silently blocked.
+    // A silent, near-instant utterance right now, inside this click, unlocks it for what follows.
+    if (speechOutSupported()) {
+      const unlock = new SpeechSynthesisUtterance(' ')
+      unlock.volume = 0
+      window.speechSynthesis.speak(unlock)
+    }
     if (!settings.speakReplies) updateSettings({ speakReplies: true })
     missesRef.current = 0
     convoRef.current = true
