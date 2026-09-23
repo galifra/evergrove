@@ -78,11 +78,14 @@ export function createSync({ log, transport, iterations }) {
   }
 }
 
-export function httpTransport(getAccessCode, fetchImpl = fetch) {
+// baseUrl defaults to a same-origin relative path (Evergrove's own use). A second app on its
+// own domain (MOXIE) passes Evergrove's absolute origin instead, so this same relay can hold a
+// second, independently encrypted copy of the log. See api/sync.js's CORS allowlist.
+export function httpTransport(getAccessCode, fetchImpl = fetch, baseUrl = '/api/sync') {
   const headers = () => ({ 'Content-Type': 'application/json', 'x-app-code': getAccessCode() })
   return {
     async push(vaultId, items) {
-      const res = await fetchImpl('/api/sync', {
+      const res = await fetchImpl(baseUrl, {
         method: 'POST',
         headers: headers(),
         body: JSON.stringify({ vaultId, items }),
@@ -90,7 +93,7 @@ export function httpTransport(getAccessCode, fetchImpl = fetch) {
       if (!res.ok) throw new Error(`Sync push failed (${res.status})`)
     },
     async pull(vaultId, after) {
-      const res = await fetchImpl(`/api/sync?vaultId=${vaultId}&after=${after}`, { headers: headers() })
+      const res = await fetchImpl(`${baseUrl}?vaultId=${vaultId}&after=${after}`, { headers: headers() })
       if (!res.ok) throw new Error(`Sync pull failed (${res.status})`)
       return res.json()
     },

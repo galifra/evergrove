@@ -3,7 +3,7 @@ import { describe, it, expect, afterEach } from 'vitest'
 import { createEvent } from './events'
 import { openStore } from './store'
 import { createLog } from './log'
-import { createSync } from './sync'
+import { createSync, httpTransport } from './sync'
 import syncHandler from '../../../api/sync.js'
 import { getKv } from '../../../server/store.js'
 
@@ -144,6 +144,32 @@ describe('encrypted multi-device sync', () => {
   it('does nothing when sync is off', async () => {
     const d = await device('')
     expect((await d.sync.syncNow()).skipped).toBeTruthy()
+  })
+})
+
+describe('httpTransport base URL', () => {
+  it('defaults to the same-origin relative path', async () => {
+    const calls = []
+    const fetchImpl = async (url) => {
+      calls.push(url)
+      return { ok: true, json: async () => ({ items: [], next: 0 }) }
+    }
+    const t = httpTransport(() => 'code', fetchImpl)
+    await t.pull('v', 0)
+    expect(calls[0]).toBe('/api/sync?vaultId=v&after=0')
+  })
+
+  it('a second app can point it at an absolute cross-origin URL instead', async () => {
+    const calls = []
+    const fetchImpl = async (url) => {
+      calls.push(url)
+      return { ok: true, json: async () => ({ items: [], next: 0 }) }
+    }
+    const t = httpTransport(() => 'code', fetchImpl, 'https://evergrove-neon.vercel.app/api/sync')
+    await t.pull('v', 0)
+    await t.push('v', [])
+    expect(calls[0]).toBe('https://evergrove-neon.vercel.app/api/sync?vaultId=v&after=0')
+    expect(calls[1]).toBe('https://evergrove-neon.vercel.app/api/sync')
   })
 })
 
