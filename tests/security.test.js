@@ -109,6 +109,13 @@ describe('every server route is behind the access code', () => {
     const sw = read('packages/kit/src/sw/sw.js')
     expect(sw).toMatch(/pathname\.startsWith\('\/api\/'\)/)
   })
+
+  it('the sync relay never answers a cross-origin preflight with a wildcard origin', () => {
+    const src = read('api/sync.js')
+    expect(src).not.toMatch(/Access-Control-Allow-Origin['"]?,\s*['"]\*/)
+    expect(src).not.toMatch(/Access-Control-Allow-Origin,\s*\*/)
+    expect(src).not.toContain(`'Access-Control-Allow-Origin', '*'`)
+  })
 })
 
 describe('links can only go inward', () => {

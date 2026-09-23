@@ -1,5 +1,5 @@
 import 'fake-indexeddb/auto'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, afterEach } from 'vitest'
 import { createEvent } from './events'
 import { openStore } from './store'
 import { createLog } from './log'
@@ -9,19 +9,26 @@ import { getKv } from '../../../server/store.js'
 
 delete process.env.APP_ACCESS_CODE
 
-function call(method, { url = '/api/sync', body } = {}) {
+function call(method, { url = '/api/sync', body, headers = {} } = {}) {
   return new Promise((resolve) => {
+    const resHeaders = {}
     const res = {
       code: 200,
       status(c) {
         this.code = c
         return this
       },
+      setHeader(k, v) {
+        resHeaders[k] = v
+      },
       json(obj) {
-        resolve({ code: this.code, body: obj })
+        resolve({ code: this.code, body: obj, headers: resHeaders })
+      },
+      end() {
+        resolve({ code: this.code, body: undefined, headers: resHeaders })
       },
     }
-    syncHandler({ method, url, headers: {}, body }, res)
+    syncHandler({ method, url, headers, body }, res)
   })
 }
 
@@ -137,5 +144,48 @@ describe('encrypted multi-device sync', () => {
   it('does nothing when sync is off', async () => {
     const d = await device('')
     expect((await d.sync.syncNow()).skipped).toBeTruthy()
+  })
+})
+
+describe('a second app on its own domain (MOXIE) reaching the same relay', () => {
+  const OLD = process.env.SYNC_ALLOWED_ORIGINS
+  afterEach(() => {
+    if (OLD === undefined) delete process.env.SYNC_ALLOWED_ORIGINS
+    else process.env.SYNC_ALLOWED_ORIGINS = OLD
+  })
+
+  it('with no allowlist configured, a cross-origin request gets no CORS header (same as today)', async () => {
+    delete process.env.SYNC_ALLOWED_ORIGINS
+    const r = await call('GET', { url: '/api/sync?vaultId=00000000000000000000000000000000&after=0', headers: { origin: 'https://moxie.example' } })
+    expect(r.headers['Access-Control-Allow-Origin']).toBeUndefined()
+  })
+
+  it('a listed origin gets the header on both the real request and the preflight; an unlisted one gets neither', async () => {
+    process.env.SYNC_ALLOWED_ORIGINS = 'https://moxie.example, https://other.example'
+    const allowed = await call('GET', { url: '/api/sync?vaultId=00000000000000000000000000000000&after=0', headers: { origin: 'https://moxie.example' } })
+    expect(allowed.headers['Access-Control-Allow-Origin']).toBe('https://moxie.example')
+    expect(allowed.headers['Vary']).toBe('Origin')
+
+    const preflight = await call('OPTIONS', { headers: { origin: 'https://moxie.example' } })
+    expect(preflight.code).toBe(204)
+    expect(preflight.headers['Access-Control-Allow-Origin']).toBe('https://moxie.example')
+    expect(preflight.headers['Access-Control-Allow-Methods']).toContain('POST')
+    expect(preflight.headers['Access-Control-Allow-Headers']).toContain('x-app-code')
+
+    const stranger = await call('GET', { url: '/api/sync?vaultId=00000000000000000000000000000000&after=0', headers: { origin: 'https://not-listed.example' } })
+    expect(stranger.headers['Access-Control-Allow-Origin']).toBeUndefined()
+  })
+
+  it("the preflight needs no access code (a real browser preflight never sends one), but the real request still does", async () => {
+    process.env.SYNC_ALLOWED_ORIGINS = 'https://moxie.example'
+    process.env.APP_ACCESS_CODE = 'right-code'
+    try {
+      const preflight = await call('OPTIONS', { headers: { origin: 'https://moxie.example' } })
+      expect(preflight.code).toBe(204)
+      const withoutCode = await call('GET', { url: '/api/sync?vaultId=00000000000000000000000000000000&after=0', headers: { origin: 'https://moxie.example' } })
+      expect(withoutCode.code).toBe(401)
+    } finally {
+      delete process.env.APP_ACCESS_CODE
+    }
   })
 })

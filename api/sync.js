@@ -13,7 +13,40 @@ function keys(vaultId) {
   return { list: `evergrove:log:${vaultId}`, ids: `evergrove:ids:${vaultId}` }
 }
 
+// Lets a second, separate app (MOXIE, on her own domain) reach this same relay to hold her own
+// synced copy of the log. A comma-separated allowlist, not a wildcard: the relay only ever carries
+// ciphertext (see below), so the real protection is the passphrase-derived key, but there is no
+// reason to let an unrelated site even attempt the exchange. Same-origin requests (no Origin header,
+// or one already covered by same-origin rules) are unaffected either way.
+function allowedOrigin(req) {
+  const origin = req.headers.origin
+  if (!origin) return null
+  const allowed = String(process.env.SYNC_ALLOWED_ORIGINS ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+  return allowed.includes(origin) ? origin : null
+}
+
+function withCors(req, res) {
+  const origin = allowedOrigin(req)
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin)
+    res.setHeader('Vary', 'Origin')
+  }
+}
+
 export default async function handler(req, res) {
+  withCors(req, res)
+  if (req.method === 'OPTIONS') {
+    // The browser's preflight: answered before authorize() runs, since a preflight carries
+    // neither the access code nor a body — that check happens on the real request that follows.
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-app-code')
+    res.setHeader('Access-Control-Max-Age', '86400')
+    res.status(204).end()
+    return
+  }
   if (!(await authorize(req, res))) return
   const kv = getKv()
 
