@@ -136,7 +136,7 @@ export const memoryModule = {
   name: 'Memory',
   icon: 'brain',
   area: null,
-  description: 'Short notes Jarvis keeps about you, so he behaves like a friend who remembers.',
+  description: 'Short notes MOXIE keeps about you, so he behaves like a friend who remembers.',
   hidden: true,
   // A note's privacy is its own flag, so the module's summary is never sent (notes go separately, chosen by rule).
   derive: deriveMemory,
@@ -186,7 +186,7 @@ export const memoryModule = {
     {
       name: 'forget',
       tier: 'ask',
-      description: 'Remove a note Jarvis kept about the user (identify it by its words). It asks the user before removing.',
+      description: 'Remove a note MOXIE kept about the user (identify it by its words). It asks the user before removing.',
       input: { type: 'object', properties: { note: { type: 'string', maxLength: MAX_TEXT } }, required: ['note'] },
       run(args, { moduleState }) {
         const r = findOne(moduleState().notes, args.note, { label: (n) => n.text, noun: 'note' })

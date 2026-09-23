@@ -244,7 +244,7 @@ export default function JarvisPage() {
     if (intent.type === 'help') return setMessages((ms) => [...ms, say('assistant', HELP_TEXT)])
     if (intent.type === 'weekly') {
       const review = composeWeekly(runtime.log.getEvents(), new Date())
-      return setMessages((ms) => [...ms, say('assistant', review.text, { link: { path: '/jarvis/weekly', label: 'your week' }, private: true })])
+      return setMessages((ms) => [...ms, say('assistant', review.text, { link: { path: '/moxie/weekly', label: 'your week' }, private: true })])
     }
     if (intent.type === 'exportfeedback') {
       const data = exportFeedback(runtime.log.getEvents())
@@ -261,7 +261,7 @@ export default function JarvisPage() {
     if (intent.type === 'remember') {
       const r = await runtime.registry.invoke('memory__remember', { text: intent.text.slice(0, 240), via: 'command' }, { approved: true, actor: 'user' })
       if (r.status === 'done') lastMemory.current = deriveMemory(runtime.log.getEvents()).notes.find((n) => n.text === intent.text.trim().replace(/\s+/g, ' '))?.text ?? null
-      return setMessages((ms) => [...ms, say('assistant', r.status === 'done' ? r.summary : r.error, { private: /\(private\)/.test(r.summary ?? ''), link: r.status === 'done' ? { path: '/jarvis/memory', label: 'what I remember' } : undefined })])
+      return setMessages((ms) => [...ms, say('assistant', r.status === 'done' ? r.summary : r.error, { private: /\(private\)/.test(r.summary ?? ''), link: r.status === 'done' ? { path: '/moxie/memory', label: 'what I remember' } : undefined })])
     }
     if (intent.type === 'callme') {
       const r = await runtime.registry.invoke('memory__remember', { text: nameNote(intent.name), role: 'name', category: 'fact', private: false, via: 'command' }, { approved: true, actor: 'user' })
@@ -273,14 +273,14 @@ export default function JarvisPage() {
       const body = notes.length
         ? `I have ${notes.length} note${notes.length === 1 ? '' : 's'}${notes.length > open.length ? ` (${notes.length - open.length} private)` : ''}.${open.length ? `\n${open.slice(-6).map((n) => '- ' + n.text).join('\n')}` : ''}`
         : "I haven't noted anything yet. Say \"remember that ...\" and I will."
-      return setMessages((ms) => [...ms, say('assistant', body, { link: { path: '/jarvis/memory', label: 'all my notes' } })])
+      return setMessages((ms) => [...ms, say('assistant', body, { link: { path: '/moxie/memory', label: 'all my notes' } })])
     }
     if (intent.type === 'forget') {
       const { notes } = deriveMemory(runtime.log.getEvents())
       const matches = intent.last ? notes.filter((n) => n.text === lastMemory.current) : findNotes(notes, intent.query)
       if (matches.length === 0) {
         const body = intent.last ? "I haven't saved anything in this chat. Tell me what to forget, or open my notes." : 'I have no note about that.'
-        return setMessages((ms) => [...ms, say('assistant', body, { link: { path: '/jarvis/memory', label: 'my notes' } })])
+        return setMessages((ms) => [...ms, say('assistant', body, { link: { path: '/moxie/memory', label: 'my notes' } })])
       }
       if (matches.length > 1) {
         const shown = matches.slice(0, 5).map((n) => '- ' + (n.private ? '(private note)' : n.text)).join('\n')
@@ -471,7 +471,7 @@ export default function JarvisPage() {
         lastLandingAt = Date.now()
         postBriefing()
       }
-      go('/jarvis', { replace: true })
+      go('/moxie', { replace: true })
     }
     // postBriefing only reads from runtime; it is safe to run once per landing
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -491,7 +491,7 @@ export default function JarvisPage() {
     <div className="flex flex-col" style={{ minHeight: 'calc(100vh - 8rem)' }}>
       <PageHeader
         icon="bot"
-        title="Jarvis"
+        title="MOXIE"
 
         subtitle="Say what you did or what you need. I'll use the right apps and ask before anything that matters."
         right={
@@ -624,7 +624,7 @@ export default function JarvisPage() {
               ) : (
                 <ul className="mt-1 list-disc pl-5 text-white/60">{seen.memories.map((n) => <li key={n.id}>{n.text}{n.private ? ' (private, shared by you)' : ''}</li>)}</ul>
               )}
-              <button type="button" className="mt-1 underline hover:text-white/80" onClick={() => go('/jarvis/memory')}>Correct it</button>
+              <button type="button" className="mt-1 underline hover:text-white/80" onClick={() => go('/moxie/memory')}>Correct it</button>
             </div>
             <div>
               <p className="text-white/50">Summary of your apps that was included:</p>
@@ -681,7 +681,7 @@ export default function JarvisPage() {
       {voiceError && <p className="text-xs text-rose-300 pb-1">{voiceError}</p>}
       {conversing ? (
         <p className="text-xs text-sky-200 pb-1" role="status">
-          {speaking ? "Jarvis is talking..." : listening ? 'Listening — just say the next thing.' : 'Thinking...'}
+          {speaking ? "MOXIE is talking..." : listening ? 'Listening — just say the next thing.' : 'Thinking...'}
         </p>
       ) : (
         speechSupported() && listening && <p className="text-xs text-white/55 pb-1">Listening... your browser's speech service turns your voice into text.</p>
@@ -698,7 +698,7 @@ export default function JarvisPage() {
             }
           }}
           rows={2}
-          placeholder="Talk to Jarvis..."
+          placeholder="Talk to MOXIE..."
           className="flex-1 resize-none rounded-2xl bg-white/[0.05] border border-white/10 px-4 py-3 text-[15px] placeholder:text-white/30 focus:outline-none focus:border-emerald-400/50"
         />
         {speechSupported() && speechOutSupported() && (
@@ -718,7 +718,7 @@ export default function JarvisPage() {
             variant={listening ? 'primary' : 'ghost'}
             onClick={toggleVoice}
             className="h-11 w-11 grid place-items-center !p-0 rounded-full"
-            aria-label={listening ? 'Stop listening' : 'Speak to Jarvis'}
+            aria-label={listening ? 'Stop listening' : 'Speak to MOXIE'}
             aria-pressed={listening}
           >
             {listening ? <Square size={14} /> : <Mic size={16} />}

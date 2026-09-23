@@ -33,7 +33,7 @@ export function scriptSrc(route) {
 }
 
 export function renderHtml(route) {
-  const title = isHome(route) ? 'Evergrove' : route.id === 'jarvis' ? 'Jarvis' : `${route.name} · Evergrove`
+  const title = isHome(route) ? 'Evergrove' : route.id === 'jarvis' ? 'MOXIE' : `${route.name} · Evergrove`
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -68,7 +68,7 @@ export function renderHtml(route) {
 export function renderManifest(route) {
   const scope = scopeOf(route)
   const manifest = {
-    name: isHome(route) ? 'Evergrove' : route.id === 'jarvis' ? 'Jarvis' : `${route.name} · Evergrove`,
+    name: isHome(route) ? 'Evergrove' : route.id === 'jarvis' ? 'MOXIE' : `${route.name} · Evergrove`,
     short_name: route.short,
     description: route.description,
     id: scope,
@@ -86,9 +86,9 @@ export function renderManifest(route) {
     ],
   }
   if (isHome(route)) {
-    manifest.description = 'A living skill tree that grows with everything you do, with Jarvis to run it.'
+    manifest.description = 'A living skill tree that grows with everything you do, with MOXIE to run it.'
     manifest.shortcuts = [
-      { name: 'Talk to Jarvis', url: '/jarvis/' },
+      { name: 'Talk to MOXIE', url: '/moxie/' },
       { name: 'Apps', url: '/apps/' },
     ]
   }

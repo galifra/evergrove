@@ -5,12 +5,12 @@ import JarvisSettings from './JarvisSettings.jsx'
 import MemoryScreen from './MemoryScreen.jsx'
 import WeeklyScreen from './WeeklyScreen.jsx'
 
-// Jarvis's screens. The chat is the home; the rest are one tap away.
+// MOXIE's screens. The chat is the home; the rest are one tap away.
 const TABS = [
-  ['', 'Chat', '/jarvis'],
-  ['weekly', 'Week', '/jarvis/weekly'],
-  ['memory', 'Memory', '/jarvis/memory'],
-  ['settings', 'Settings', '/jarvis/settings'],
+  ['', 'Chat', '/moxie'],
+  ['weekly', 'Week', '/moxie/weekly'],
+  ['memory', 'Memory', '/moxie/memory'],
+  ['settings', 'Settings', '/moxie/settings'],
 ]
 
 export default function JarvisApp() {
@@ -19,7 +19,7 @@ export default function JarvisApp() {
   const active = TABS.some(([id]) => id === sub) ? sub : ''
   return (
     <div>
-      <nav aria-label="Jarvis screens" className="mb-4 flex flex-wrap gap-2">
+      <nav aria-label="MOXIE screens" className="mb-4 flex flex-wrap gap-2">
         {TABS.map(([id, label, path]) => (
           <Link
             key={id || 'chat'}

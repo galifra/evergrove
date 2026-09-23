@@ -29,7 +29,7 @@ export default function TrackerPage({ trackerId }) {
   const year = String(new Date().getFullYear())
   const yearReview = useMemo(() => (trackerId === 'compass' ? yearInReview(evState, Number(year)) : null), [trackerId, evState, year])
 
-  if (!def) return <Empty>That app doesn't exist yet. Ask Jarvis to create it, or make one from the Apps page.</Empty>
+  if (!def) return <Empty>That app doesn't exist yet. Ask MOXIE to create it, or make one from the Apps page.</Empty>
 
   const thisWeek = entries.filter((e) => localDate(e.occurredAt) >= weekAgo)
   const statTotal = def.stat
@@ -212,7 +212,7 @@ export default function TrackerPage({ trackerId }) {
       </Card>
       {def.sensitive && (
         <p className="text-xs text-white/55 mt-3">
-          Private area: Jarvis doesn't see a summary of this unless you share it in Settings.
+          Private area: MOXIE doesn't see a summary of this unless you share it in Settings.
         </p>
       )}
     </div>

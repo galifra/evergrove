@@ -67,7 +67,7 @@ describe('summaries', () => {
     await reg.invoke('money__log_purchase', { amount: 20, category: 'dining' }, { now: NOW })
     const cmd = log.getEvents().find((e) => e.type === 'command.executed')
     expect(isPrivate(cmd, ctx())).toBe(true)
-    expect(summarize(cmd, ctx())).toBe('Jarvis entry (private)')
+    expect(summarize(cmd, ctx())).toBe('MOXIE entry (private)')
     await add(ev('something.new', 'mystery', {}))
     expect(summarize(log.getEvents().find((e) => e.type === 'something.new'), ctx())).toBe('something.new')
   })

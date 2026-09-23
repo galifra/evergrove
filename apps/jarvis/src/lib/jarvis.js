@@ -154,7 +154,7 @@ export async function askJarvis(payload, fetchImpl = fetch) {
   })
   const body = await res.json().catch(() => ({}))
   if (!res.ok) {
-    const err = new Error(body.error || `Jarvis request failed (${res.status})`)
+    const err = new Error(body.error || `MOXIE request failed (${res.status})`)
     err.status = res.status
     err.ration = body.ration === true // optional AI is paused for the month
     err.stopped = body.stopped === true // the whole allowance is used

@@ -61,7 +61,7 @@ export default function TasksPage() {
       <PageHeader icon="check-square" title="Tasks & habits" subtitle="One-off tasks and the habits that keep you consistent." />
 
       <Card title="Habits">
-        {state.habits.length === 0 && <Empty>No habits yet. Add one below, or tell Jarvis.</Empty>}
+        {state.habits.length === 0 && <Empty>No habits yet. Add one below, or tell MOXIE.</Empty>}
         <div className="grid gap-3 sm:grid-cols-2">
           {state.habits.map((h) => (
             <div key={h.id} className="rounded-xl bg-white/5 border border-white/10 p-3">

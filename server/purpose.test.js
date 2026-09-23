@@ -50,7 +50,7 @@ describe('the instructions for optional uses', () => {
     expect(isOptionalPurpose('constructor')).toBe(false)
     for (const p of Object.keys(PURPOSES)) {
       const sys = systemForPurpose(p)
-      expect(sys).toContain('You are Jarvis')
+      expect(sys).toContain('You are MOXIE')
       expect(sys).toContain('What you will not do')
       expect(sys).not.toContain(TOOL_RULES)
     }

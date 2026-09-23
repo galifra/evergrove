@@ -13,7 +13,7 @@ AI spend.
 
 - **Evergrove (the tree).** Reads the shared event log and grows. The tree never
   shrinks; mistakes are fixed with correction events, never by editing history.
-- **Jarvis (`/jarvis`), a butler and a friend.** Type or speak. He greets you by name,
+- **MOXIE (`/moxie`), a butler and a friend.** Type or speak. He greets you by name,
   remembers what you tell him (a visible, editable list of short notes, never saved
   without your say), speaks up unprompted only when something needs you (at most two
   notes a day, never at night, each one rateable, "not useful" silences a kind for a
@@ -28,7 +28,7 @@ AI spend.
   savings, debts and a payoff planner, holdings, deadlines, CSV import), Goals,
   People, Vault (encrypted), plus twelve trackers (body, health and diet, mind,
   self-care, learning with spaced review, creativity, career, side hustles,
-  travel, home, records, Compass). New trackers can be made by talking to Jarvis;
+  travel, home, records, Compass). New trackers can be made by talking to MOXIE;
   a whole new app becomes a ready-to-build spec on the Apps page.
 - **Today and the evening briefing.** One derived list of what needs you, and a
   real push notification each evening about tomorrow, built on the device.
@@ -48,12 +48,12 @@ packages that may only import downward (a test enforces it):
 
 ```
 packages/core     event log (IndexedDB), registry + command channel, crypto, sync
-packages/modules  one file per app: state derived from the log, and its actions (incl. Jarvis's memory)
+packages/modules  one file per app: state derived from the log, and its actions (incl. MOXIE's memory)
 packages/rules    growth rules, tree, Today, briefing, observations and the weekly review, log viewer, routes
 packages/ui       shared components and styles
 packages/kit      the shell: runtime, router, settings, service worker, the AI budget panel
 apps/evergrove    the tree and every app screen
-apps/jarvis       Jarvis: chat, notes, memory, weekly review, settings
+apps/jarvis       MOXIE: chat, notes, memory, weekly review, settings (folder kept its old internal name)
 site, public      generated pages, manifests and icons for every path (`npm run gen`)
 api               serverless routes: jarvis, usage, sync, parse-entry, save-subscription, send-reminder
 server            auth, key-value store, spend meter and ration rules, prompts, time helpers
@@ -79,7 +79,7 @@ an in-memory store, which is fine for development.
 | `npm run lint` | oxlint |
 | `npm run build` | Production build, including the service worker |
 | `npm run health` | The whole health check in one command: tests, lint, generated files, build, audit. With `-- --url <address>` it also requests every path of a running site and checks headers and the access-code gate (read-only) |
-| `npm run eval` | The Jarvis routing eval against the real model. Costs about half a dollar; run it deliberately |
+| `npm run eval` | The MOXIE routing eval against the real model. Costs about half a dollar; run it deliberately |
 | `npm run tone` | 25 situations through the real model, written to `docs/v2/TONE-SAMPLE.md` for you to read (about 10 cents) |
 | `npm run feedback` | His opinions and weekly write-up on made-up lives, written to `docs/v2/FEEDBACK-SAMPLE.md` (about 6 cents) |
 | `npm run measure` | Measures the real cost per request type into `docs/v2/COST-MEASURED.md` (about 6 cents) |
@@ -89,7 +89,7 @@ an in-memory store, which is fine for development.
 
 | Name | Needed for |
 | --- | --- |
-| `ANTHROPIC_API_KEY` | Jarvis. A separate pay-per-token key, not a Claude subscription |
+| `ANTHROPIC_API_KEY` | MOXIE. A separate pay-per-token key, not a Claude subscription |
 | `ANTHROPIC_MODEL` | Optional, defaults to a small Haiku model |
 | `APP_ACCESS_CODE` | Required in production. Every API route rejects requests without it |
 | `AI_MONTHLY_CAP_USD` | Optional hard cap on AI spend, default 2 |
@@ -127,15 +127,15 @@ unaffected, and Settings has a full export and import.
 
 ## Adding something new
 
-- **A tracker** (things you log with a few fields): ask Jarvis ("make me a
+- **A tracker** (things you log with a few fields): ask MOXIE ("make me a
   tracker for houseplants"), or add it to `src/evergrove/trackers.js`.
-- **A whole app**: ask Jarvis for it (it saves a spec), or add a module in
+- **A whole app**: ask MOXIE for it (it saves a spec), or add a module in
   `src/modules` with `derive`, an optional `context`, and `actions` (each with a
   tier), register it in `src/modules/index.js`, add a page, growth rules if it
   should grow the tree, and tests. `src/modules/vault.js` is the smallest
   example; `src/modules/tasks.js` shows actions and tiers.
 
-Every new action needs a test that it emits only valid events, and Jarvis
+Every new action needs a test that it emits only valid events, and MOXIE
 routing phrases in `src/jarvis/evalCases.js`.
 
 ## Backups and recovery

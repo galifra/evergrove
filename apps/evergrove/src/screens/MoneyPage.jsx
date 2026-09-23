@@ -338,7 +338,7 @@ export default function MoneyPage() {
           ))}
         </ul>
       </Card>
-      <p className="text-xs text-white/55">Private area: Jarvis doesn't see money summaries unless you share them in Settings. This page gives general tracking help, not personal financial advice.</p>
+      <p className="text-xs text-white/55">Private area: MOXIE doesn't see money summaries unless you share them in Settings. This page gives general tracking help, not personal financial advice.</p>
     </div>
   )
 }

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { MotionConfig } from 'framer-motion'
 import { ChevronDown, Settings } from 'lucide-react'
-import { HUB, JARVIS, MODULES, TRACKERS } from '@evergrove/rules/routes.js'
+import { HUB, MODULES, MOXIE, TRACKERS } from '@evergrove/rules/routes.js'
 import { AppIcon } from '@evergrove/ui/components/ui.jsx'
 import BuddyWidget from '@evergrove/ui/components/BuddyWidget.jsx'
 import { AppProvider, useApp } from './AppContext.jsx'
@@ -91,7 +91,7 @@ function Frame({ children, showBuddy }) {
   useEffect(() => {
     const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1)
     document.title =
-      route?.id === 'evergrove' ? 'Evergrove' : route?.id === 'jarvis' ? (route.sub ? `${cap(route.sub.split('/')[0])} · Jarvis` : 'Jarvis') : `${label} · Evergrove`
+      route?.id === 'evergrove' ? 'Evergrove' : route?.id === 'jarvis' ? (route.sub ? `${cap(route.sub.split('/')[0])} · MOXIE` : 'MOXIE') : `${label} · Evergrove`
     if (first.current) first.current = false
     else document.getElementById('main')?.focus()
   }, [label, route?.id, route?.sub])
@@ -130,11 +130,11 @@ function Frame({ children, showBuddy }) {
           <Link to="/" className="font-display text-lg mr-1 hidden sm:block hover:text-emerald-200">Evergrove</Link>
           <AppSwitcher route={route} />
           <Link
-            to={JARVIS.path}
+            to={MOXIE.path}
             aria-current={isJarvis ? 'page' : undefined}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors ${isJarvis ? 'bg-sky-500/20 text-sky-200' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
           >
-            <AppIcon name={JARVIS.icon} size={15} /> Jarvis
+            <AppIcon name={MOXIE.icon} size={15} /> MOXIE
           </Link>
           <button onClick={() => setSettingsOpen(true)} className="ml-auto p-2 rounded-full text-white/50 hover:text-white hover:bg-white/5" aria-label="Settings">
             <Settings size={17} />

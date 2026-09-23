@@ -15,7 +15,7 @@ const MAX_EXPORT_TEXT = 200
 export function buildViewContext(events) {
   const apps = listApps(events)
   const names = new Map(apps.map((a) => [a.id, a.name]))
-  names.set('jarvis', 'Jarvis')
+  names.set('jarvis', 'MOXIE')
   names.set('evergrove', 'Evergrove')
   names.set('memory', 'Memory')
   const priv = new Set(apps.filter((a) => a.sensitive).map((a) => a.id))
@@ -116,8 +116,8 @@ const SUMMARIES = {
   'memory.noted': (d) => `Remembered: ${d.text}`,
   'memory.revised': () => 'Changed a memory',
   'memory.forgotten': () => 'Forgot a memory',
-  'weekly.polished': () => 'Jarvis put the week into words',
-  'note.shown': (d) => `Jarvis mentioned: ${d.obsId}`,
+  'weekly.polished': () => 'MOXIE put the week into words',
+  'note.shown': (d) => `MOXIE mentioned: ${d.obsId}`,
   'feedback.given': (d) => `Feedback: ${d.value}`,
 }
 

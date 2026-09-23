@@ -148,4 +148,4 @@ export function composeWeekly(events, now = new Date()) {
 }
 
 // On Sundays, from evening, the briefing says the review is ready.
-export const weeklyReadyLine = (now = new Date()) => (now.getDay() === 0 ? 'Your weekly review is ready in Jarvis.' : null)
+export const weeklyReadyLine = (now = new Date()) => (now.getDay() === 0 ? 'Your weekly review is ready in MOXIE.' : null)

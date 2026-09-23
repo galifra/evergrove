@@ -1,7 +1,7 @@
 {
   "name": "Evergrove",
   "short_name": "Evergrove",
-  "description": "A living skill tree that grows with everything you do, with Jarvis to run it.",
+  "description": "A living skill tree that grows with everything you do, with MOXIE to run it.",
   "id": "/",
   "start_url": "/",
   "scope": "/",
@@ -37,8 +37,8 @@
   ],
   "shortcuts": [
     {
-      "name": "Talk to Jarvis",
-      "url": "/jarvis/"
+      "name": "Talk to MOXIE",
+      "url": "/moxie/"
     },
     {
       "name": "Apps",

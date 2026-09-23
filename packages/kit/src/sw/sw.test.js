@@ -47,7 +47,7 @@ function makeCaches() {
 const clientsApi = { claim: vi.fn(), matchAll: vi.fn(async () => []), openWindow: vi.fn(async () => {}) }
 
 beforeAll(async () => {
-  globalThis.__PRECACHE__ = ['/', '/money/', '/jarvis/', '/t/', '/assets/app-abc.js', '/missing.png']
+  globalThis.__PRECACHE__ = ['/', '/money/', '/moxie/', '/t/', '/assets/app-abc.js', '/missing.png']
   globalThis.self = {
     addEventListener: (type, fn) => (handlers[type] = fn),
     skipWaiting: vi.fn(),
@@ -204,7 +204,7 @@ describe('working offline', () => {
     handlers.install({ waitUntil: (p) => (pending = p) })
     await pending
     const kept = [...[...globalThis.caches.stores.values()][0].keys()].sort()
-    expect(kept).toEqual(['/', '/assets/app-abc.js', '/jarvis/', '/money/', '/t/'])
+    expect(kept).toEqual(['/', '/assets/app-abc.js', '/money/', '/moxie/', '/t/'])
     expect(globalThis.self.skipWaiting).toHaveBeenCalled()
   })
 
@@ -216,7 +216,7 @@ describe('working offline', () => {
     online = false
     globalThis.fetch = vi.fn(async () => { throw new TypeError('offline') })
     expect(await (await ask(request('/money', { mode: 'navigate' }))).response.text()).toBe('page /money/')
-    expect(await (await ask(request('/jarvis/memory', { mode: 'navigate' }))).response.text()).toBe('page /jarvis/')
+    expect(await (await ask(request('/moxie/memory', { mode: 'navigate' }))).response.text()).toBe('page /moxie/')
     expect(await (await ask(request('/t/houseplants', { mode: 'navigate' }))).response.text()).toBe('page /t/')
     expect(await (await ask(request('/not/an/app', { mode: 'navigate' }))).response.text()).toBe('page /')
   })

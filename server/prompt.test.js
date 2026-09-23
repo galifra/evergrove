@@ -11,7 +11,7 @@ describe('the layered prompt (P5.1)', () => {
   })
 
   it('carries the personality guide: butler and friend, dry, honest, short, no emoji', () => {
-    expect(IDENTITY).toMatch(/butler and friend/)
+    expect(IDENTITY).toMatch(/executive assistant and friend/)
     expect(VOICE).toMatch(/dry/)
     expect(VOICE).toMatch(/Never flatter, never scold, never guilt-trip, never nag/)
     expect(VOICE).toMatch(/No emoji/)

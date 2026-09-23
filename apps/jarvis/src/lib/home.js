@@ -12,7 +12,7 @@ export function greeting(now = new Date(), name = '') {
 
 const norm = (s) => String(s ?? '').trim().toLowerCase()
 
-// Where to send you after Jarvis did something: the app it touched. Returns
+// Where to send you after MOXIE did something: the app it touched. Returns
 // { label, path } or null when there is nowhere better than staying here.
 export function stepLink(step) {
   if (!step || step.status !== 'done') return null
@@ -27,7 +27,7 @@ export function stepLink(step) {
     if (action === 'request_app') return { label: 'app ideas', path: '/apps' }
     return { label: 'your tree', path: '/' }
   }
-  if (moduleId === 'memory') return { label: 'what I remember', path: '/jarvis/memory' }
+  if (moduleId === 'memory') return { label: 'what I remember', path: '/moxie/memory' }
   const path = appPath(moduleId)
   const names = { tasks: 'Tasks', calendar: 'Calendar', money: 'Money', goals: 'Goals', people: 'People', vault: 'Vault' }
   return names[moduleId] ? { label: names[moduleId], path } : null

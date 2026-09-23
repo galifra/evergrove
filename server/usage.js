@@ -40,7 +40,7 @@ function countKey(now = new Date()) {
 // What the money was spent on. Every request says which of these it is; the total above is the
 // sum, so a request with an unknown purpose still counts against the cap.
 export const PURPOSES_TRACKED = ['chat', 'logging', 'weekly', 'opinion']
-export const PURPOSE_LABELS = { chat: 'Chat with Jarvis', logging: 'Typed entries on the tree', weekly: 'Weekly write-up', opinion: 'Opinions you asked for' }
+export const PURPOSE_LABELS = { chat: 'Chat with MOXIE', logging: 'Typed entries on the tree', weekly: 'Weekly write-up', opinion: 'Opinions you asked for' }
 
 // Spend by purpose for one month, in dollars; purposes with nothing spent are left out.
 export async function getSpendByPurpose(now = new Date()) {

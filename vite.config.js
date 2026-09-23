@@ -67,7 +67,7 @@ function devSourceRewrites() {
   }
 }
 
-// Screens inside Jarvis (/jarvis/memory) and custom trackers (/t/<id>) have no
+// Screens inside MOXIE (/moxie/memory) and custom trackers (/t/<id>) have no
 // file of their own: the same page serves them. Production does this with
 // rewrites in vercel.json; this plugin does the same for dev and preview.
 function entryRewrites() {
@@ -76,7 +76,7 @@ function entryRewrites() {
     const [pathname, query = ''] = url.split('?')
     const q = query ? `?${query}` : ''
     if (ENTRY_DIRS.has(pathname)) req.url = `${pathname}/index.html${q}`
-    else if (/^\/jarvis\/[^.]+$/.test(pathname)) req.url = `/jarvis/index.html${q}`
+    else if (/^\/moxie\/[^.]+$/.test(pathname)) req.url = `/moxie/index.html${q}`
     else if (/^\/t\/[^/.]+\/?$/.test(pathname)) req.url = `/t/index.html${q}`
     next()
   }

@@ -118,7 +118,7 @@ export default function VaultPage() {
           </form>
           <ErrorNote>{error}</ErrorNote>
           <p className="text-xs text-white/55 mt-3">
-            The passphrase stays in memory only while unlocked and is never sent anywhere. It cannot be recovered. If you forget it, the items cannot be opened. Jarvis never sees this area.
+            The passphrase stays in memory only while unlocked and is never sent anywhere. It cannot be recovered. If you forget it, the items cannot be opened. MOXIE never sees this area.
           </p>
         </Card>
       ) : (

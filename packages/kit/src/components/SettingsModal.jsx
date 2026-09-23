@@ -209,9 +209,9 @@ export default function SettingsModal({ onClose }) {
           </div>
 
           <div className={section}>
-            <span className="text-white/80">Share private areas with Jarvis</span>
+            <span className="text-white/80">Share private areas with MOXIE</span>
             <p className="text-xs text-white/55 mt-1">
-              Off by default. Jarvis can still log to these when you tell it something, but it won't see summaries of what's inside unless you turn a switch on. The vault is never shared.
+              Off by default. MOXIE can still log to these when you tell it something, but it won't see summaries of what's inside unless you turn a switch on. The vault is never shared.
             </p>
             <div className="mt-2 space-y-1.5">
               {sensitiveApps.map((a) => (

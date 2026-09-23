@@ -121,19 +121,19 @@ describe('what may be sent out for the optional polish', () => {
   })
 })
 
-describe('the Sunday line and Jarvis\'s note in the evening briefing', () => {
+describe("the Sunday line and MOXIE's note in the evening briefing", () => {
   const bill = ev('money.bill.defined', { billId: 'rent', name: 'Landlord Rent', amountCents: 100000, cadence: 'once', dueDate: '2026-09-10' }, day(2026, 8, 1))
 
   it('says the review is ready on Sundays and not on other days', () => {
-    expect(weeklyReadyLine(SUN)).toBe('Your weekly review is ready in Jarvis.')
+    expect(weeklyReadyLine(SUN)).toBe('Your weekly review is ready in MOXIE.')
     expect(weeklyReadyLine(WED)).toBeNull()
-    expect(composeBriefing([], SUN).lines).toContain('Your weekly review is ready in Jarvis.')
+    expect(composeBriefing([], SUN).lines).toContain('Your weekly review is ready in MOXIE.')
     expect(composeBriefing([], WED).lines.join('\n')).not.toContain('weekly review')
   })
 
   it('adds one generic line for something private, never its name or amount', () => {
     const b = composeBriefing([bill], WED)
-    const noteLines = b.lines.filter((l) => l.startsWith("Jarvis's note:"))
+    const noteLines = b.lines.filter((l) => l.startsWith("MOXIE's note:"))
     expect(noteLines).toHaveLength(1)
     expect(noteLines[0]).not.toMatch(/Landlord|1,000|100000/)
     expect(b.body).not.toContain('Landlord')
@@ -142,7 +142,7 @@ describe('the Sunday line and Jarvis\'s note in the evening briefing', () => {
 
   it('is absent when he is set to never speak up, including the Sunday line', () => {
     const b = composeBriefing([bill], SUN, { speakUp: 'never' })
-    expect(b.lines.join('\n')).not.toMatch(/Jarvis's note|weekly review/)
+    expect(b.lines.join('\n')).not.toMatch(/MOXIE's note|weekly review/)
     expect(b.note).toBeNull()
   })
 

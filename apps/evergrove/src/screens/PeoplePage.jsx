@@ -71,7 +71,7 @@ export default function PeoplePage() {
             </div>
           ))}
         </div>
-        <p className="mt-3 text-xs text-white/55">Logging a contact grows Staying connected. Private area: not shared with Jarvis unless you allow it in Settings.</p>
+        <p className="mt-3 text-xs text-white/55">Logging a contact grows Staying connected. Private area: not shared with MOXIE unless you allow it in Settings.</p>
       </Card>
     </div>
   )

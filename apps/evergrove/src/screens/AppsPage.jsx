@@ -58,7 +58,7 @@ export default function AppsPage() {
 
   return (
     <div className="grid gap-5">
-      <PageHeader icon="trees" title="Apps" subtitle="Each one works on its own and feeds the tree. Tell Jarvis to use them, or open them here." />
+      <PageHeader icon="trees" title="Apps" subtitle="Each one works on its own and feeds the tree. Tell MOXIE to use them, or open them here." />
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{modules.map((a) => <Tile key={a.id} a={a} />)}</div>
       <div>
         <h2 className="text-sm font-medium text-white/60 mb-2">Trackers</h2>
@@ -94,7 +94,7 @@ export default function AppsPage() {
 
       <Card title="Make a new tracker">
         <p className="text-xs text-white/55 mb-3">
-          Or just tell Jarvis: "make me a tracker for my houseplants". Fields are comma separated. Add # for a number (Water ml#) or :a|b|c for a choice (Health:good|ok|poor).
+          Or just tell MOXIE: "make me a tracker for my houseplants". Fields are comma separated. Add # for a number (Water ml#) or :a|b|c for a choice (Health:good|ok|poor).
         </p>
         <form onSubmit={create} className="grid gap-3 sm:grid-cols-3 items-end">
           <Field label="Name"><TextInput value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder="Plants" /></Field>

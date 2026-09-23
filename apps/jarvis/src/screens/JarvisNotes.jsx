@@ -8,7 +8,7 @@ import { chooseNotes, feedbackState, observe } from '@evergrove/rules/observatio
 import { coachSteps, feedbackEvent, noteShownEvent } from '../lib/notes.js'
 import { deriveGoals } from '@evergrove/modules/goals.js'
 
-// What Jarvis has to say unprompted, at most a couple of things a day and only when it matters
+// What MOXIE has to say unprompted, at most a couple of things a day and only when it matters
 // (docs/v2/FEEDBACK-SPEC.md). Each note can be rated, and "not useful" quiets that kind for 30 days.
 // Nothing here calls the AI: the notes are made from your own data and fixed wordings.
 
@@ -109,7 +109,7 @@ export default function JarvisNotes() {
 
   if (!show.length) return null
   return (
-    <ul aria-label="Notes from Jarvis" aria-live="polite" className="mt-2 mb-3 space-y-2">
+    <ul aria-label="Notes from MOXIE" aria-live="polite" className="mt-2 mb-3 space-y-2">
       {show.map((n) => <Note key={n.key} note={n} rating={ratings.get(n.key)} rate={rate} />)}
     </ul>
   )

@@ -81,10 +81,16 @@ describe('generated app pages, manifests and icons (T-P2a, T-P2e)', () => {
 describe('the hosting rules', () => {
   const vercel = JSON.parse(read('vercel.json').toString())
 
-  it('rewrites serve custom trackers and Jarvis screens from their one page', () => {
+  it('rewrites serve custom trackers and MOXIE screens from their one page', () => {
     const map = Object.fromEntries(vercel.rewrites.map((r) => [r.source, r.destination]))
     expect(map['/t/:id']).toBe('/t/index.html')
-    expect(map['/jarvis/:path+']).toBe('/jarvis/index.html')
+    expect(map['/moxie/:path+']).toBe('/moxie/index.html')
+  })
+
+  it('old /jarvis links redirect to /moxie', () => {
+    const map = Object.fromEntries(vercel.redirects.map((r) => [r.source, r.destination]))
+    expect(map['/jarvis']).toBe('/moxie')
+    expect(map['/jarvis/:path*']).toBe('/moxie/:path*')
   })
 
   it('keeps the strict security headers on every page', () => {

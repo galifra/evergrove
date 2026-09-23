@@ -8,7 +8,7 @@ import { listVoices, speak, speechOutSupported, stopSpeaking } from '../lib/spea
 import { OBS_LABELS, SPEAK_UP_LABELS, feedbackState } from '@evergrove/rules/observations.js'
 import { exportFeedback, feedbackEvent } from '../lib/notes'
 
-// How Jarvis speaks to you. Everything here is stored on this device.
+// How MOXIE speaks to you. Everything here is stored on this device.
 export default function JarvisSettings() {
   const { settings, updateSettings, events, runtime } = useApp()
   const fb = useMemo(() => feedbackState(events), [events])
@@ -55,7 +55,7 @@ export default function JarvisSettings() {
 
   return (
     <div className="grid gap-4">
-      <PageHeader icon="bot" title="Jarvis settings" subtitle="How he talks to you, and how often he speaks up." />
+      <PageHeader icon="bot" title="MOXIE settings" subtitle="How he talks to you, and how often he speaks up." />
 
       <Card title="Manner">
         <div className="grid gap-3 sm:grid-cols-2 max-w-xl">
@@ -83,7 +83,7 @@ export default function JarvisSettings() {
 
       <Card title="Speaking up">
         <div className="grid gap-3 max-w-xl">
-          <Field label="Jarvis speaks up">
+          <Field label="MOXIE speaks up">
             <Select
               value={settings.speakUp}
               onChange={(e) => updateSettings({ speakUp: e.target.value })}

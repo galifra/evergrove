@@ -9,7 +9,7 @@ import { weeklyReadyLine } from './weekly.js'
 
 // The evening briefing: what tomorrow holds, in a few short lines. Built on the
 // device from the device's own data, both for the push notification (by the
-// service worker) and for Jarvis's "brief me" message. Pure, so it is tested
+// service worker) and for MOXIE's "brief me" message. Pure, so it is tested
 // without a browser.
 
 export const DEFAULT_BRIEFING_PREFS = { detail: 'full', showAmounts: false, speakUp: 'necessary' }
@@ -81,11 +81,11 @@ export function composeBriefing(events, now = new Date(), prefs = DEFAULT_BRIEFI
   }
   if (!loggedToday) lines.push("You haven't logged anything today.")
 
-  // Jarvis's note: one line, generic if it is about something private, and nothing at all if he is set to never speak up.
+  // MOXIE's note: one line, generic if it is about something private, and nothing at all if he is set to never speak up.
   let note = null
   if (p.speakUp !== 'never') {
     note = briefingNote(events, now, { speakUp: p.speakUp })
-    if (note) lines.push(`Jarvis's note: ${note.text}`)
+    if (note) lines.push(`MOXIE's note: ${note.text}`)
     const weekly = weeklyReadyLine(now)
     if (weekly) lines.push(weekly)
   }

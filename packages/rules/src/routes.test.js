@@ -47,9 +47,9 @@ describe('finding a route from a path', () => {
     expect(routeForPath('/body').trackerId).toBe('body')
   })
 
-  it('reads Jarvis screens and custom trackers', () => {
-    expect(routeForPath('/jarvis/memory')).toMatchObject({ id: 'jarvis', sub: 'memory' })
-    expect(routeForPath('/jarvis')).toMatchObject({ id: 'jarvis', sub: null })
+  it('reads MOXIE screens and custom trackers', () => {
+    expect(routeForPath('/moxie/memory')).toMatchObject({ id: 'jarvis', sub: 'memory' })
+    expect(routeForPath('/moxie')).toMatchObject({ id: 'jarvis', sub: null })
     expect(routeForPath('/t/houseplants')).toMatchObject({ custom: true, trackerId: 'houseplants' })
     expect(routeForPath('/t/my%20plants').trackerId).toBe('my plants')
   })
@@ -63,7 +63,7 @@ describe('finding a route from a path', () => {
     expect(entryPath(routeForPath('/money'))).toBe('/money/')
     expect(entryPath(routeForPath('/'))).toBe('/')
     expect(entryPath(routeForPath('/t/x'))).toBe('/t/')
-    expect(sameEntry('/jarvis', '/jarvis/memory')).toBe(true)
+    expect(sameEntry('/moxie', '/moxie/memory')).toBe(true)
     expect(sameEntry('/t/a', '/t/b')).toBe(true)
     expect(sameEntry('/money', '/tasks')).toBe(false)
     expect(sameEntry('/', '/log')).toBe(false)
@@ -88,8 +88,9 @@ describe('old links keep working (T-P2c)', () => {
     expect(legacyRedirect('#/app/houseplants')).toBe('/t/houseplants')
     expect(legacyRedirect('#/timeline')).toBe('/log')
     expect(legacyRedirect('#/apps')).toBe('/apps')
-    expect(legacyRedirect('#/jarvis')).toBe('/jarvis')
-    expect(legacyRedirect('#/jarvis/brief')).toBe('/jarvis/brief')
+    // '#/jarvis' is itself an old link now (from before the MOXIE rename), so it also lands on the new path.
+    expect(legacyRedirect('#/jarvis')).toBe('/moxie')
+    expect(legacyRedirect('#/jarvis/brief')).toBe('/moxie/brief')
     expect(legacyRedirect('#/app')).toBe('/apps')
   })
 
@@ -110,7 +111,7 @@ describe('old links keep working (T-P2c)', () => {
     expect(normalizeLink('/app/money')).toBe('/money')
     expect(normalizeLink('/app/learning')).toBe('/learning')
     expect(normalizeLink('/timeline')).toBe('/log')
-    expect(normalizeLink('/jarvis/brief')).toBe('/jarvis/brief')
+    expect(normalizeLink('/moxie/brief')).toBe('/moxie/brief')
     expect(normalizeLink('/')).toBe('/')
     expect(normalizeLink(undefined)).toBe('/')
   })
@@ -125,9 +126,9 @@ describe('the address a link really goes to', () => {
     expect(canonicalPath('/timeline')).toBe('/log/')
   })
 
-  it('keeps Jarvis screens, custom trackers, queries and hashes', () => {
-    expect(canonicalPath('/jarvis')).toBe('/jarvis/')
-    expect(canonicalPath('/jarvis/memory')).toBe('/jarvis/memory')
+  it('keeps MOXIE screens, custom trackers, queries and hashes', () => {
+    expect(canonicalPath('/moxie')).toBe('/moxie/')
+    expect(canonicalPath('/moxie/memory')).toBe('/moxie/memory')
     expect(canonicalPath('/t/my%20plants')).toBe('/t/my%20plants')
     expect(canonicalPath('/money?x=1')).toBe('/money/?x=1')
     expect(canonicalPath('/tasks#top')).toBe('/tasks/#top')
