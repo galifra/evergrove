@@ -143,14 +143,25 @@ async function live() {
     }
   }
 
-  // Jarvis's deep addresses all land on Jarvis's page.
+  // MOXIE's deep addresses all land on MOXIE's page.
   for (const sub of ['memory', 'weekly', 'settings', 'brief']) {
     try {
-      const { res } = await get(`/jarvis/${sub}`)
+      const { res } = await get(`/moxie/${sub}`)
       const html = res.status === 200 ? await res.text() : ''
-      record(res.status === 200 && html.includes('content="jarvis"'), `/jarvis/${sub}`, `status ${res.status}`)
+      record(res.status === 200 && html.includes('content="jarvis"'), `/moxie/${sub}`, `status ${res.status}`)
     } catch (err) {
-      record(false, `/jarvis/${sub}`, err.message)
+      record(false, `/moxie/${sub}`, err.message)
+    }
+  }
+
+  // The old name, /jarvis, still redirects rather than 404ing.
+  for (const [oldPath, newPath] of [['/jarvis', '/moxie'], ['/jarvis/memory', '/moxie/memory']]) {
+    try {
+      const { res } = await get(oldPath)
+      const lands = res.status >= 300 && res.status < 400 && new URL(res.headers.get('location'), base).pathname === newPath
+      record(lands, `${oldPath} redirects to ${newPath}`, `status ${res.status}`)
+    } catch (err) {
+      record(false, oldPath, err.message)
     }
   }
 
