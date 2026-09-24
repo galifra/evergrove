@@ -132,7 +132,7 @@ async function live() {
   }
 
   // An address without its trailing slash still finds the right page (a redirect or the page itself).
-  for (const [bare, id] of [['/money', 'money'], ['/jarvis', 'jarvis'], ['/tasks', 'tasks']]) {
+  for (const [bare, id] of [['/money', 'money'], ['/tasks', 'tasks']]) {
     try {
       let { res } = await get(bare)
       if (res.status >= 300 && res.status < 400) res = (await get(new URL(res.headers.get('location'), base + bare).pathname)).res
@@ -140,28 +140,6 @@ async function live() {
       record(res.status === 200 && html.includes(`content="${id}"`), `${bare} (no slash)`, `status ${res.status}`)
     } catch (err) {
       record(false, `${bare} (no slash)`, err.message)
-    }
-  }
-
-  // MOXIE's deep addresses all land on MOXIE's page.
-  for (const sub of ['memory', 'weekly', 'settings', 'brief']) {
-    try {
-      const { res } = await get(`/moxie/${sub}`)
-      const html = res.status === 200 ? await res.text() : ''
-      record(res.status === 200 && html.includes('content="jarvis"'), `/moxie/${sub}`, `status ${res.status}`)
-    } catch (err) {
-      record(false, `/moxie/${sub}`, err.message)
-    }
-  }
-
-  // The old name, /jarvis, still redirects rather than 404ing.
-  for (const [oldPath, newPath] of [['/jarvis', '/moxie'], ['/jarvis/memory', '/moxie/memory']]) {
-    try {
-      const { res } = await get(oldPath)
-      const lands = res.status >= 300 && res.status < 400 && new URL(res.headers.get('location'), base).pathname === newPath
-      record(lands, `${oldPath} redirects to ${newPath}`, `status ${res.status}`)
-    } catch (err) {
-      record(false, oldPath, err.message)
     }
   }
 
@@ -177,7 +155,7 @@ async function live() {
   if (isLocalhost) {
     skip('API access-code gate', 'a local preview serves no API')
   } else {
-    for (const path of ['/api/usage', '/api/jarvis', '/api/parse-entry', '/api/sync']) {
+    for (const path of ['/api/sync']) {
       try {
         const { res } = await get(path, { method: path === '/api/usage' ? 'GET' : 'POST', headers: { 'content-type': 'application/json' }, body: path === '/api/usage' ? undefined : '{}' })
         record([401, 403].includes(res.status), `${path} refuses a request with no code`, `status ${res.status}`)

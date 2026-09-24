@@ -1,13 +1,11 @@
-import { useMemo, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Download, RefreshCw, Upload, X } from 'lucide-react'
 import { useApp } from '../AppContext'
 import { getAccessCode, setAccessCode } from '@evergrove/core/lib/storage.js'
 import { pushSupported, enablePushReminders, disablePushReminders, showBriefingPreview } from '../lib/push'
 import { composeBriefing } from '@evergrove/rules/briefing.js'
-import AiBudget from './AiBudget.jsx'
 import { describeVerification, verifyLog } from '@evergrove/rules/verify.js'
-import { listApps } from '@evergrove/rules/registry.js'
 import { AccessCodePrompt } from '@evergrove/ui/components/ui.jsx'
 import { useDialog } from '@evergrove/ui/components/useDialog.js'
 
@@ -28,8 +26,6 @@ export default function SettingsModal({ onClose }) {
   const [notice, setNotice] = useState('')
   const [health, setHealth] = useState('')
   const fileRef = useRef(null)
-
-  const sensitiveApps = useMemo(() => listApps(events).filter((a) => a.sensitive && a.id !== 'vault'), [events])
 
   async function handleReminderToggle(checked) {
     setReminderError('')
@@ -62,13 +58,6 @@ export default function SettingsModal({ onClose }) {
     } catch (err) {
       setReminderError(err.message)
     }
-  }
-
-  function toggleShare(id, on) {
-    const set = new Set(settings.shareSensitive)
-    if (on) set.add(id)
-    else set.delete(id)
-    updateSettings({ shareSensitive: [...set] })
   }
 
   function handleImportFile(e) {
@@ -200,32 +189,6 @@ export default function SettingsModal({ onClose }) {
                 <AccessCodePrompt onSaved={app.syncNow} />
               </div>
             )}
-          </div>
-
-          <div className={section}>
-            <span className="text-white/80">AI budget</span>
-            <p className="text-xs text-white/55 mt-1 mb-2">A hard monthly cap shared by everything here. When it is reached the AI stops until next month; everything else keeps working.</p>
-            <AiBudget />
-          </div>
-
-          <div className={section}>
-            <span className="text-white/80">Share private areas with MOXIE</span>
-            <p className="text-xs text-white/55 mt-1">
-              Off by default. MOXIE can still log to these when you tell it something, but it won't see summaries of what's inside unless you turn a switch on. The vault is never shared.
-            </p>
-            <div className="mt-2 space-y-1.5">
-              {sensitiveApps.map((a) => (
-                <label key={a.id} className="flex items-center justify-between">
-                  <span className="text-white/70">{a.name}</span>
-                  <input
-                    type="checkbox"
-                    checked={settings.shareSensitive.includes(a.id)}
-                    onChange={(e) => toggleShare(a.id, e.target.checked)}
-                    className="w-4 h-4 accent-emerald-500"
-                  />
-                </label>
-              ))}
-            </div>
           </div>
 
           <div>

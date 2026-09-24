@@ -33,28 +33,20 @@ export const TRACKERS = BUILTIN_TRACKERS.map((t) => ({
   trackerId: t.id,
 }))
 
-// `id` stays 'jarvis' (an internal key: the folder it loads from, the events it writes) even
-// though the product is now called MOXIE — renaming it would mean rewriting every historical
-// event already in a live log. Only what a person actually sees (the path, the name) changes.
-export const MOXIE = { id: 'jarvis', path: '/moxie', name: 'MOXIE', short: 'MOXIE', kind: 'assistant', color: '#38bdf8', icon: 'bot', description: 'Your own executive intelligence and counsel: chat, memory, briefings and honest feedback.' }
-
 // Trackers made by talking have no page at build time; one entry serves them all.
-export const CUSTOM_TRACKER = { id: 'custom-tracker', path: '/t', name: 'Tracker', short: 'Tracker', kind: 'tracker', color: '#34d399', icon: 'sparkles', description: 'A tracker you made by talking to MOXIE.', custom: true }
+export const CUSTOM_TRACKER = { id: 'custom-tracker', path: '/t', name: 'Tracker', short: 'Tracker', kind: 'tracker', color: '#34d399', icon: 'sparkles', description: 'A tracker you made by talking.', custom: true }
 
-export const ROUTES = [...HUB, ...MODULES, ...TRACKERS, MOXIE]
+export const ROUTES = [...HUB, ...MODULES, ...TRACKERS]
 
 // Every page that has its own generated entry.
 export const ENTRIES = [...ROUTES, CUSTOM_TRACKER]
-
-// Which JavaScript app serves a route: the mother app, or MOXIE.
-export const appOf = (route) => (route.id === 'jarvis' ? 'jarvis' : 'evergrove')
 
 export const routeById = (id) => ROUTES.find((r) => r.id === id) ?? null
 
 const trim = (p) => (p.length > 1 ? p.replace(/\/+$/, '') : p) || '/'
 
 // Finds the route for a URL path. `/money/` and `/money` are the same;
-// `/moxie/memory` is the MOXIE route with a screen; `/t/<id>` is a custom tracker.
+// `/t/<id>` is a custom tracker.
 export function routeForPath(pathname) {
   const p = trim(String(pathname || '/').split('?')[0].split('#')[0])
   const parts = p.split('/').filter(Boolean)
@@ -79,17 +71,17 @@ export function sameEntry(a, b) {
 
 export const trackerPath = (id) => (TRACKERS.some((t) => t.id === id) ? `/${id}` : `/t/${encodeURIComponent(id)}`)
 
-// Old links, forever: `#/app/<id>`, `#/timeline`, `#/apps`, `#/jarvis`, `#/jarvis/brief`.
+// Old links, forever: `#/app/<id>`, `#/timeline`, `#/apps`. The assistant (MOXIE) moved to
+// her own separate address, so an old `#/jarvis` link has nowhere left to redirect to here.
 // Returns the new path, or null if the hash is not an old link.
 export function legacyRedirect(hash) {
   const h = String(hash || '').replace(/^#/, '')
   if (!h.startsWith('/')) return null
-  const [, first, second, ...rest] = h.split('/')
+  const [, first, second] = h.split('/')
   if (!first) return null
   if (first === 'app') return second ? trackerOrModulePath(decodeURIComponent(second)) : '/apps'
   if (first === 'timeline') return '/log'
   if (first === 'apps') return '/apps'
-  if (first === 'jarvis') return `/moxie${second ? `/${[second, ...rest].join('/')}` : ''}`
   return null
 }
 
@@ -101,7 +93,7 @@ function trackerOrModulePath(id) {
 }
 
 // The address to actually navigate to: an app's own page ends in a slash (`/money/`),
-// which is what its manifest scope expects; screens inside MOXIE and custom trackers keep their tail.
+// which is what its manifest scope expects; custom trackers keep their tail.
 export function canonicalPath(link) {
   const target = normalizeLink(link)
   const [pathPart, ...tail] = target.split(/(?=[?#])/)

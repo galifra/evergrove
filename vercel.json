@@ -10,12 +10,7 @@
     }
   ],
   "rewrites": [
-    { "source": "/t/:id", "destination": "/t/index.html" },
-    { "source": "/moxie/:path+", "destination": "/moxie/index.html" }
-  ],
-  "redirects": [
-    { "source": "/jarvis", "destination": "/moxie", "permanent": false },
-    { "source": "/jarvis/:path*", "destination": "/moxie/:path*", "permanent": false }
+    { "source": "/t/:id", "destination": "/t/index.html" }
   ],
   "headers": [
     {

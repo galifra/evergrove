@@ -10,15 +10,10 @@
     "gen": "node scripts/gen-entries.mjs",
     "lint": "oxlint",
     "test": "vitest run",
-    "eval": "node scripts/eval.mjs",
     "preview": "vite preview",
-    "tone": "node scripts/tone.mjs",
-    "feedback": "node scripts/feedback.mjs",
-    "measure": "node scripts/measure.mjs",
     "health": "node scripts/health.mjs"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.125.0",
     "@tailwindcss/vite": "^4.3.3",
     "@upstash/redis": "^1.38.4",
     "framer-motion": "^13.2.0",

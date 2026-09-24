@@ -3,10 +3,8 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { openStore } from '@evergrove/core/store.js'
 import { createLog } from '@evergrove/core/log.js'
 import { createEvent, validateEvent } from '@evergrove/core/events.js'
-import { createAppRegistry } from '../registry'
 import { buildEmergencySheet, deriveVault, openItem, sealItem, securityEvent, SECURITY_CHECKLIST, unlockVault } from '@evergrove/modules/vault.js'
 import { deriveEvergrove } from '../derive'
-import { buildContext } from '../../../../apps/jarvis/src/lib/jarvis.js'
 
 const NOW = new Date(2026, 4, 15, 12)
 const PASS = 'correct horse battery staple'
@@ -59,16 +57,6 @@ describe('vault restore drill (T8)', () => {
     const again = await device2.append(backup.events, { remote: true })
     expect(again).toHaveLength(0)
     expect(deriveVault(device2.getEvents()).items).toHaveLength(1)
-  })
-
-  it('vault contents never reach Jarvis, even when the area is shared', async () => {
-    const reg = createAppRegistry(log)
-    const key = await unlockVault(PASS, 1000)
-    await save(key, { title: 'Passport', kind: 'identity', body: 'A1234567-SECRET' })
-    const ctx = buildContext(reg, log.getEvents(), { shareSensitive: ['vault', 'money', 'health'] }, NOW)
-    expect(ctx).not.toContain('A1234567')
-    expect(ctx).not.toContain('Passport')
-    expect(reg.tools().some((t) => t.name.startsWith('vault__'))).toBe(false)
   })
 })
 

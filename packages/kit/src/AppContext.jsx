@@ -3,10 +3,8 @@ import { getRuntime } from './runtime'
 import { loadSettings, saveSettings, defaultSettings } from './settings'
 import { deriveEvergrove } from '@evergrove/rules/derive.js'
 import { deriveInsights } from '@evergrove/rules/insights.js'
-import { createEvent, newId } from '@evergrove/core/events.js'
+import { createEvent } from '@evergrove/core/events.js'
 import { legacyToEvents } from '@evergrove/rules/migrate.js'
-import { levelFromXp, slugify } from '@evergrove/core/lib/treeEngine.js'
-import { getAccessCode } from '@evergrove/core/lib/storage.js'
 import { disablePushReminders } from './lib/push'
 
 const Ctx = createContext(null)
@@ -18,8 +16,6 @@ export function AppProvider({ children }) {
   const [runtime, setRuntime] = useState(null)
   const [bootError, setBootError] = useState(null)
   const [settings, setSettingsState] = useState(loadSettings)
-  const [pending, setPending] = useState(false)
-  const [lastResult, setLastResult] = useState(null)
   const [syncStatus, setSyncStatus] = useState({ state: 'off', message: '' })
 
   useEffect(() => {
@@ -104,70 +100,6 @@ export function AppProvider({ children }) {
     [runtime]
   )
 
-  const addEntry = useCallback(
-    async (text) => {
-      const trimmed = text.trim()
-      if (!trimmed || !runtime) return null
-      setPending(true)
-      setLastResult(null)
-      try {
-        const existing = {}
-        for (const [area, skills] of Object.entries(evState.skills)) {
-          existing[area] = Object.values(skills).map((s) => ({ id: s.id, name: s.name }))
-        }
-        const res = await fetch('/api/parse-entry', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-app-code': getAccessCode() },
-          body: JSON.stringify({ text: trimmed, existingSkills: existing }),
-        })
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}))
-          const err = new Error(body.error || `Request failed (${res.status})`)
-          err.needsCode = res.status === 401
-          throw err
-        }
-        const data = await res.json()
-        const updates = Array.isArray(data.updates) ? data.updates : []
-        const before = deriveEvergrove(runtime.log.getEvents())
-        const correlationId = newId()
-        const evs = updates.map((u) =>
-          createEvent({
-            type: 'skill.practiced',
-            app: 'evergrove',
-            area: u.domain,
-            correlationId,
-            data: {
-              domain: u.domain,
-              skillId: slugify(u.skillId || u.skillName),
-              skillName: u.skillName,
-              xp: u.xpGain,
-              text: trimmed,
-              summary: data.summary || '',
-            },
-          })
-        )
-        if (evs.length) await runtime.log.append(evs)
-        const after = deriveEvergrove(runtime.log.getEvents())
-        const levelUps = []
-        for (const u of updates) {
-          const id = slugify(u.skillId || u.skillName)
-          const b = levelFromXp(before.skills[u.domain]?.[id]?.xp ?? 0).level
-          const a = levelFromXp(after.skills[u.domain]?.[id]?.xp ?? 0).level
-          if (a > b) levelUps.push({ skillName: u.skillName, level: a })
-        }
-        const result = { summary: data.summary, updates, levelUps }
-        setLastResult(result)
-        return result
-      } catch (err) {
-        setLastResult({ error: err.message || 'Something went wrong logging that.', needsCode: !!err.needsCode })
-        return null
-      } finally {
-        setPending(false)
-      }
-    },
-    [runtime, evState]
-  )
-
   const reverseEvent = useCallback(
     (id) =>
       runtime.log.append(createEvent({ type: 'event.reversed', app: 'evergrove', supersedes: id, actor: 'user', data: { reason: 'undo' } })),
@@ -223,9 +155,6 @@ export function AppProvider({ children }) {
     renameTree,
     run,
     reverseEvent,
-    addEntry,
-    pending,
-    lastResult,
     syncStatus,
     syncNow: () => runtime?.syncNow(),
     setSyncPassphrase,

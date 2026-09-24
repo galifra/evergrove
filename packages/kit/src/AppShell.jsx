@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { MotionConfig } from 'framer-motion'
 import { ChevronDown, Settings } from 'lucide-react'
-import { HUB, MODULES, MOXIE, TRACKERS } from '@evergrove/rules/routes.js'
+import { HUB, MODULES, TRACKERS } from '@evergrove/rules/routes.js'
 import { AppIcon } from '@evergrove/ui/components/ui.jsx'
 import BuddyWidget from '@evergrove/ui/components/BuddyWidget.jsx'
 import { AppProvider, useApp } from './AppContext.jsx'
@@ -89,12 +89,10 @@ function Frame({ children, showBuddy }) {
   // an in-page move so screen readers announce the new screen.
   const label = route ? (route.custom && route.trackerId ? route.trackerId : route.name) : 'Not found'
   useEffect(() => {
-    const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1)
-    document.title =
-      route?.id === 'evergrove' ? 'Evergrove' : route?.id === 'jarvis' ? (route.sub ? `${cap(route.sub.split('/')[0])} · MOXIE` : 'MOXIE') : `${label} · Evergrove`
+    document.title = route?.id === 'evergrove' ? 'Evergrove' : `${label} · Evergrove`
     if (first.current) first.current = false
     else document.getElementById('main')?.focus()
-  }, [label, route?.id, route?.sub])
+  }, [label, route?.id])
 
   if (bootError) {
     return (
@@ -119,7 +117,6 @@ function Frame({ children, showBuddy }) {
     )
   }
 
-  const isJarvis = route?.id === 'jarvis'
   return (
     <div className="min-h-screen">
       <button type="button" className="skip-link" onClick={() => document.getElementById('main')?.focus()}>
@@ -129,13 +126,6 @@ function Frame({ children, showBuddy }) {
         <nav aria-label="Main" className="max-w-4xl mx-auto px-4 py-2.5 flex items-center gap-2">
           <Link to="/" className="font-display text-lg mr-1 hidden sm:block hover:text-emerald-200">Evergrove</Link>
           <AppSwitcher route={route} />
-          <Link
-            to={MOXIE.path}
-            aria-current={isJarvis ? 'page' : undefined}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors ${isJarvis ? 'bg-sky-500/20 text-sky-200' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
-          >
-            <AppIcon name={MOXIE.icon} size={15} /> MOXIE
-          </Link>
           <button onClick={() => setSettingsOpen(true)} className="ml-auto p-2 rounded-full text-white/50 hover:text-white hover:bg-white/5" aria-label="Settings">
             <Settings size={17} />
           </button>
@@ -146,7 +136,7 @@ function Frame({ children, showBuddy }) {
         {children}
       </main>
 
-      {showBuddy && !isJarvis && <BuddyWidget state={viewState} onOpenSettings={() => setSettingsOpen(true)} />}
+      {showBuddy && <BuddyWidget state={viewState} onOpenSettings={() => setSettingsOpen(true)} />}
       {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
     </div>
   )

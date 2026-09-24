@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react'
 import { canonicalPath, legacyRedirect, routeForPath, sameEntry } from '@evergrove/rules/routes.js'
 
 // Path-based routing (docs/v2/ARCHITECTURE.md). Each app is its own page, so
-// moving between apps is a real navigation; moving between screens of one app
-// (Jarvis, memory, weekly) happens inside the open page with the history API.
+// moving between apps is a real navigation.
 
 const NAV_EVENT = 'evergrove:navigate'
 
@@ -34,7 +33,7 @@ export function usePath() {
   return path
 }
 
-// The route (and Jarvis screen or custom tracker id) for the current page.
+// The route (and custom tracker id) for the current page.
 export function useRoute() {
   return routeForPath(usePath())
 }

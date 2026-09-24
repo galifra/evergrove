@@ -2,7 +2,7 @@
 // manifest, and icons. Pure functions (no file writes) so a test can check the
 // committed files are exactly what the route table says.
 import { deflateSync } from 'node:zlib'
-import { ENTRIES, appOf } from '../../packages/rules/src/routes.js'
+import { ENTRIES } from '../../packages/rules/src/routes.js'
 
 export const BASE_BG = '#0d1912'
 
@@ -29,11 +29,11 @@ const scopeOf = (route) => (route.custom ? '/t/' : route.path === '/' ? '/' : `$
 export function scriptSrc(route) {
   const depth = route.path === '/' ? 0 : route.path.slice(1).split('/').length
   const up = '../'.repeat(depth + 1)
-  return `${up}apps/${appOf(route)}/src/main.jsx`
+  return `${up}apps/evergrove/src/main.jsx`
 }
 
 export function renderHtml(route) {
-  const title = isHome(route) ? 'Evergrove' : route.id === 'jarvis' ? 'MOXIE' : `${route.name} · Evergrove`
+  const title = isHome(route) ? 'Evergrove' : `${route.name} · Evergrove`
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -68,7 +68,7 @@ export function renderHtml(route) {
 export function renderManifest(route) {
   const scope = scopeOf(route)
   const manifest = {
-    name: isHome(route) ? 'Evergrove' : route.id === 'jarvis' ? 'MOXIE' : `${route.name} · Evergrove`,
+    name: isHome(route) ? 'Evergrove' : `${route.name} · Evergrove`,
     short_name: route.short,
     description: route.description,
     id: scope,
@@ -86,11 +86,8 @@ export function renderManifest(route) {
     ],
   }
   if (isHome(route)) {
-    manifest.description = 'A living skill tree that grows with everything you do, with MOXIE to run it.'
-    manifest.shortcuts = [
-      { name: 'Talk to MOXIE', url: '/moxie/' },
-      { name: 'Apps', url: '/apps/' },
-    ]
+    manifest.description = 'A living skill tree that grows with everything you do.'
+    manifest.shortcuts = [{ name: 'Apps', url: '/apps/' }]
   }
   return JSON.stringify(manifest, null, 2) + '\n'
 }

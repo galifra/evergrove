@@ -133,7 +133,7 @@ self.addEventListener('push', (event) => {
         icon: '/icon-192.png',
         badge: '/tree-icon.svg',
         tag: 'evergrove-daily',
-        data: { url: '/moxie/brief' },
+        data: { url: '/' },
       })
     )
   )

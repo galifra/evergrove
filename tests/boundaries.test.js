@@ -65,7 +65,7 @@ function violations() {
 describe('import boundaries', () => {
   it('finds the packages and apps it is meant to check', () => {
     expect(sources.length).toBeGreaterThan(60)
-    expect(new Set(sources.map((f) => layerOf(f)?.name))).toEqual(new Set([...LAYERS, 'evergrove', 'jarvis']))
+    expect(new Set(sources.map((f) => layerOf(f)?.name))).toEqual(new Set([...LAYERS, 'evergrove']))
   })
 
   it('nothing imports upward or sideways, and no app imports another app', () => {

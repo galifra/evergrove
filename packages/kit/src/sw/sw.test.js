@@ -216,7 +216,6 @@ describe('working offline', () => {
     online = false
     globalThis.fetch = vi.fn(async () => { throw new TypeError('offline') })
     expect(await (await ask(request('/money', { mode: 'navigate' }))).response.text()).toBe('page /money/')
-    expect(await (await ask(request('/moxie/memory', { mode: 'navigate' }))).response.text()).toBe('page /moxie/')
     expect(await (await ask(request('/t/houseplants', { mode: 'navigate' }))).response.text()).toBe('page /t/')
     expect(await (await ask(request('/not/an/app', { mode: 'navigate' }))).response.text()).toBe('page /')
   })

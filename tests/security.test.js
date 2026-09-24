@@ -35,7 +35,7 @@ describe('nothing turns text into code or markup', () => {
   ]
 
   it('finds the source it is meant to check', () => {
-    expect(files.length).toBeGreaterThan(80)
+    expect(files.length).toBeGreaterThan(60)
   })
 
   for (const [re, label] of SINKS) {
@@ -89,7 +89,7 @@ describe('every server route is behind the access code', () => {
   const routes = fs.readdirSync(path.join(ROOT, 'api')).filter((f) => f.endsWith('.js'))
 
   it('finds the routes', () => {
-    expect(routes.sort()).toEqual(['jarvis.js', 'parse-entry.js', 'save-subscription.js', 'send-reminder.js', 'sync.js', 'usage.js'])
+    expect(routes.sort()).toEqual(['save-subscription.js', 'send-reminder.js', 'sync.js'])
   })
 
   for (const file of routes) {
@@ -128,7 +128,6 @@ describe('links can only go inward', () => {
 
   it('real inward links are left alone', () => {
     expect(canonicalPath('/money')).toBe('/money/')
-    expect(canonicalPath('/jarvis/memory')).toBe('/jarvis/memory')
     expect(canonicalPath('/app/tasks')).toBe('/tasks/')
     expect(canonicalPath('/log?q=milk')).toBe('/log/?q=milk')
   })

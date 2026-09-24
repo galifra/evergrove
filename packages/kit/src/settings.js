@@ -9,15 +9,8 @@ export function defaultSettings() {
     briefingDetail: 'full',
     showAmounts: false,
     onboarded: false,
-    shareSensitive: [],
     syncPassphrase: '',
-    // Jarvis (docs/v2): how he speaks and how often he speaks up.
-    jarvisStyle: 'plain',
-    jarvisTitle: '',
-    nameAsked: false, // Jarvis asks what to call you once, then never again
-    speakReplies: false,
-    voiceURI: '',
-    speechRate: 1,
+    // How often the evening briefing speaks up (docs/v2): a plain-language dial, not AI.
     speakUp: 'necessary',
   }
 }

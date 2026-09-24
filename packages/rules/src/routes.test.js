@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { ENTRIES, ROUTES, appOf, canonicalPath, entryPath, legacyRedirect, normalizeLink, routeById, routeForPath, sameEntry, trackerPath } from './routes.js'
+import { ENTRIES, ROUTES, canonicalPath, entryPath, legacyRedirect, normalizeLink, routeById, routeForPath, sameEntry, trackerPath } from './routes.js'
 import { listApps } from './registry.js'
 import { BUILTIN_TRACKERS } from './trackers.js'
 
@@ -47,9 +47,7 @@ describe('finding a route from a path', () => {
     expect(routeForPath('/body').trackerId).toBe('body')
   })
 
-  it('reads MOXIE screens and custom trackers', () => {
-    expect(routeForPath('/moxie/memory')).toMatchObject({ id: 'jarvis', sub: 'memory' })
-    expect(routeForPath('/moxie')).toMatchObject({ id: 'jarvis', sub: null })
+  it('reads custom trackers', () => {
     expect(routeForPath('/t/houseplants')).toMatchObject({ custom: true, trackerId: 'houseplants' })
     expect(routeForPath('/t/my%20plants').trackerId).toBe('my plants')
   })
@@ -63,16 +61,10 @@ describe('finding a route from a path', () => {
     expect(entryPath(routeForPath('/money'))).toBe('/money/')
     expect(entryPath(routeForPath('/'))).toBe('/')
     expect(entryPath(routeForPath('/t/x'))).toBe('/t/')
-    expect(sameEntry('/moxie', '/moxie/memory')).toBe(true)
     expect(sameEntry('/t/a', '/t/b')).toBe(true)
     expect(sameEntry('/money', '/tasks')).toBe(false)
     expect(sameEntry('/', '/log')).toBe(false)
     expect(sameEntry('/nope', '/money')).toBe(false)
-  })
-
-  it('tells the two JavaScript apps apart', () => {
-    expect(appOf(routeById('jarvis'))).toBe('jarvis')
-    expect(appOf(routeById('money'))).toBe('evergrove')
   })
 
   it('builds tracker paths, built-in or custom', () => {
@@ -88,17 +80,16 @@ describe('old links keep working (T-P2c)', () => {
     expect(legacyRedirect('#/app/houseplants')).toBe('/t/houseplants')
     expect(legacyRedirect('#/timeline')).toBe('/log')
     expect(legacyRedirect('#/apps')).toBe('/apps')
-    // '#/jarvis' is itself an old link now (from before the MOXIE rename), so it also lands on the new path.
-    expect(legacyRedirect('#/jarvis')).toBe('/moxie')
-    expect(legacyRedirect('#/jarvis/brief')).toBe('/moxie/brief')
     expect(legacyRedirect('#/app')).toBe('/apps')
   })
 
-  it('ignores anything that is not an old link', () => {
+  it('ignores anything that is not an old link, including the assistant (moved to her own address)', () => {
     expect(legacyRedirect('')).toBeNull()
     expect(legacyRedirect('#top')).toBeNull()
     expect(legacyRedirect('#/')).toBeNull()
     expect(legacyRedirect('#/mystery')).toBeNull()
+    expect(legacyRedirect('#/jarvis')).toBeNull()
+    expect(legacyRedirect('#/jarvis/brief')).toBeNull()
   })
 
   it('every old app link that ever existed lands on a real route', () => {
@@ -111,7 +102,6 @@ describe('old links keep working (T-P2c)', () => {
     expect(normalizeLink('/app/money')).toBe('/money')
     expect(normalizeLink('/app/learning')).toBe('/learning')
     expect(normalizeLink('/timeline')).toBe('/log')
-    expect(normalizeLink('/moxie/brief')).toBe('/moxie/brief')
     expect(normalizeLink('/')).toBe('/')
     expect(normalizeLink(undefined)).toBe('/')
   })
@@ -126,9 +116,7 @@ describe('the address a link really goes to', () => {
     expect(canonicalPath('/timeline')).toBe('/log/')
   })
 
-  it('keeps MOXIE screens, custom trackers, queries and hashes', () => {
-    expect(canonicalPath('/moxie')).toBe('/moxie/')
-    expect(canonicalPath('/moxie/memory')).toBe('/moxie/memory')
+  it('keeps custom trackers, queries and hashes', () => {
     expect(canonicalPath('/t/my%20plants')).toBe('/t/my%20plants')
     expect(canonicalPath('/money?x=1')).toBe('/money/?x=1')
     expect(canonicalPath('/tasks#top')).toBe('/tasks/#top')

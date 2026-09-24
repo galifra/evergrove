@@ -1,7 +1,7 @@
 {
   "name": "Tracker · Evergrove",
   "short_name": "Tracker",
-  "description": "A tracker you made by talking to MOXIE.",
+  "description": "A tracker you made by talking.",
   "id": "/t/",
   "start_url": "/t/",
   "scope": "/t/",
